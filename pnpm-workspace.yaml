@@ -1,0 +1,5 @@
+packages:
+  - 'crm-core'
+  - 'crm-web'
+  - 'crm-ops'
+  - 'docs'

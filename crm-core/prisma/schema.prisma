@@ -1,0 +1,272 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  MANAGER
+  STAFF
+}
+
+enum ProjectStatus {
+  PROSPECT
+  CONTRACTED
+  ON_SITE
+  AFTER_SERVICE
+}
+
+// Base model for soft delete
+model Company {
+  id          BigInt    @id @default(autoincrement())
+  name        String
+  logoUrl     String?
+  planId      Int       @default(1)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  users       User[]
+  projects    Project[]
+  customers   Customer[]
+  orders      Order[]
+  bills       Bill[]
+  kpiSnapshots KpiSnapshot[]
+
+  @@map("companies")
+}
+
+model User {
+  id          BigInt    @id @default(autoincrement())
+  companyId   BigInt
+  email       String    @unique
+  password    String
+  name        String
+  role        UserRole  @default(STAFF)
+  locale      String    @default("ja")
+  timezone    String    @default("Asia/Tokyo")
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  company     Company   @relation(fields: [companyId], references: [id])
+  refreshTokens RefreshToken[]
+  projects    Project[] @relation("ProjectAssignee")
+
+  @@index([companyId])
+  @@map("users")
+}
+
+model RefreshToken {
+  id          String    @id @default(uuid())
+  userId      BigInt
+  token       String    @unique
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model Customer {
+  id          BigInt    @id @default(autoincrement())
+  companyId   BigInt
+  name        String
+  email       String?
+  phone       String?
+  address     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  company     Company   @relation(fields: [companyId], references: [id])
+  projects    Project[]
+
+  @@index([companyId])
+  @@map("customers")
+}
+
+model Project {
+  id            BigInt        @id @default(autoincrement())
+  companyId     BigInt
+  customerId    BigInt?
+  assigneeId    BigInt?
+  name          String
+  address       String
+  latitude      Float?
+  longitude     Float?
+  status        ProjectStatus @default(PROSPECT)
+  contractDate  DateTime?
+  startDate     DateTime?
+  completionDate DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
+
+  company       Company       @relation(fields: [companyId], references: [id])
+  customer      Customer?     @relation(fields: [customerId], references: [id])
+  assignee      User?         @relation("ProjectAssignee", fields: [assigneeId], references: [id])
+  orders        Order[]
+  scheduleItems ScheduleItem[]
+  estimates     Estimate[]
+
+  @@index([companyId])
+  @@index([customerId])
+  @@index([assigneeId])
+  @@index([latitude, longitude])
+  @@map("projects")
+}
+
+model Order {
+  id              BigInt    @id
+  companyId       BigInt
+  projectId       BigInt
+  supplierId      BigInt
+  orderDate       DateTime?
+  originalAmount  Decimal   @db.Decimal(15, 2)
+  statusCode      Int       @default(10)
+  dandioriData    Json?     // Store raw API response
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  company         Company   @relation(fields: [companyId], references: [id])
+  project         Project   @relation(fields: [projectId], references: [id])
+  bills           Bill[]
+
+  @@index([companyId, projectId])
+  @@map("orders")
+}
+
+model Bill {
+  id              BigInt    @id @default(autoincrement())
+  companyId       BigInt
+  orderId         BigInt
+  billNumber      String
+  billDate        DateTime
+  dueDate         DateTime?
+  totalAmount     Decimal   @db.Decimal(15, 2)
+  paidAmount      Decimal?  @db.Decimal(15, 2)
+  statusCode      Int       @default(10)
+  dandioriData    Json?     // Store raw API response
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  company         Company   @relation(fields: [companyId], references: [id])
+  order           Order     @relation(fields: [orderId], references: [id])
+
+  @@index([companyId, orderId])
+  @@map("bills")
+}
+
+model Estimate {
+  id              BigInt    @id @default(autoincrement())
+  companyId       BigInt    // Not in spec but needed for multi-tenant
+  projectId       BigInt
+  estimateNumber  String
+  estimateDate    DateTime
+  validUntil      DateTime?
+  totalAmount     Decimal   @db.Decimal(15, 2)
+  taxAmount       Decimal   @db.Decimal(15, 2)
+  items           Json      // Array of line items
+  statusCode      Int       @default(10)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  project         Project   @relation(fields: [projectId], references: [id])
+
+  @@index([projectId])
+  @@map("estimates")
+}
+
+model ScheduleItem {
+  id              BigInt    @id @default(autoincrement())
+  projectId       BigInt
+  taskName        String
+  plannedStart    DateTime?
+  plannedEnd      DateTime?
+  actualStart     DateTime?
+  actualEnd       DateTime?
+  progress        Int       @default(0) // 0-100
+  dependsOn       BigInt?   // Reference to another ScheduleItem
+  dandioriData    Json?     // Store raw API response
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  project         Project   @relation(fields: [projectId], references: [id])
+
+  @@index([projectId])
+  @@map("schedule_items")
+}
+
+model StatusMaster {
+  statusCode      Int       @id
+  labelJp         String
+  labelEn         String
+  category        String
+  createdAt       DateTime  @default(now())
+
+  @@map("status_master")
+}
+
+model GeoCache {
+  id              BigInt    @id @default(autoincrement())
+  addressHash     String    @unique
+  address         String
+  latitude        Float
+  longitude       Float
+  reverseAddress  String?
+  provider        String    @default("google")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([latitude, longitude])
+  @@map("geo_cache")
+}
+
+model KpiSnapshot {
+  id              BigInt    @id @default(autoincrement())
+  companyId       BigInt
+  snapshotDate    DateTime
+  period          String    // "hourly", "daily", "weekly", "monthly"
+  storeId         BigInt?
+  areaCode        String?
+  assigneeId      BigInt?
+  dealCount       Int       @default(0)
+  contractCount   Int       @default(0)
+  salesAmount     Decimal   @db.Decimal(15, 2)
+  grossProfit     Decimal   @db.Decimal(15, 2)
+  createdAt       DateTime  @default(now())
+
+  company         Company   @relation(fields: [companyId], references: [id])
+
+  @@index([companyId, snapshotDate])
+  @@index([companyId, storeId])
+  @@index([companyId, assigneeId])
+  @@map("kpi_snapshots")
+}
+
+model SyncLog {
+  id              BigInt    @id @default(autoincrement())
+  resourceType    String    // "orders", "bills", "projects", etc.
+  syncStatus      String    // "success", "error", "partial"
+  recordsProcessed Int      @default(0)
+  errorMessage    String?
+  startedAt       DateTime
+  completedAt     DateTime?
+  metadata        Json?
+
+  @@index([resourceType, startedAt])
+  @@map("sync_logs")
+}

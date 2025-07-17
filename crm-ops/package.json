@@ -1,0 +1,17 @@
+{
+  "name": "@crm/ops",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CRM Infrastructure and Operations",
+  "scripts": {
+    "terraform:init": "cd terraform && terraform init",
+    "terraform:plan": "cd terraform && terraform plan",
+    "terraform:apply": "cd terraform && terraform apply",
+    "docker:build": "docker build -f Dockerfile.core ../crm-core -t crm-core:latest",
+    "docker:push": "docker push crm-core:latest",
+    "clean": "rm -rf terraform/.terraform"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10"
+  }
+}
