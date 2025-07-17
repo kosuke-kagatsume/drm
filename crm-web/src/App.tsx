@@ -3,6 +3,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { useAuthStore } from '@/store/auth';
 import LoginPage from '@/pages/login';
 import DashboardPage from '@/pages/dashboard';
+import DemoPage from '@/pages/demo';
+import IndexPage from '@/pages/index';
 import Layout from '@/components/layout';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -17,6 +19,8 @@ function App() {
     <>
       <BrowserRouter>
         <Routes>
+          <Route path="/" element={<IndexPage />} />
+          <Route path="/demo" element={<DemoPage />} />
           <Route
             path="/login"
             element={isAuthenticated ? <Navigate to="/dashboard" /> : <LoginPage />}
@@ -28,7 +32,6 @@ function App() {
                 <Layout>
                   <Routes>
                     <Route path="/dashboard" element={<DashboardPage />} />
-                    <Route path="/" element={<Navigate to="/dashboard" />} />
                   </Routes>
                 </Layout>
               </ProtectedRoute>
