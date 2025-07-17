@@ -4,6 +4,7 @@ import { Menu, X, LayoutDashboard, Map, Users, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/auth';
 import api from '@/lib/api';
+import { mockApi, isMockMode } from '@/lib/mock-api';
 
 export default function MobileNav() {
   const navigate = useNavigate();
@@ -12,7 +13,11 @@ export default function MobileNav() {
 
   const handleLogout = async () => {
     try {
-      await api.post('/auth/logout');
+      if (isMockMode()) {
+        await mockApi.logout();
+      } else {
+        await api.post('/auth/logout');
+      }
     } catch (error) {
       // Continue with logout even if API call fails
     }

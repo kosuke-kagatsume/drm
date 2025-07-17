@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuthStore } from '@/store/auth';
 import api from '@/lib/api';
+import { mockApi, isMockMode } from '@/lib/mock-api';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -17,6 +18,10 @@ export default function LoginPage() {
 
   const loginMutation = useMutation({
     mutationFn: async (data: { email: string; password: string }) => {
+      // モックモードの場合はモックAPIを使用
+      if (isMockMode()) {
+        return await mockApi.login(data.email, data.password);
+      }
       const response = await api.post('/auth/login', data);
       return response.data;
     },

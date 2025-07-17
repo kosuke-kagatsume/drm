@@ -28,6 +28,14 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
+    // モックモードチェック
+    if (error.code === 'ERR_NETWORK' || error.response?.status === 404) {
+      // ネットワークエラーの場合、モックモードに切り替え
+      localStorage.setItem('mock-mode', 'true');
+      window.location.reload();
+      return Promise.reject(error);
+    }
+    
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       

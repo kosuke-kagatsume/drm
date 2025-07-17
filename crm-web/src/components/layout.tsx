@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/auth';
 import MobileNav from '@/components/mobile-nav';
 import api from '@/lib/api';
+import { mockApi, isMockMode } from '@/lib/mock-api';
 
 interface LayoutProps {
   children: ReactNode;
@@ -16,7 +17,11 @@ export default function Layout({ children }: LayoutProps) {
 
   const handleLogout = async () => {
     try {
-      await api.post('/auth/logout');
+      if (isMockMode()) {
+        await mockApi.logout();
+      } else {
+        await api.post('/auth/logout');
+      }
     } catch (error) {
       // Continue with logout even if API call fails
     }

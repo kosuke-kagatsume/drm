@@ -1,4 +1,5 @@
 import { useAuthStore } from '@/store/auth';
+import { isMockMode } from '@/lib/mock-api';
 
 export default function DashboardPage() {
   const user = useAuthStore((state) => state.user);
@@ -8,6 +9,9 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight">ダッシュボード</h1>
         <p className="text-sm md:text-base text-gray-500">ようこそ、{user?.name}さん</p>
+        {isMockMode() && (
+          <p className="text-xs text-orange-600 mt-1">※ デモモードで動作中（バックエンド未接続）</p>
+        )}
       </div>
       
       <div className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
