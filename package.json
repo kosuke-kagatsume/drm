@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "dev": "pnpm --parallel run dev",
-    "build": "pnpm run build",
+    "build": "pnpm --filter=* run build",
     "test": "pnpm run test",
     "lint": "pnpm run lint",
     "clean": "pnpm run clean && rm -rf node_modules",

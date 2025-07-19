@@ -1,9 +1,20 @@
 import { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, LayoutDashboard, Map, Users } from 'lucide-react';
+import {
+  LogOut,
+  LayoutDashboard,
+  Map,
+  Users,
+  Brain,
+  Activity,
+  Wrench,
+  Calculator,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/auth';
 import MobileNav from '@/components/mobile-nav';
+import VoiceCommand from '@/components/voice-command';
+import QuickCustomerRegister from '@/components/quick-customer-register';
 import api from '@/lib/api';
 import { mockApi, isMockMode } from '@/lib/mock-api';
 
@@ -33,7 +44,7 @@ export default function Layout({ children }: LayoutProps) {
     <>
       {/* Mobile Navigation */}
       <MobileNav />
-      
+
       <div className="flex h-screen bg-gray-100">
         {/* Desktop Sidebar */}
         <div className="hidden md:block w-64 bg-white shadow-md">
@@ -41,27 +52,57 @@ export default function Layout({ children }: LayoutProps) {
             <h2 className="text-xl font-bold">CRM System</h2>
             <p className="text-sm text-gray-500">{user?.companyName}</p>
           </div>
-          <nav className="mt-8">
+          <nav className="mt-6">
             <a
               href="/dashboard"
-              className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
+              className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100"
             >
               <LayoutDashboard className="mr-3 h-5 w-5" />
               ダッシュボード
             </a>
-            <a
-              href="/map"
-              className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
-            >
+            <a href="/map" className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100">
               <Map className="mr-3 h-5 w-5" />
               地図表示
             </a>
             <a
               href="/projects"
-              className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
+              className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100"
             >
               <Users className="mr-3 h-5 w-5" />
               プロジェクト
+            </a>
+            <a
+              href="/quote"
+              className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100"
+            >
+              <Calculator className="mr-3 h-5 w-5" />
+              見積作成
+            </a>
+            <a
+              href="/after-service"
+              className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100"
+            >
+              <Wrench className="mr-3 h-5 w-5" />
+              アフター管理
+            </a>
+            <div className="mt-6 mb-2 px-4">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                拡張機能
+              </p>
+            </div>
+            <a
+              href="/realtime"
+              className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100"
+            >
+              <Activity className="mr-3 h-5 w-5" />
+              リアルタイム
+            </a>
+            <a
+              href="/ai-insights"
+              className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100"
+            >
+              <Brain className="mr-3 h-5 w-5" />
+              AI分析
             </a>
           </nav>
         </div>
@@ -84,9 +125,11 @@ export default function Layout({ children }: LayoutProps) {
           </header>
 
           {/* Page content */}
-          <main className="flex-1 overflow-y-auto p-4 md:p-6 pt-16 md:pt-0">{children}</main>
+          <main className="flex-1 overflow-y-auto p-4 md:p-6 pt-16 md:pt-6">{children}</main>
         </div>
       </div>
+      <VoiceCommand />
+      <QuickCustomerRegister />
     </>
   );
 }

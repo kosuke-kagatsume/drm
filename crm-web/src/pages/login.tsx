@@ -32,7 +32,7 @@ export default function LoginPage() {
       } else {
         localStorage.setItem('auth-remember', 'false');
       }
-      
+
       setAuth(data);
       toast({
         title: 'ログイン成功',
@@ -106,15 +106,11 @@ export default function LoginPage() {
               </label>
             </div>
           </div>
-          <Button
-            type="submit"
-            className="w-full h-10 md:h-11"
-            disabled={loginMutation.isPending}
-          >
+          <Button type="submit" className="w-full h-10 md:h-11" disabled={loginMutation.isPending}>
             {loginMutation.isPending ? 'ログイン中...' : 'ログイン'}
           </Button>
         </form>
-        
+
         {/* デモ情報 */}
         <div className="mt-6 rounded-lg bg-gray-50 p-4 text-sm">
           <p className="font-medium text-gray-700 mb-2">デモアカウント</p>

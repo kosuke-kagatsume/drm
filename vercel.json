@@ -1,0 +1,16 @@
+{
+  "buildCommand": "pnpm --filter=* run build",
+  "outputDirectory": "crm-web/dist",
+  "installCommand": "pnpm install",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://crm-backend.fly.dev/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

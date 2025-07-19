@@ -37,19 +37,12 @@ export default function MobileNav() {
       <div className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm md:hidden">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsOpen(!isOpen)}
-              className="mr-2"
-            >
+            <Button variant="ghost" size="icon" onClick={() => setIsOpen(!isOpen)} className="mr-2">
               {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
             <h1 className="text-lg font-semibold">CRM System</h1>
           </div>
-          <div className="text-sm text-gray-600">
-            {user?.name}
-          </div>
+          <div className="text-sm text-gray-600">{user?.name}</div>
         </div>
       </div>
 
@@ -60,7 +53,7 @@ export default function MobileNav() {
         }`}
         onClick={() => setIsOpen(false)}
       />
-      
+
       <div
         className={`fixed top-0 left-0 z-40 h-full w-64 transform bg-white shadow-lg transition-transform md:hidden ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
@@ -70,7 +63,7 @@ export default function MobileNav() {
           <div className="p-4 pt-16">
             <p className="text-sm text-gray-500">{user?.companyName}</p>
           </div>
-          
+
           <nav className="flex-1">
             {navItems.map((item) => (
               <a
@@ -88,13 +81,9 @@ export default function MobileNav() {
               </a>
             ))}
           </nav>
-          
+
           <div className="border-t p-4">
-            <Button
-              variant="ghost"
-              className="w-full justify-start"
-              onClick={handleLogout}
-            >
+            <Button variant="ghost" className="w-full justify-start" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               ログアウト
             </Button>

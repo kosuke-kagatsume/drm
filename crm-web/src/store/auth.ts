@@ -52,26 +52,28 @@ export const useAuthStore = create<AuthState>()(
           getItem: (name: string) => {
             const str = localStorage.getItem(name);
             if (!str) return null;
-            
+
             // Remember Meがfalseの場合、セッションストレージのように扱う
             const rememberMe = localStorage.getItem('auth-remember') !== 'false';
-            
+
             if (!rememberMe) {
               // ブラウザを閉じたら認証情報をクリア
               const lastActive = localStorage.getItem('last-active');
               const now = new Date().getTime();
-              const hoursSinceActive = lastActive ? (now - parseInt(lastActive)) / (1000 * 60 * 60) : 0;
-              
+              const hoursSinceActive = lastActive
+                ? (now - parseInt(lastActive)) / (1000 * 60 * 60)
+                : 0;
+
               // 12時間以上経過していたらクリア
               if (hoursSinceActive > 12) {
                 localStorage.removeItem(name);
                 return null;
               }
             }
-            
+
             // 最終アクティブ時刻を更新
             localStorage.setItem('last-active', new Date().getTime().toString());
-            
+
             return JSON.parse(str);
           },
           setItem: (name: string, value: any) => {

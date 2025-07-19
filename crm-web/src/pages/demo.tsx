@@ -6,15 +6,12 @@ export default function DemoPage() {
           <h1 className="mb-4 md:mb-6 text-2xl md:text-4xl font-bold text-gray-800">
             CRM/基幹システム デモ
           </h1>
-          
+
           <div className="mb-6 md:mb-8 space-y-3 md:space-y-4">
-            <h2 className="text-xl md:text-2xl font-semibold text-gray-700">
-              システム概要
-            </h2>
+            <h2 className="text-xl md:text-2xl font-semibold text-gray-700">システム概要</h2>
             <p className="text-sm md:text-base text-gray-600">
               建設業向けのCRM/ERPシステムです。DandoriWork APIと連携し、
-              土地調達から見積、発注、現場進捗、引渡、アフターサービスまでを
-              一元管理します。
+              土地調達から見積、発注、現場進捗、引渡、アフターサービスまでを 一元管理します。
             </p>
           </div>
 
@@ -29,7 +26,7 @@ export default function DemoPage() {
                 <li>• Maps: Google Maps</li>
               </ul>
             </div>
-            
+
             <div className="rounded-lg border border-gray-200 p-4">
               <h3 className="mb-2 font-semibold text-gray-700">主要機能</h3>
               <ul className="space-y-1 text-xs md:text-sm text-gray-600">
@@ -46,7 +43,8 @@ export default function DemoPage() {
             <h3 className="mb-2 font-semibold text-gray-700">デモアカウント</h3>
             <div className="rounded-lg bg-gray-50 p-4">
               <p className="text-sm text-gray-600">
-                <strong>Email:</strong> admin@crm.com<br />
+                <strong>Email:</strong> admin@crm.com
+                <br />
                 <strong>Password:</strong> password123
               </p>
             </div>
@@ -56,10 +54,12 @@ export default function DemoPage() {
             <h3 className="mb-2 font-semibold text-gray-700">📱 モバイル対応</h3>
             <div className="rounded-lg bg-green-50 border border-green-200 p-4">
               <p className="text-sm text-green-800">
-                ✅ iPhone/iPad完全対応<br />
-                ✅ レスポンシブデザイン<br />
-                ✅ タッチ操作最適化<br />
-                ✅ ログイン状態保持機能
+                ✅ iPhone/iPad完全対応
+                <br />
+                ✅ レスポンシブデザイン
+                <br />
+                ✅ タッチ操作最適化
+                <br />✅ ログイン状態保持機能
               </p>
             </div>
           </div>

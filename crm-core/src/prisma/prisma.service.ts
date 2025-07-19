@@ -18,7 +18,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   }
 
   // Helper for soft delete
-  excludeDeleted<T, K>(model: T, keys: K[]): Omit<T, K> {
+  excludeDeleted<T, K extends keyof T>(model: T, keys: K[]): Omit<T, K> {
     return Object.fromEntries(
       Object.entries(model).filter(([key]) => !keys.includes(key as K))
     ) as Omit<T, K>;
