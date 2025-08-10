@@ -41,6 +41,14 @@ export default function Index() {
               <p>Powered by: Next.js, NestJS, Nx Monorepo</p>
               <p>© 2024 DRM Suite - Enterprise CRM Solution</p>
             </div>
+            <div className="mt-4">
+              <a
+                href="/login"
+                className="inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition font-medium"
+              >
+                ログインして始める
+              </a>
+            </div>
           </div>
         </div>
       </div>
