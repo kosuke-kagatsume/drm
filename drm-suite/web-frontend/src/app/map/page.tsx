@@ -468,17 +468,19 @@ export default function MapDashboard() {
             {/* Markers with Clustering */}
             {showClusters ? (
               <MarkerClusterer>
-                {(clusterer) =>
-                  filteredLocations.map((location) => (
-                    <Marker
-                      key={location.id}
-                      position={{ lat: location.lat, lng: location.lng }}
-                      icon={getMarkerIcon(location.type)}
-                      onClick={() => setSelectedMarker(location)}
-                      clusterer={clusterer}
-                    />
-                  ))
-                }
+                {(clusterer) => (
+                  <>
+                    {filteredLocations.map((location) => (
+                      <Marker
+                        key={location.id}
+                        position={{ lat: location.lat, lng: location.lng }}
+                        icon={getMarkerIcon(location.type)}
+                        onClick={() => setSelectedMarker(location)}
+                        clusterer={clusterer}
+                      />
+                    ))}
+                  </>
+                )}
               </MarkerClusterer>
             ) : (
               filteredLocations.map((location) => (
