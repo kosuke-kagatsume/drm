@@ -1,0 +1,12 @@
+{
+  "buildCommand": "cd drm-suite && pnpm nx build web-frontend",
+  "outputDirectory": "drm-suite/web-frontend/.next",
+  "installCommand": "pnpm install",
+  "framework": "nextjs",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://drm-api-gateway.fly.dev/api/:path*"
+    }
+  ]
+}
