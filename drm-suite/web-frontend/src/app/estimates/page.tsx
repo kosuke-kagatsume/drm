@@ -1,0 +1,264 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+interface Estimate {
+  id: string;
+  estimateNo: string;
+  companyName: string;
+  projectName: string;
+  totalAmount: number;
+  status: 'draft' | 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+}
+
+export default function EstimatesPage() {
+  const router = useRouter();
+  const [estimates, setEstimates] = useState<Estimate[]>([
+    {
+      id: '1',
+      estimateNo: 'EST-2024-001',
+      companyName: '株式会社サンプル',
+      projectName: 'Webサイトリニューアル',
+      totalAmount: 1500000,
+      status: 'pending',
+      createdAt: '2024-08-01',
+    },
+    {
+      id: '2',
+      estimateNo: 'EST-2024-002',
+      companyName: 'テスト商事',
+      projectName: 'システム開発',
+      totalAmount: 3200000,
+      status: 'approved',
+      createdAt: '2024-08-03',
+    },
+    {
+      id: '3',
+      estimateNo: 'EST-2024-003',
+      companyName: 'デモ工業',
+      projectName: 'アプリ開発',
+      totalAmount: 2100000,
+      status: 'draft',
+      createdAt: '2024-08-05',
+    },
+  ]);
+
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newEstimate, setNewEstimate] = useState({
+    companyName: '',
+    projectName: '',
+    totalAmount: '',
+  });
+
+  useEffect(() => {
+    const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+    if (!isLoggedIn) {
+      router.push('/login');
+    }
+  }, [router]);
+
+  const handleCreateEstimate = () => {
+    const estimate: Estimate = {
+      id: Date.now().toString(),
+      estimateNo: `EST-2024-${String(estimates.length + 1).padStart(3, '0')}`,
+      companyName: newEstimate.companyName,
+      projectName: newEstimate.projectName,
+      totalAmount: Number(newEstimate.totalAmount),
+      status: 'draft',
+      createdAt: new Date().toISOString().split('T')[0],
+    };
+    setEstimates([...estimates, estimate]);
+    setShowCreateModal(false);
+    setNewEstimate({ companyName: '', projectName: '', totalAmount: '' });
+  };
+
+  const getStatusBadge = (status: string) => {
+    const colors = {
+      draft: 'bg-gray-100 text-gray-800',
+      pending: 'bg-yellow-100 text-yellow-800',
+      approved: 'bg-green-100 text-green-800',
+      rejected: 'bg-red-100 text-red-800',
+    };
+    const labels = {
+      draft: '下書き',
+      pending: '承認待ち',
+      approved: '承認済み',
+      rejected: '却下',
+    };
+    return (
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status as keyof typeof colors]}`}
+      >
+        {labels[status as keyof typeof labels]}
+      </span>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <nav className="bg-white shadow-sm">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="text-gray-600 hover:text-gray-900"
+            >
+              ← ダッシュボード
+            </button>
+            <h1 className="text-2xl font-bold text-gray-900">見積管理</h1>
+          </div>
+        </div>
+      </nav>
+
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-white rounded-lg shadow mb-6 p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-semibold">見積一覧</h2>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+            >
+              + 新規見積作成
+            </button>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    見積番号
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    会社名
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    案件名
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    金額
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    ステータス
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    作成日
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    操作
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {estimates.map((estimate) => (
+                  <tr key={estimate.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-4 text-sm font-medium text-gray-900">
+                      {estimate.estimateNo}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-900">
+                      {estimate.companyName}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-900">
+                      {estimate.projectName}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-900">
+                      ¥{estimate.totalAmount.toLocaleString()}
+                    </td>
+                    <td className="px-4 py-4 text-sm">
+                      {getStatusBadge(estimate.status)}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-500">
+                      {estimate.createdAt}
+                    </td>
+                    <td className="px-4 py-4 text-sm">
+                      <button className="text-blue-600 hover:text-blue-900 mr-3">
+                        編集
+                      </button>
+                      <button className="text-red-600 hover:text-red-900">
+                        削除
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">新規見積作成</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  会社名
+                </label>
+                <input
+                  type="text"
+                  value={newEstimate.companyName}
+                  onChange={(e) =>
+                    setNewEstimate({
+                      ...newEstimate,
+                      companyName: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  案件名
+                </label>
+                <input
+                  type="text"
+                  value={newEstimate.projectName}
+                  onChange={(e) =>
+                    setNewEstimate({
+                      ...newEstimate,
+                      projectName: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  金額
+                </label>
+                <input
+                  type="number"
+                  value={newEstimate.totalAmount}
+                  onChange={(e) =>
+                    setNewEstimate({
+                      ...newEstimate,
+                      totalAmount: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleCreateEstimate}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                作成
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

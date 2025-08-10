@@ -38,37 +38,53 @@ export default function DashboardPage() {
 
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow">
+          <a
+            href="/estimates"
+            className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition cursor-pointer"
+          >
             <h2 className="text-lg font-semibold mb-2 text-blue-600">
               見積管理
             </h2>
             <p className="text-3xl font-bold mb-2">24</p>
             <p className="text-gray-600 text-sm">進行中の見積</p>
-          </div>
+            <p className="text-blue-500 text-sm mt-2">クリックして管理 →</p>
+          </a>
 
-          <div className="bg-white p-6 rounded-lg shadow">
+          <a
+            href="/inventory"
+            className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition cursor-pointer"
+          >
             <h2 className="text-lg font-semibold mb-2 text-green-600">
               在庫管理
             </h2>
             <p className="text-3xl font-bold mb-2">1,234</p>
             <p className="text-gray-600 text-sm">総在庫数</p>
-          </div>
+            <p className="text-green-500 text-sm mt-2">クリックして管理 →</p>
+          </a>
 
-          <div className="bg-white p-6 rounded-lg shadow">
+          <a
+            href="/bookings"
+            className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition cursor-pointer"
+          >
             <h2 className="text-lg font-semibold mb-2 text-purple-600">
               予約管理
             </h2>
             <p className="text-3xl font-bold mb-2">18</p>
             <p className="text-gray-600 text-sm">今日の予約</p>
-          </div>
+            <p className="text-purple-500 text-sm mt-2">クリックして管理 →</p>
+          </a>
 
-          <div className="bg-white p-6 rounded-lg shadow">
+          <a
+            href="/marketing"
+            className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition cursor-pointer"
+          >
             <h2 className="text-lg font-semibold mb-2 text-orange-600">
               マーケティング
             </h2>
             <p className="text-3xl font-bold mb-2">89%</p>
             <p className="text-gray-600 text-sm">目標達成率</p>
-          </div>
+            <p className="text-orange-500 text-sm mt-2">クリックして管理 →</p>
+          </a>
         </div>
 
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
