@@ -12,7 +12,7 @@ interface QuickLoginAccount {
   department: string;
   permissions: string[];
   avatar: string;
-  bgColor: string;
+  gradient: string;
 }
 
 export default function LoginPage() {
@@ -30,7 +30,7 @@ export default function LoginPage() {
       department: '経営管理',
       permissions: ['スケジュール管理', '売上分析', '現場管理', '承認権限'],
       avatar: '👨‍💼',
-      bgColor: 'bg-gradient-to-br from-dandori-blue to-dandori-sky',
+      gradient: 'linear-gradient(135deg, #0099CC 0%, #66CCFF 100%)',
     },
     {
       name: '鈴木 一郎',
@@ -46,7 +46,7 @@ export default function LoginPage() {
         'チャット機能',
       ],
       avatar: '👷',
-      bgColor: 'bg-gradient-to-br from-dandori-orange to-dandori-yellow',
+      gradient: 'linear-gradient(135deg, #FF9933 0%, #FFCC33 100%)',
     },
     {
       name: '佐藤 次郎',
@@ -57,7 +57,7 @@ export default function LoginPage() {
       department: '営業部',
       permissions: ['自分のスケジュール確認', '作業進捗登録', 'チャット機能'],
       avatar: '👨‍💻',
-      bgColor: 'bg-gradient-to-br from-dandori-pink to-dandori-orange',
+      gradient: 'linear-gradient(135deg, #FF3366 0%, #FF9933 100%)',
     },
     {
       name: '山田 愛子',
@@ -68,7 +68,7 @@ export default function LoginPage() {
       department: '経理部',
       permissions: ['請求書作成', '入金管理', '財務分析', '月次報告'],
       avatar: '👩‍💼',
-      bgColor: 'bg-gradient-to-br from-purple-500 to-dandori-pink',
+      gradient: 'linear-gradient(135deg, #9333EA 0%, #FF3366 100%)',
     },
     {
       name: '木村 健太',
@@ -79,7 +79,7 @@ export default function LoginPage() {
       department: 'マーケティング部',
       permissions: ['キャンペーン管理', 'Web分析', 'SEO対策', 'SNS運用'],
       avatar: '📊',
-      bgColor: 'bg-gradient-to-br from-dandori-yellow to-green-400',
+      gradient: 'linear-gradient(135deg, #FFCC33 0%, #10B981 100%)',
     },
   ];
 
@@ -96,14 +96,35 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-dandori-blue/5 via-white to-dandori-sky/5">
+    <div
+      className="min-h-screen"
+      style={{
+        background: 'linear-gradient(135deg, #0099CC15 0%, #66CCFF15 100%)',
+      }}
+    >
       <div className="flex flex-col items-center justify-center min-h-screen px-4 py-12">
         {/* ヘッダー */}
-        <div className="text-center mb-12 animate-fade-in">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-dandori shadow-xl mb-4">
+        <div
+          className="text-center mb-12"
+          style={{ animation: 'fadeIn 0.5s ease-out' }}
+        >
+          <div
+            className="inline-flex items-center justify-center w-20 h-20 rounded-full shadow-xl mb-4"
+            style={{
+              background: 'linear-gradient(135deg, #0099CC 0%, #00CCFF 100%)',
+            }}
+          >
             <span className="text-4xl text-white">🏗️</span>
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-dandori bg-clip-text text-transparent mb-2">
+          <h1
+            className="text-4xl font-bold mb-2"
+            style={{
+              background: 'linear-gradient(135deg, #0099CC 0%, #00CCFF 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
             DRM Suite v1.0
           </h1>
           <p className="text-gray-600">Dandori Relation Management System</p>
@@ -119,15 +140,22 @@ export default function LoginPage() {
               <button
                 key={account.email}
                 onClick={() => handleQuickLogin(account)}
-                className={`relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 border-2 ${
-                  selectedAccount?.email === account.email
-                    ? 'border-dandori-blue ring-4 ring-dandori-blue/20'
-                    : 'border-transparent hover:border-dandori-blue/30'
-                }`}
+                className="relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                style={{
+                  border:
+                    selectedAccount?.email === account.email
+                      ? '2px solid #0099CC'
+                      : '2px solid transparent',
+                  boxShadow:
+                    selectedAccount?.email === account.email
+                      ? '0 0 0 4px rgba(0, 153, 204, 0.2), 0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                      : '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                }}
               >
                 {/* グラデーションバッジ */}
                 <div
-                  className={`absolute -top-3 -right-3 w-16 h-16 rounded-full ${account.bgColor} flex items-center justify-center shadow-lg`}
+                  className="absolute -top-3 -right-3 w-16 h-16 rounded-full flex items-center justify-center shadow-lg"
+                  style={{ background: account.gradient }}
                 >
                   <span className="text-2xl">{account.avatar}</span>
                 </div>
@@ -136,7 +164,10 @@ export default function LoginPage() {
                   <h4 className="font-bold text-lg text-gray-800 mb-1">
                     {account.name}
                   </h4>
-                  <p className="text-sm text-dandori-blue font-medium mb-2">
+                  <p
+                    className="text-sm font-medium mb-2"
+                    style={{ color: '#0099CC' }}
+                  >
                     {account.role}
                   </p>
                   <p className="text-xs text-gray-500 mb-3">
@@ -149,7 +180,11 @@ export default function LoginPage() {
                       {account.permissions.slice(0, 3).map((perm, idx) => (
                         <span
                           key={idx}
-                          className="inline-block px-2 py-0.5 bg-dandori-blue/10 text-dandori-blue text-xs rounded-full"
+                          className="inline-block px-2 py-0.5 text-xs rounded-full"
+                          style={{
+                            backgroundColor: 'rgba(0, 153, 204, 0.1)',
+                            color: '#0099CC',
+                          }}
                         >
                           {perm}
                         </span>
@@ -164,9 +199,22 @@ export default function LoginPage() {
                 </div>
 
                 {selectedAccount?.email === account.email && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-dandori-blue/90 rounded-2xl animate-fade-in">
+                  <div
+                    className="absolute inset-0 flex items-center justify-center rounded-2xl"
+                    style={{
+                      backgroundColor: 'rgba(0, 153, 204, 0.9)',
+                      animation: 'fadeIn 0.5s ease-out',
+                    }}
+                  >
                     <div className="text-white text-center">
-                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-white/30 border-t-white mb-2"></div>
+                      <div
+                        className="inline-block rounded-full h-8 w-8 border-4 mb-2"
+                        style={{
+                          borderColor: 'rgba(255, 255, 255, 0.3)',
+                          borderTopColor: 'white',
+                          animation: 'spin 1s linear infinite',
+                        }}
+                      ></div>
                       <p className="text-sm font-medium">ログイン中...</p>
                     </div>
                   </div>
@@ -184,27 +232,55 @@ export default function LoginPage() {
           <div className="mt-2 flex justify-center gap-4">
             <a
               href="#"
-              className="text-xs text-dandori-blue hover:text-dandori-blue-dark transition-colors"
+              className="text-xs transition-colors"
+              style={{ color: '#0099CC' }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#006699')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#0099CC')}
             >
               利用規約
             </a>
             <span className="text-gray-300">|</span>
             <a
               href="#"
-              className="text-xs text-dandori-blue hover:text-dandori-blue-dark transition-colors"
+              className="text-xs transition-colors"
+              style={{ color: '#0099CC' }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#006699')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#0099CC')}
             >
               プライバシーポリシー
             </a>
             <span className="text-gray-300">|</span>
             <a
               href="#"
-              className="text-xs text-dandori-blue hover:text-dandori-blue-dark transition-colors"
+              className="text-xs transition-colors"
+              style={{ color: '#0099CC' }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#006699')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#0099CC')}
             >
               ヘルプ
             </a>
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
     </div>
   );
 }
