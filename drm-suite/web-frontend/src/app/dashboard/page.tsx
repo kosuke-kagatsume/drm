@@ -12,18 +12,22 @@ export default function DashboardPage() {
   const router = useRouter();
   const [userRole, setUserRole] = useState<string>('');
   const [userEmail, setUserEmail] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Check localStorage for login information
-    const role = localStorage.getItem('userRole');
-    const email = localStorage.getItem('userEmail');
-    const name = localStorage.getItem('userName');
+    if (typeof window !== 'undefined') {
+      const role = localStorage.getItem('userRole');
+      const email = localStorage.getItem('userEmail');
+      const name = localStorage.getItem('userName');
 
-    if (!role || !email) {
-      router.push('/login');
-    } else {
-      setUserRole(role);
-      setUserEmail(email);
+      if (!role || !email) {
+        router.push('/login');
+      } else {
+        setUserRole(role);
+        setUserEmail(email);
+        setIsLoading(false);
+      }
     }
   }, [router]);
 
@@ -80,6 +84,17 @@ export default function DashboardPage() {
         return 'from-gray-600 to-gray-700';
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dandori-blue mx-auto"></div>
+          <p className="mt-4 text-gray-600">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

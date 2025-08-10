@@ -19,14 +19,19 @@ export default function ContractsPage() {
   const router = useRouter();
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Check localStorage for login information
-    const role = localStorage.getItem('userRole');
-    const email = localStorage.getItem('userEmail');
+    if (typeof window !== 'undefined') {
+      const role = localStorage.getItem('userRole');
+      const email = localStorage.getItem('userEmail');
 
-    if (!role || !email) {
-      router.push('/login');
+      if (!role || !email) {
+        router.push('/login');
+      } else {
+        setIsLoading(false);
+      }
     }
   }, [router]);
 
@@ -147,6 +152,17 @@ export default function ContractsPage() {
     (sum, contract) => sum + (contract.amount * contract.paymentProgress) / 100,
     0,
   );
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dandori-blue mx-auto"></div>
+          <p className="mt-4 text-gray-600">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">

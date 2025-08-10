@@ -24,14 +24,19 @@ interface Vendor {
 
 export default function VendorsPage() {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Check localStorage for login information
-    const role = localStorage.getItem('userRole');
-    const email = localStorage.getItem('userEmail');
+    if (typeof window !== 'undefined') {
+      const role = localStorage.getItem('userRole');
+      const email = localStorage.getItem('userEmail');
 
-    if (!role || !email) {
-      router.push('/login');
+      if (!role || !email) {
+        router.push('/login');
+      } else {
+        setIsLoading(false);
+      }
     }
   }, [router]);
 
@@ -162,6 +167,17 @@ export default function VendorsPage() {
     '内装',
     '外構',
   ];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dandori-blue mx-auto"></div>
+          <p className="mt-4 text-gray-600">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
