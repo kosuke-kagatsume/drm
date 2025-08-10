@@ -22,8 +22,8 @@
     "baseUrl": ".",
     "paths": {
       "@crm/core/*": ["crm-core/src/*"],
-      "@crm/web/*": ["crm-web/src/*"],
-      "@crm/shared/*": ["crm-core/src/common/interfaces/*"]
+      "@crm/shared/*": ["crm-core/src/common/interfaces/*"],
+      "@crm/web/*": ["crm-web/src/*"]
     }
   },
   "exclude": ["node_modules", "dist", "coverage", "**/*.spec.ts", "**/*.test.ts"]
