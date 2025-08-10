@@ -89,19 +89,50 @@ export default function DashboardPage() {
 
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">最近の活動</h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between py-2 border-b">
-                <span className="text-gray-700">新規見積 #1234 作成</span>
-                <span className="text-gray-500 text-sm">10分前</span>
-              </div>
-              <div className="flex items-center justify-between py-2 border-b">
-                <span className="text-gray-700">在庫更新: 商品A (+50)</span>
-                <span className="text-gray-500 text-sm">1時間前</span>
-              </div>
-              <div className="flex items-center justify-between py-2 border-b">
-                <span className="text-gray-700">会議室予約: 第2会議室</span>
-                <span className="text-gray-500 text-sm">3時間前</span>
+            <h3 className="text-lg font-semibold mb-4">クイックアクセス</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <a
+                href="/estimates/create"
+                className="p-3 bg-blue-50 rounded hover:bg-blue-100 transition"
+              >
+                <p className="font-medium text-blue-900">📝 新規見積作成</p>
+              </a>
+              <a
+                href="/vendors"
+                className="p-3 bg-green-50 rounded hover:bg-green-100 transition"
+              >
+                <p className="font-medium text-green-900">👷 協力会社管理</p>
+              </a>
+              <a
+                href="/projects"
+                className="p-3 bg-purple-50 rounded hover:bg-purple-100 transition"
+              >
+                <p className="font-medium text-purple-900">🏗️ 工事進捗</p>
+              </a>
+              <a
+                href="/invoices"
+                className="p-3 bg-orange-50 rounded hover:bg-orange-100 transition"
+              >
+                <p className="font-medium text-orange-900">💰 請求・入金</p>
+              </a>
+            </div>
+            <div className="mt-4 pt-4 border-t">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">
+                最近の活動
+              </h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>田中様邸 見積承認</span>
+                  <span className="text-gray-500">10分前</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>山田建設に発注</span>
+                  <span className="text-gray-500">1時間前</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>佐藤様邸 完工</span>
+                  <span className="text-gray-500">3時間前</span>
+                </div>
               </div>
             </div>
           </div>

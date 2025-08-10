@@ -45,34 +45,12 @@ export default function EstimatesPage() {
     },
   ]);
 
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newEstimate, setNewEstimate] = useState({
-    companyName: '',
-    projectName: '',
-    totalAmount: '',
-  });
-
   useEffect(() => {
     const isLoggedIn = sessionStorage.getItem('isLoggedIn');
     if (!isLoggedIn) {
       router.push('/login');
     }
   }, [router]);
-
-  const handleCreateEstimate = () => {
-    const estimate: Estimate = {
-      id: Date.now().toString(),
-      estimateNo: `EST-2024-${String(estimates.length + 1).padStart(3, '0')}`,
-      companyName: newEstimate.companyName,
-      projectName: newEstimate.projectName,
-      totalAmount: Number(newEstimate.totalAmount),
-      status: 'draft',
-      createdAt: new Date().toISOString().split('T')[0],
-    };
-    setEstimates([...estimates, estimate]);
-    setShowCreateModal(false);
-    setNewEstimate({ companyName: '', projectName: '', totalAmount: '' });
-  };
 
   const getStatusBadge = (status: string) => {
     const colors = {
@@ -117,7 +95,7 @@ export default function EstimatesPage() {
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold">見積一覧</h2>
             <button
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => router.push('/estimates/create')}
               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
             >
               + 新規見積作成
@@ -187,78 +165,6 @@ export default function EstimatesPage() {
           </div>
         </div>
       </div>
-
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">新規見積作成</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  会社名
-                </label>
-                <input
-                  type="text"
-                  value={newEstimate.companyName}
-                  onChange={(e) =>
-                    setNewEstimate({
-                      ...newEstimate,
-                      companyName: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  案件名
-                </label>
-                <input
-                  type="text"
-                  value={newEstimate.projectName}
-                  onChange={(e) =>
-                    setNewEstimate({
-                      ...newEstimate,
-                      projectName: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  金額
-                </label>
-                <input
-                  type="number"
-                  value={newEstimate.totalAmount}
-                  onChange={(e) =>
-                    setNewEstimate({
-                      ...newEstimate,
-                      totalAmount: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
-              >
-                キャンセル
-              </button>
-              <button
-                onClick={handleCreateEstimate}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                作成
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
