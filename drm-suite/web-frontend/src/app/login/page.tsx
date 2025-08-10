@@ -7,6 +7,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('sales');
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -17,6 +18,7 @@ export default function LoginPage() {
       // セッションストレージに保存
       sessionStorage.setItem('isLoggedIn', 'true');
       sessionStorage.setItem('userEmail', email);
+      sessionStorage.setItem('userRole', role);
       router.push('/dashboard');
     } else {
       setError('メールアドレスまたはパスワードが正しくありません');
@@ -66,6 +68,27 @@ export default function LoginPage() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               placeholder="admin123"
             />
+          </div>
+
+          <div>
+            <label
+              htmlFor="role"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              役職
+            </label>
+            <select
+              id="role"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="sales">営業担当</option>
+              <option value="manager">支店長</option>
+              <option value="purchasing">購買・発注担当</option>
+              <option value="accounting">経理担当</option>
+              <option value="executive">経営層</option>
+            </select>
           </div>
 
           {error && (
