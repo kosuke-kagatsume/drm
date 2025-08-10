@@ -109,54 +109,7 @@ export default function LoginPage() {
           <p className="text-gray-600">Dandori Relation Management System</p>
         </div>
 
-        {/* メインログインフォーム */}
-        <div className="w-full max-w-md mb-12">
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-dandori-blue/10">
-            <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">
-              ログイン
-            </h2>
-            <form
-              className="space-y-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                // デモ用：任意の入力でログイン可能
-                localStorage.setItem('userRole', '営業担当');
-                localStorage.setItem('userEmail', 'user@drm.com');
-                localStorage.setItem('userName', 'ユーザー');
-                router.push('/dashboard');
-              }}
-            >
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  メールアドレス
-                </label>
-                <input
-                  type="email"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-dandori-blue focus:ring-2 focus:ring-dandori-blue/20 transition-all duration-200"
-                  placeholder="email@example.com"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  パスワード
-                </label>
-                <input
-                  type="password"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-dandori-blue focus:ring-2 focus:ring-dandori-blue/20 transition-all duration-200"
-                  placeholder="••••••••"
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full py-3 bg-gradient-dandori text-white rounded-xl font-medium hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-              >
-                ログイン
-              </button>
-            </form>
-          </div>
-        </div>
-
-        {/* クイックログイン */}
+        {/* デモ用クイックログイン */}
         <div className="w-full max-w-5xl">
           <h3 className="text-center text-lg font-semibold text-gray-700 mb-6">
             🚀 デモ用クイックログイン
