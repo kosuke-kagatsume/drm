@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import SalesDashboard from './sales';
 import ManagerDashboard from './manager';
 import ExecutiveDashboard from './executive';
+import PurchasingDashboard from './purchasing';
+import AccountingDashboard from './accounting';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -106,18 +108,10 @@ export default function DashboardPage() {
           <ExecutiveDashboard userEmail={userEmail} />
         )}
         {userRole === 'purchasing' && (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">
-              購買・発注ダッシュボード
-            </h2>
-            <p className="text-gray-600">Coming soon...</p>
-          </div>
+          <PurchasingDashboard userEmail={userEmail} />
         )}
         {userRole === 'accounting' && (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">経理ダッシュボード</h2>
-            <p className="text-gray-600">Coming soon...</p>
-          </div>
+          <AccountingDashboard userEmail={userEmail} />
         )}
       </div>
     </div>
