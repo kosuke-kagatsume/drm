@@ -258,6 +258,41 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
             </div>
           </div>
 
+          {/* 財務管理 */}
+          <div className="bg-white rounded-2xl shadow-lg mt-6 overflow-hidden">
+            <div className="px-6 py-4 bg-gradient-to-r from-dandori-blue to-dandori-sky text-white">
+              <h3 className="font-semibold">💰 支店財務管理</h3>
+            </div>
+            <div className="p-4">
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => router.push('/contracts')}
+                  className="text-center bg-gradient-to-r from-dandori-blue/5 to-dandori-sky/5 p-3 rounded-lg hover:from-dandori-blue/10 hover:to-dandori-sky/10 transition-all duration-200"
+                >
+                  <p className="text-2xl mb-1">📄</p>
+                  <p className="text-xs font-medium text-gray-900">契約</p>
+                  <p className="text-xs text-gray-600">5件</p>
+                </button>
+                <button
+                  onClick={() => router.push('/invoices')}
+                  className="text-center bg-gradient-to-r from-dandori-orange/5 to-dandori-yellow/5 p-3 rounded-lg hover:from-dandori-orange/10 hover:to-dandori-yellow/10 transition-all duration-200"
+                >
+                  <p className="text-2xl mb-1">📋</p>
+                  <p className="text-xs font-medium text-gray-900">請求</p>
+                  <p className="text-xs text-gray-600">8件</p>
+                </button>
+                <button
+                  onClick={() => router.push('/payments')}
+                  className="text-center bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-lg hover:from-green-100 hover:to-emerald-100 transition-all duration-200"
+                >
+                  <p className="text-2xl mb-1">💵</p>
+                  <p className="text-xs font-medium text-gray-900">入金</p>
+                  <p className="text-xs text-gray-600">¥8M</p>
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* 地図分析 */}
           <div className="bg-white rounded-2xl shadow-lg mt-6 hover:shadow-xl transition-shadow duration-300">
             <div className="px-6 py-4 border-b border-gray-100">

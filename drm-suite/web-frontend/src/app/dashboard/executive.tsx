@@ -239,8 +239,63 @@ export default function ExecutiveDashboard({
           </div>
         </div>
 
-        {/* 経営分析RAG */}
+        {/* 財務管理 */}
         <div className="lg:col-span-1">
+          <div className="bg-white rounded-2xl shadow-lg mb-6 overflow-hidden">
+            <div className="px-6 py-4 bg-gradient-to-r from-dandori-blue to-dandori-sky text-white">
+              <h3 className="font-semibold">💰 財務管理</h3>
+            </div>
+            <div className="p-4">
+              <div className="space-y-3">
+                <button
+                  onClick={() => router.push('/contracts')}
+                  className="w-full text-left bg-gradient-to-r from-dandori-blue/5 to-dandori-sky/5 p-3 rounded-lg hover:from-dandori-blue/10 hover:to-dandori-sky/10 transition-all duration-200"
+                >
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="font-medium text-gray-900">契約管理</p>
+                      <p className="text-xs text-gray-600">5件の進行中</p>
+                    </div>
+                    <span className="text-dandori-blue">→</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => router.push('/invoices')}
+                  className="w-full text-left bg-gradient-to-r from-dandori-orange/5 to-dandori-yellow/5 p-3 rounded-lg hover:from-dandori-orange/10 hover:to-dandori-yellow/10 transition-all duration-200"
+                >
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="font-medium text-gray-900">請求書管理</p>
+                      <p className="text-xs text-gray-600">3件の未入金</p>
+                    </div>
+                    <span className="text-dandori-orange">→</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => router.push('/payments')}
+                  className="w-full text-left bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-lg hover:from-green-100 hover:to-emerald-100 transition-all duration-200"
+                >
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="font-medium text-gray-900">入金管理</p>
+                      <p className="text-xs text-gray-600">今月¥22M入金済</p>
+                    </div>
+                    <span className="text-green-600">→</span>
+                  </div>
+                </button>
+              </div>
+              <div className="mt-4 p-3 bg-dandori-pink/5 rounded-lg border border-dandori-pink/20">
+                <p className="text-xs font-medium text-dandori-pink mb-1">
+                  ⚠️ 要確認
+                </p>
+                <p className="text-xs text-gray-700">
+                  期限超過の請求が3件あります
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* 経営分析RAG */}
           <div className="bg-white rounded-2xl shadow-lg sticky top-6 overflow-hidden">
             <div className="px-6 py-4 bg-gradient-warm text-white">
               <h3 className="font-semibold">🤖 経営分析AI</h3>

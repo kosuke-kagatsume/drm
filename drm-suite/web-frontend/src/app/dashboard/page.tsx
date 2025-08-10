@@ -14,11 +14,12 @@ export default function DashboardPage() {
   const [userEmail, setUserEmail] = useState<string>('');
 
   useEffect(() => {
-    const isLoggedIn = sessionStorage.getItem('isLoggedIn');
-    const role = sessionStorage.getItem('userRole') || 'sales';
-    const email = sessionStorage.getItem('userEmail') || '';
+    // Check localStorage for login information
+    const role = localStorage.getItem('userRole');
+    const email = localStorage.getItem('userEmail');
+    const name = localStorage.getItem('userName');
 
-    if (!isLoggedIn) {
+    if (!role || !email) {
       router.push('/login');
     } else {
       setUserRole(role);
@@ -27,14 +28,26 @@ export default function DashboardPage() {
   }, [router]);
 
   const handleLogout = () => {
-    sessionStorage.removeItem('isLoggedIn');
-    sessionStorage.removeItem('userEmail');
-    sessionStorage.removeItem('userRole');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userName');
     router.push('/login');
   };
 
+  const getRoleMapping = (role: string) => {
+    // Map Japanese role names to dashboard types
+    if (role === '経営者') return 'executive';
+    if (role === '支店長') return 'manager';
+    if (role === '営業担当') return 'sales';
+    if (role === '経理担当') return 'accounting';
+    if (role === 'マーケティング') return 'marketing';
+    // Return original if already in English format
+    return role;
+  };
+
   const getRoleTitle = (role: string) => {
-    switch (role) {
+    const mappedRole = getRoleMapping(role);
+    switch (mappedRole) {
       case 'sales':
         return '営業ダッシュボード';
       case 'manager':
@@ -51,17 +64,18 @@ export default function DashboardPage() {
   };
 
   const getRoleColor = (role: string) => {
-    switch (role) {
+    const mappedRole = getRoleMapping(role);
+    switch (mappedRole) {
       case 'sales':
-        return 'from-blue-600 to-blue-700';
+        return 'from-dandori-orange to-dandori-yellow';
       case 'manager':
-        return 'from-green-600 to-green-700';
+        return 'from-dandori-blue to-dandori-sky';
       case 'marketing':
-        return 'from-purple-600 to-purple-700';
+        return 'from-dandori-yellow to-green-400';
       case 'accounting':
-        return 'from-orange-600 to-orange-700';
+        return 'from-purple-500 to-dandori-pink';
       case 'executive':
-        return 'from-gray-800 to-gray-900';
+        return 'from-dandori-blue to-dandori-sky';
       default:
         return 'from-gray-600 to-gray-700';
     }
@@ -102,15 +116,19 @@ export default function DashboardPage() {
       </nav>
 
       <div className="container mx-auto px-4 py-8">
-        {userRole === 'sales' && <SalesDashboard userEmail={userEmail} />}
-        {userRole === 'manager' && <ManagerDashboard userEmail={userEmail} />}
-        {userRole === 'executive' && (
+        {getRoleMapping(userRole) === 'sales' && (
+          <SalesDashboard userEmail={userEmail} />
+        )}
+        {getRoleMapping(userRole) === 'manager' && (
+          <ManagerDashboard userEmail={userEmail} />
+        )}
+        {getRoleMapping(userRole) === 'executive' && (
           <ExecutiveDashboard userEmail={userEmail} />
         )}
-        {userRole === 'marketing' && (
+        {getRoleMapping(userRole) === 'marketing' && (
           <MarketingDashboard userEmail={userEmail} />
         )}
-        {userRole === 'accounting' && (
+        {getRoleMapping(userRole) === 'accounting' && (
           <AccountingDashboard userEmail={userEmail} />
         )}
       </div>
