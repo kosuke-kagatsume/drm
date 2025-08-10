@@ -278,9 +278,12 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
           <span className="text-2xl">👷</span>
           <p className="mt-2 font-medium">協力会社</p>
         </button>
-        <button className="bg-orange-500 text-white p-4 rounded-lg hover:bg-orange-600 transition">
-          <span className="text-2xl">📅</span>
-          <p className="mt-2 font-medium">来店予約</p>
+        <button
+          onClick={() => router.push('/map')}
+          className="bg-orange-500 text-white p-4 rounded-lg hover:bg-orange-600 transition"
+        >
+          <span className="text-2xl">🗺️</span>
+          <p className="mt-2 font-medium">地図分析</p>
         </button>
       </div>
     </div>

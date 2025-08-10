@@ -67,13 +67,13 @@ export default function LoginPage() {
     },
     {
       name: '高橋 三郎',
-      role: '購買担当',
+      role: 'マーケティング',
       email: 'takahashi@drm.com',
       password: 'admin123',
       status: 'worker',
-      department: '購買部',
-      permissions: ['発注管理', '在庫確認', '協力会社管理'],
-      avatar: '📦',
+      department: 'マーケティング部',
+      permissions: ['集客分析', 'キャンペーン管理', 'SEO/Web管理'],
+      avatar: '📊',
     },
   ];
 
@@ -89,7 +89,7 @@ export default function LoginPage() {
     else if (account.role === '支店長') roleType = 'manager';
     else if (account.role === '営業担当') roleType = 'sales';
     else if (account.role === '経理担当') roleType = 'accounting';
-    else if (account.role === '購買担当') roleType = 'purchasing';
+    else if (account.role === 'マーケティング') roleType = 'marketing';
 
     sessionStorage.setItem('userRole', roleType);
     router.push('/dashboard');

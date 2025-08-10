@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import SalesDashboard from './sales';
 import ManagerDashboard from './manager';
 import ExecutiveDashboard from './executive';
-import PurchasingDashboard from './purchasing';
+import MarketingDashboard from './marketing';
 import AccountingDashboard from './accounting';
 
 export default function DashboardPage() {
@@ -39,8 +39,8 @@ export default function DashboardPage() {
         return '営業ダッシュボード';
       case 'manager':
         return '支店長ダッシュボード';
-      case 'purchasing':
-        return '購買・発注ダッシュボード';
+      case 'marketing':
+        return 'マーケティングダッシュボード';
       case 'accounting':
         return '経理ダッシュボード';
       case 'executive':
@@ -56,7 +56,7 @@ export default function DashboardPage() {
         return 'from-blue-600 to-blue-700';
       case 'manager':
         return 'from-green-600 to-green-700';
-      case 'purchasing':
+      case 'marketing':
         return 'from-purple-600 to-purple-700';
       case 'accounting':
         return 'from-orange-600 to-orange-700';
@@ -107,8 +107,8 @@ export default function DashboardPage() {
         {userRole === 'executive' && (
           <ExecutiveDashboard userEmail={userEmail} />
         )}
-        {userRole === 'purchasing' && (
-          <PurchasingDashboard userEmail={userEmail} />
+        {userRole === 'marketing' && (
+          <MarketingDashboard userEmail={userEmail} />
         )}
         {userRole === 'accounting' && (
           <AccountingDashboard userEmail={userEmail} />
