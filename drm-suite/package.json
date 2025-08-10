@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "license": "MIT",
   "description": "DRM Suite - Dandori Relation Management System with RAG Copilot",
+  "packageManager": "npm@10.8.2",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "nx": "nx",
     "build": "nx run-many -t build",
