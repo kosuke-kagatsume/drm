@@ -1,7 +1,7 @@
 {
-  "buildCommand": "cd drm-suite && pnpm nx build web-frontend",
-  "outputDirectory": "drm-suite/web-frontend/.next",
-  "installCommand": "pnpm install",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
   "framework": "nextjs",
   "rewrites": [
     {
