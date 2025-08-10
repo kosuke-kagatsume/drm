@@ -12,6 +12,7 @@ interface QuickLoginAccount {
   department: string;
   permissions: string[];
   avatar: string;
+  color: string;
 }
 
 export default function LoginPage() {
@@ -29,6 +30,7 @@ export default function LoginPage() {
       department: '経営管理',
       permissions: ['スケジュール管理', '売上分析', '現場管理', '承認権限'],
       avatar: '👨‍💼',
+      color: 'from-dandori-blue to-dandori-sky',
     },
     {
       name: '鈴木 一郎',
@@ -44,6 +46,7 @@ export default function LoginPage() {
         'チャット機能',
       ],
       avatar: '👷',
+      color: 'from-dandori-orange to-dandori-yellow',
     },
     {
       name: '佐藤 次郎',
@@ -52,173 +55,191 @@ export default function LoginPage() {
       password: 'admin123',
       status: 'worker',
       department: '営業部',
-      permissions: ['自分のスケジュール確認', '見積作成', 'チャット機能'],
-      avatar: '🔧',
+      permissions: ['自分のスケジュール確認', '作業進捗登録', 'チャット機能'],
+      avatar: '👨‍💻',
+      color: 'from-dandori-pink to-dandori-orange',
     },
     {
-      name: '田中 花子',
+      name: '山田 愛子',
       role: '経理担当',
-      email: 'tanaka@drm.com',
+      email: 'aiko@drm.com',
       password: 'admin123',
       status: 'worker',
       department: '経理部',
-      permissions: ['入金確認', '請求書発行', '支払管理'],
-      avatar: '💼',
+      permissions: ['請求書作成', '入金管理', '財務分析', '月次報告'],
+      avatar: '👩‍💼',
+      color: 'from-purple-500 to-dandori-pink',
     },
     {
-      name: '高橋 三郎',
+      name: '木村 健太',
       role: 'マーケティング',
-      email: 'takahashi@drm.com',
+      email: 'kimura@drm.com',
       password: 'admin123',
       status: 'worker',
       department: 'マーケティング部',
-      permissions: ['集客分析', 'キャンペーン管理', 'SEO/Web管理'],
+      permissions: ['キャンペーン管理', 'Web分析', 'SEO対策', 'SNS運用'],
       avatar: '📊',
+      color: 'from-dandori-yellow to-green-400',
     },
   ];
 
   const handleQuickLogin = (account: QuickLoginAccount) => {
-    sessionStorage.setItem('isLoggedIn', 'true');
-    sessionStorage.setItem('userEmail', account.email);
-    sessionStorage.setItem('userName', account.name);
-    sessionStorage.setItem('userAvatar', account.avatar);
-
-    // 役職に応じたroleをセット
-    let roleType = 'sales';
-    if (account.role === '経営者') roleType = 'executive';
-    else if (account.role === '支店長') roleType = 'manager';
-    else if (account.role === '営業担当') roleType = 'sales';
-    else if (account.role === '経理担当') roleType = 'accounting';
-    else if (account.role === 'マーケティング') roleType = 'marketing';
-
-    sessionStorage.setItem('userRole', roleType);
-    router.push('/dashboard');
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'manager':
-        return 'bg-red-500';
-      case 'supervisor':
-        return 'bg-green-500';
-      case 'worker':
-        return 'bg-blue-500';
-      default:
-        return 'bg-gray-500';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'manager':
-        return '管理者';
-      case 'supervisor':
-        return '責任者';
-      case 'worker':
-        return '担当者';
-      default:
-        return '';
-    }
+    setSelectedAccount(account);
+    // セッション保存のシミュレーション
+    localStorage.setItem('userRole', account.role);
+    localStorage.setItem('userEmail', account.email);
+    localStorage.setItem('userName', account.name);
+    // ダッシュボードへ遷移
+    setTimeout(() => {
+      router.push('/dashboard');
+    }, 500);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center p-4">
-      <div className="w-full max-w-7xl">
+    <div className="min-h-screen bg-gradient-to-br from-dandori-blue/5 via-white to-dandori-sky/5">
+      <div className="flex flex-col items-center justify-center min-h-screen px-4 py-12">
         {/* ヘッダー */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <span className="text-5xl mr-3">🏗️</span>
-            <h1 className="text-4xl font-bold text-white">DRM Suite</h1>
+        <div className="text-center mb-12 animate-fade-in">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-dandori shadow-xl mb-4">
+            <span className="text-4xl text-white">🏗️</span>
           </div>
-          <p className="text-xl text-purple-100">建築業向け統合管理システム</p>
-          <p className="text-purple-200 mt-2">
-            デモアカウントを選択してログイン
-          </p>
+          <h1 className="text-4xl font-bold bg-gradient-dandori bg-clip-text text-transparent mb-2">
+            DRM Suite v1.0
+          </h1>
+          <p className="text-gray-600">Dandori Relation Management System</p>
         </div>
 
-        {/* クイックログインカード */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
-          {quickAccounts.map((account, idx) => (
-            <div
-              key={idx}
-              className="bg-white rounded-xl shadow-xl p-6 hover:shadow-2xl transition transform hover:scale-105 cursor-pointer"
-              onClick={() => handleQuickLogin(account)}
-            >
-              <div className="text-center mb-4">
-                <div className="text-5xl mb-3">{account.avatar}</div>
-                <h3 className="text-lg font-bold text-gray-900">
-                  {account.name}
-                </h3>
-                <div className="flex items-center justify-center mt-2">
-                  <span
-                    className={`${getStatusColor(account.status)} text-white text-xs px-2 py-1 rounded`}
-                  >
-                    {getStatusLabel(account.status)}
-                  </span>
-                </div>
+        {/* メインログインフォーム */}
+        <div className="w-full max-w-md mb-12">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-dandori-blue/10">
+            <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">
+              ログイン
+            </h2>
+            <form className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  メールアドレス
+                </label>
+                <input
+                  type="email"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-dandori-blue focus:ring-2 focus:ring-dandori-blue/20 transition-all duration-200"
+                  placeholder="email@example.com"
+                />
               </div>
-
-              <div className="text-sm text-gray-600 mb-4">
-                <p className="font-medium">
-                  {account.department}の{account.role}
-                </p>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  パスワード
+                </label>
+                <input
+                  type="password"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-dandori-blue focus:ring-2 focus:ring-dandori-blue/20 transition-all duration-200"
+                  placeholder="••••••••"
+                />
               </div>
+              <button
+                type="submit"
+                className="w-full py-3 bg-gradient-dandori text-white rounded-xl font-medium hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+              >
+                ログイン
+              </button>
+            </form>
+          </div>
+        </div>
 
-              <div className="border-t pt-3">
-                <p className="text-xs font-medium text-gray-500 mb-2">
-                  利用可能な機能：
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  {account.permissions.slice(0, 3).map((perm, pidx) => (
-                    <span
-                      key={pidx}
-                      className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded"
-                    >
-                      {perm}
-                    </span>
-                  ))}
-                  {account.permissions.length > 3 && (
-                    <span className="text-xs text-gray-400">
-                      他{account.permissions.length - 3}件
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <button
-                  className={`w-full py-2 px-4 rounded-lg text-white font-medium transition
-                    ${
-                      account.status === 'manager'
-                        ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
-                        : account.status === 'supervisor'
-                          ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
-                          : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
-                    }`}
+        {/* クイックログイン */}
+        <div className="w-full max-w-5xl">
+          <h3 className="text-center text-lg font-semibold text-gray-700 mb-6">
+            🚀 デモ用クイックログイン
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {quickAccounts.map((account) => (
+              <button
+                key={account.email}
+                onClick={() => handleQuickLogin(account)}
+                className={`relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 border-2 ${
+                  selectedAccount?.email === account.email
+                    ? 'border-dandori-blue ring-4 ring-dandori-blue/20'
+                    : 'border-transparent hover:border-dandori-blue/30'
+                }`}
+              >
+                {/* グラデーションバッジ */}
+                <div
+                  className={`absolute -top-3 -right-3 w-16 h-16 rounded-full bg-gradient-to-br ${account.color} flex items-center justify-center shadow-lg`}
                 >
-                  クイックログイン →
-                </button>
-              </div>
+                  <span className="text-2xl">{account.avatar}</span>
+                </div>
 
-              <div className="mt-3 text-xs text-gray-400 text-center">
-                <p>Email: {account.email}</p>
-                <p>Pass: ••••••••</p>
-              </div>
-            </div>
-          ))}
+                <div className="text-left">
+                  <h4 className="font-bold text-lg text-gray-800 mb-1">
+                    {account.name}
+                  </h4>
+                  <p className="text-sm text-dandori-blue font-medium mb-2">
+                    {account.role}
+                  </p>
+                  <p className="text-xs text-gray-500 mb-3">
+                    {account.department}
+                  </p>
+
+                  <div className="space-y-1">
+                    <p className="text-xs text-gray-600">権限:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {account.permissions.slice(0, 3).map((perm, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-block px-2 py-0.5 bg-dandori-blue/10 text-dandori-blue text-xs rounded-full"
+                        >
+                          {perm}
+                        </span>
+                      ))}
+                      {account.permissions.length > 3 && (
+                        <span className="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
+                          +{account.permissions.length - 3}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {selectedAccount?.email === account.email && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-dandori/90 rounded-2xl animate-fade-in">
+                    <div className="text-white text-center">
+                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-white/30 border-t-white mb-2"></div>
+                      <p className="text-sm font-medium">ログイン中...</p>
+                    </div>
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* 通常ログインリンク */}
-        <div className="text-center mt-8">
-          <p className="text-white text-sm">
-            ※ これはデモ環境です。実際のデータは保存されません。
+        {/* フッター */}
+        <div className="mt-12 text-center">
+          <p className="text-sm text-gray-500">
+            © 2024 DRM Suite - Powered by Dandori Work
           </p>
-          <button
-            onClick={() => setSelectedAccount(quickAccounts[0])}
-            className="mt-4 text-purple-200 hover:text-white underline text-sm"
-          >
-            通常のログインはこちら
-          </button>
+          <div className="mt-2 flex justify-center gap-4">
+            <a
+              href="#"
+              className="text-xs text-dandori-blue hover:text-dandori-blue-dark transition-colors"
+            >
+              利用規約
+            </a>
+            <span className="text-gray-300">|</span>
+            <a
+              href="#"
+              className="text-xs text-dandori-blue hover:text-dandori-blue-dark transition-colors"
+            >
+              プライバシーポリシー
+            </a>
+            <span className="text-gray-300">|</span>
+            <a
+              href="#"
+              className="text-xs text-dandori-blue hover:text-dandori-blue-dark transition-colors"
+            >
+              ヘルプ
+            </a>
+          </div>
         </div>
       </div>
     </div>
