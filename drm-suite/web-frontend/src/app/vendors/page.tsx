@@ -24,6 +24,17 @@ interface Vendor {
 
 export default function VendorsPage() {
   const router = useRouter();
+
+  useEffect(() => {
+    // Check localStorage for login information
+    const role = localStorage.getItem('userRole');
+    const email = localStorage.getItem('userEmail');
+
+    if (!role || !email) {
+      router.push('/login');
+    }
+  }, [router]);
+
   const [vendors, setVendors] = useState<Vendor[]>([
     {
       id: '1',

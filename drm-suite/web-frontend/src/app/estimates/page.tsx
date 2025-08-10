@@ -15,6 +15,17 @@ interface Estimate {
 
 export default function EstimatesPage() {
   const router = useRouter();
+
+  useEffect(() => {
+    // Check localStorage for login information
+    const role = localStorage.getItem('userRole');
+    const email = localStorage.getItem('userEmail');
+
+    if (!role || !email) {
+      router.push('/login');
+    }
+  }, [router]);
+
   const [estimates, setEstimates] = useState<Estimate[]>([
     {
       id: '1',

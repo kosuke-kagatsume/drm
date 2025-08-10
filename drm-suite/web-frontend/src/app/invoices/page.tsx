@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface Invoice {
@@ -24,6 +24,16 @@ export default function InvoicesPage() {
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
+
+  useEffect(() => {
+    // Check localStorage for login information
+    const role = localStorage.getItem('userRole');
+    const email = localStorage.getItem('userEmail');
+
+    if (!role || !email) {
+      router.push('/login');
+    }
+  }, [router]);
 
   const invoices: Invoice[] = [
     {

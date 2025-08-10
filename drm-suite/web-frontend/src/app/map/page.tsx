@@ -66,6 +66,16 @@ export default function MapDashboard() {
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [valueRange, setValueRange] = useState({ min: 0, max: 10000000 });
 
+  useEffect(() => {
+    // Check localStorage for login information
+    const role = localStorage.getItem('userRole');
+    const email = localStorage.getItem('userEmail');
+
+    if (!role || !email) {
+      router.push('/login');
+    }
+  }, [router]);
+
   // Sample data for demonstration
   const projectLocations: ProjectLocation[] = [
     {

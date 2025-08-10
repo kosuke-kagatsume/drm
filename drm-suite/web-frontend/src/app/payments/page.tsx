@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface Payment {
@@ -24,6 +24,16 @@ export default function PaymentsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<string>('thisMonth');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMethod, setSelectedMethod] = useState<string>('all');
+
+  useEffect(() => {
+    // Check localStorage for login information
+    const role = localStorage.getItem('userRole');
+    const email = localStorage.getItem('userEmail');
+
+    if (!role || !email) {
+      router.push('/login');
+    }
+  }, [router]);
 
   const payments: Payment[] = [
     {

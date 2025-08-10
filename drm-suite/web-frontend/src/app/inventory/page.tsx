@@ -59,8 +59,11 @@ export default function InventoryPage() {
   });
 
   useEffect(() => {
-    const isLoggedIn = sessionStorage.getItem('isLoggedIn');
-    if (!isLoggedIn) {
+    // Check localStorage for login information
+    const role = localStorage.getItem('userRole');
+    const email = localStorage.getItem('userEmail');
+
+    if (!role || !email) {
       router.push('/login');
     }
   }, [router]);
