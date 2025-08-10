@@ -1,6 +1,7 @@
 {
-  "buildCommand": "cd drm-suite/web-frontend && npm install && npm run build",
-  "outputDirectory": "drm-suite/web-frontend/.next",
-  "installCommand": "cd drm-suite/web-frontend && npm install",
-  "framework": "nextjs"
+  "buildCommand": "npm install && npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "rootDirectory": "drm-suite/web-frontend"
 }
