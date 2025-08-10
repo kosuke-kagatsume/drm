@@ -34,6 +34,21 @@ export default function CreateEstimatePage() {
   const [showRAG, setShowRAG] = useState(false);
   const [ragQuery, setRagQuery] = useState('');
   const [ragResults, setRagResults] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Check localStorage for login information
+    if (typeof window !== 'undefined') {
+      const role = localStorage.getItem('userRole');
+      const email = localStorage.getItem('userEmail');
+
+      if (!role || !email) {
+        router.push('/login');
+      } else {
+        setIsLoading(false);
+      }
+    }
+  }, [router]);
 
   const [estimateData, setEstimateData] = useState({
     customerName: '',
@@ -185,6 +200,17 @@ export default function CreateEstimatePage() {
   );
   const totalProfit = totalAmount - totalCost;
   const avgProfitRate = totalAmount > 0 ? (totalProfit / totalAmount) * 100 : 0;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dandori-blue mx-auto"></div>
+          <p className="mt-4 text-gray-600">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

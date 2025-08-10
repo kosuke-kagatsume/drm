@@ -37,6 +37,22 @@ export default function EstimateDetailPage() {
   const router = useRouter();
   const params = useParams();
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Check localStorage for login information
+    if (typeof window !== 'undefined') {
+      const role = localStorage.getItem('userRole');
+      const email = localStorage.getItem('userEmail');
+
+      if (!role || !email) {
+        router.push('/login');
+      } else {
+        setIsLoading(false);
+      }
+    }
+  }, [router]);
+
   const [estimate, setEstimate] = useState<EstimateData>({
     id: params.id as string,
     customer: '田中建設株式会社',
@@ -257,6 +273,17 @@ export default function EstimateDetailPage() {
         return status;
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dandori-blue mx-auto"></div>
+          <p className="mt-4 text-gray-600">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
