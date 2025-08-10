@@ -12,7 +12,7 @@ interface QuickLoginAccount {
   department: string;
   permissions: string[];
   avatar: string;
-  color: string;
+  bgColor: string;
 }
 
 export default function LoginPage() {
@@ -30,7 +30,7 @@ export default function LoginPage() {
       department: '経営管理',
       permissions: ['スケジュール管理', '売上分析', '現場管理', '承認権限'],
       avatar: '👨‍💼',
-      color: 'from-dandori-blue to-dandori-sky',
+      bgColor: 'bg-gradient-to-br from-dandori-blue to-dandori-sky',
     },
     {
       name: '鈴木 一郎',
@@ -46,7 +46,7 @@ export default function LoginPage() {
         'チャット機能',
       ],
       avatar: '👷',
-      color: 'from-dandori-orange to-dandori-yellow',
+      bgColor: 'bg-gradient-to-br from-dandori-orange to-dandori-yellow',
     },
     {
       name: '佐藤 次郎',
@@ -57,7 +57,7 @@ export default function LoginPage() {
       department: '営業部',
       permissions: ['自分のスケジュール確認', '作業進捗登録', 'チャット機能'],
       avatar: '👨‍💻',
-      color: 'from-dandori-pink to-dandori-orange',
+      bgColor: 'bg-gradient-to-br from-dandori-pink to-dandori-orange',
     },
     {
       name: '山田 愛子',
@@ -68,7 +68,7 @@ export default function LoginPage() {
       department: '経理部',
       permissions: ['請求書作成', '入金管理', '財務分析', '月次報告'],
       avatar: '👩‍💼',
-      color: 'from-purple-500 to-dandori-pink',
+      bgColor: 'bg-gradient-to-br from-purple-500 to-dandori-pink',
     },
     {
       name: '木村 健太',
@@ -79,7 +79,7 @@ export default function LoginPage() {
       department: 'マーケティング部',
       permissions: ['キャンペーン管理', 'Web分析', 'SEO対策', 'SNS運用'],
       avatar: '📊',
-      color: 'from-dandori-yellow to-green-400',
+      bgColor: 'bg-gradient-to-br from-dandori-yellow to-green-400',
     },
   ];
 
@@ -127,7 +127,7 @@ export default function LoginPage() {
               >
                 {/* グラデーションバッジ */}
                 <div
-                  className={`absolute -top-3 -right-3 w-16 h-16 rounded-full bg-gradient-to-br ${account.color} flex items-center justify-center shadow-lg`}
+                  className={`absolute -top-3 -right-3 w-16 h-16 rounded-full ${account.bgColor} flex items-center justify-center shadow-lg`}
                 >
                   <span className="text-2xl">{account.avatar}</span>
                 </div>
