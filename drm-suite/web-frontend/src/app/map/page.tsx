@@ -45,13 +45,10 @@ const mapOptions = {
   fullscreenControl: true,
 };
 
-const libraries: (
-  | 'places'
-  | 'drawing'
-  | 'geometry'
-  | 'localContext'
-  | 'visualization'
-)[] = ['visualization', 'places'];
+const libraries: ('places' | 'drawing' | 'geometry' | 'visualization')[] = [
+  'visualization',
+  'places',
+];
 
 export default function MapDashboard() {
   const router = useRouter();
