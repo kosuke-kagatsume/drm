@@ -115,7 +115,17 @@ export default function LoginPage() {
             <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">
               ログイン
             </h2>
-            <form className="space-y-4">
+            <form
+              className="space-y-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                // デモ用：任意の入力でログイン可能
+                localStorage.setItem('userRole', '営業担当');
+                localStorage.setItem('userEmail', 'user@drm.com');
+                localStorage.setItem('userName', 'ユーザー');
+                router.push('/dashboard');
+              }}
+            >
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   メールアドレス
