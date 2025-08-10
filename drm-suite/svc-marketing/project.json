@@ -1,0 +1,39 @@
+{
+  "name": "svc-marketing",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "svc-marketing/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "webpack-cli build",
+        "args": ["--node-env=production"]
+      },
+      "configurations": {
+        "development": {
+          "args": ["--node-env=development"]
+        }
+      }
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": ["build"],
+      "options": {
+        "buildTarget": "svc-marketing:build",
+        "runBuildTargetDependencies": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "svc-marketing:build:development"
+        },
+        "production": {
+          "buildTarget": "svc-marketing:build:production"
+        }
+      }
+    }
+  },
+  "tags": []
+}

@@ -1,0 +1,24 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "esnext",
+    "lib": ["es2020", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@drm-suite/auth": ["libs/auth/src/index.ts"],
+      "@drm-suite/event-bus": ["libs/event-bus/src/index.ts"],
+      "@drm-suite/rag": ["libs/rag/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

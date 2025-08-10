@@ -1,0 +1,39 @@
+{
+  "name": "svc-estimate",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "svc-estimate/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "webpack-cli build",
+        "args": ["--node-env=production"]
+      },
+      "configurations": {
+        "development": {
+          "args": ["--node-env=development"]
+        }
+      }
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": ["build"],
+      "options": {
+        "buildTarget": "svc-estimate:build",
+        "runBuildTargetDependencies": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "svc-estimate:build:development"
+        },
+        "production": {
+          "buildTarget": "svc-estimate:build:production"
+        }
+      }
+    }
+  },
+  "tags": []
+}

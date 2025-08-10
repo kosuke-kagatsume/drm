@@ -1,0 +1,17 @@
+{
+  "name": "svc-marketing-e2e",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": ["svc-marketing"],
+  "projectType": "application",
+  "targets": {
+    "e2e": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{e2eProjectRoot}"],
+      "options": {
+        "jestConfig": "svc-marketing-e2e/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "dependsOn": ["svc-marketing:build", "svc-marketing:serve"]
+    }
+  }
+}

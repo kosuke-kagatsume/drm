@@ -1,0 +1,263 @@
+version: '3.8'
+
+services:
+  # PostgreSQL with PostGIS
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: drm-postgres
+    environment:
+      POSTGRES_USER: drm_user
+      POSTGRES_PASSWORD: drm_password
+      POSTGRES_DB: drm_db
+      POSTGRES_EXTENSIONS: postgis,pgvector
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - drm-network
+
+  # Redis for caching and queues
+  redis:
+    image: redis:7-alpine
+    container_name: drm-redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    networks:
+      - drm-network
+
+  # Kafka for event streaming
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: drm-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - drm-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: drm-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - '9092:9092'
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    networks:
+      - drm-network
+
+  # ClickHouse for analytics
+  clickhouse:
+    image: clickhouse/clickhouse-server:23.8
+    container_name: drm-clickhouse
+    ports:
+      - '8123:8123'
+      - '9000:9000'
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    environment:
+      CLICKHOUSE_USER: drm_ch_user
+      CLICKHOUSE_PASSWORD: drm_ch_password
+      CLICKHOUSE_DB: drm_analytics
+    networks:
+      - drm-network
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: .
+      dockerfile: apps/api-gateway/Dockerfile
+    container_name: drm-api-gateway
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgresql://drm_user:drm_password@postgres:5432/drm_db
+      REDIS_URL: redis://redis:6379
+      KAFKA_BROKERS: kafka:9092
+      JWT_SECRET: your-super-secret-jwt-key
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    networks:
+      - drm-network
+    volumes:
+      - ./apps/api-gateway:/app/apps/api-gateway
+      - ./libs:/app/libs
+
+  # Estimate Service
+  svc-estimate:
+    build:
+      context: .
+      dockerfile: apps/svc-estimate/Dockerfile
+    container_name: drm-svc-estimate
+    ports:
+      - '3001:3001'
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgresql://drm_user:drm_password@postgres:5432/drm_db
+      REDIS_URL: redis://redis:6379
+      KAFKA_BROKERS: kafka:9092
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    networks:
+      - drm-network
+    volumes:
+      - ./apps/svc-estimate:/app/apps/svc-estimate
+      - ./libs:/app/libs
+
+  # Inventory Service
+  svc-inventory:
+    build:
+      context: .
+      dockerfile: apps/svc-inventory/Dockerfile
+    container_name: drm-svc-inventory
+    ports:
+      - '3002:3002'
+    environment:
+      NODE_ENV: development
+      PORT: 3002
+      DATABASE_URL: postgresql://drm_user:drm_password@postgres:5432/drm_db
+      REDIS_URL: redis://redis:6379
+      KAFKA_BROKERS: kafka:9092
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    networks:
+      - drm-network
+    volumes:
+      - ./apps/svc-inventory:/app/apps/svc-inventory
+      - ./libs:/app/libs
+
+  # Booking Service
+  svc-booking:
+    build:
+      context: .
+      dockerfile: apps/svc-booking/Dockerfile
+    container_name: drm-svc-booking
+    ports:
+      - '3003:3003'
+    environment:
+      NODE_ENV: development
+      PORT: 3003
+      DATABASE_URL: postgresql://drm_user:drm_password@postgres:5432/drm_db
+      REDIS_URL: redis://redis:6379
+      KAFKA_BROKERS: kafka:9092
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    networks:
+      - drm-network
+    volumes:
+      - ./apps/svc-booking:/app/apps/svc-booking
+      - ./libs:/app/libs
+
+  # Marketing Service
+  svc-marketing:
+    build:
+      context: .
+      dockerfile: apps/svc-marketing/Dockerfile
+    container_name: drm-svc-marketing
+    ports:
+      - '3004:3004'
+    environment:
+      NODE_ENV: development
+      PORT: 3004
+      DATABASE_URL: postgresql://drm_user:drm_password@postgres:5432/drm_db
+      CLICKHOUSE_URL: http://clickhouse:8123
+      REDIS_URL: redis://redis:6379
+      KAFKA_BROKERS: kafka:9092
+    depends_on:
+      - postgres
+      - clickhouse
+      - redis
+      - kafka
+    networks:
+      - drm-network
+    volumes:
+      - ./apps/svc-marketing:/app/apps/svc-marketing
+      - ./libs:/app/libs
+
+  # RAG API (Python/FastAPI)
+  rag-api:
+    build:
+      context: ./apps/rag-api
+      dockerfile: Dockerfile
+    container_name: drm-rag-api
+    ports:
+      - '8000:8000'
+    environment:
+      PYTHONPATH: /app
+      DATABASE_URL: postgresql://drm_user:drm_password@postgres:5432/drm_db
+      REDIS_URL: redis://redis:6379
+      KAFKA_BROKERS: kafka:9092
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    networks:
+      - drm-network
+    volumes:
+      - ./apps/rag-api:/app
+
+  # Prometheus for monitoring
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: drm-prometheus
+    ports:
+      - '9090:9090'
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - drm-network
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:10.1.0
+    container_name: drm-grafana
+    ports:
+      - '3030:3000'
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: redis-datasource
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    networks:
+      - drm-network
+
+networks:
+  drm-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  clickhouse_data:
+  prometheus_data:
+  grafana_data:
