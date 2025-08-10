@@ -76,7 +76,7 @@ services:
   api-gateway:
     build:
       context: .
-      dockerfile: apps/api-gateway/Dockerfile
+      dockerfile: api-gateway/Dockerfile
     container_name: drm-api-gateway
     ports:
       - '3000:3000'
@@ -94,14 +94,14 @@ services:
     networks:
       - drm-network
     volumes:
-      - ./apps/api-gateway:/app/apps/api-gateway
+      - ./api-gateway:/app/api-gateway
       - ./libs:/app/libs
 
   # Estimate Service
   svc-estimate:
     build:
       context: .
-      dockerfile: apps/svc-estimate/Dockerfile
+      dockerfile: svc-estimate/Dockerfile
     container_name: drm-svc-estimate
     ports:
       - '3001:3001'
@@ -118,14 +118,14 @@ services:
     networks:
       - drm-network
     volumes:
-      - ./apps/svc-estimate:/app/apps/svc-estimate
+      - ./svc-estimate:/app/svc-estimate
       - ./libs:/app/libs
 
   # Inventory Service
   svc-inventory:
     build:
       context: .
-      dockerfile: apps/svc-inventory/Dockerfile
+      dockerfile: svc-inventory/Dockerfile
     container_name: drm-svc-inventory
     ports:
       - '3002:3002'
@@ -142,14 +142,14 @@ services:
     networks:
       - drm-network
     volumes:
-      - ./apps/svc-inventory:/app/apps/svc-inventory
+      - ./svc-inventory:/app/svc-inventory
       - ./libs:/app/libs
 
   # Booking Service
   svc-booking:
     build:
       context: .
-      dockerfile: apps/svc-booking/Dockerfile
+      dockerfile: svc-booking/Dockerfile
     container_name: drm-svc-booking
     ports:
       - '3003:3003'
@@ -166,14 +166,14 @@ services:
     networks:
       - drm-network
     volumes:
-      - ./apps/svc-booking:/app/apps/svc-booking
+      - ./svc-booking:/app/svc-booking
       - ./libs:/app/libs
 
   # Marketing Service
   svc-marketing:
     build:
       context: .
-      dockerfile: apps/svc-marketing/Dockerfile
+      dockerfile: svc-marketing/Dockerfile
     container_name: drm-svc-marketing
     ports:
       - '3004:3004'
@@ -192,7 +192,7 @@ services:
     networks:
       - drm-network
     volumes:
-      - ./apps/svc-marketing:/app/apps/svc-marketing
+      - ./svc-marketing:/app/svc-marketing
       - ./libs:/app/libs
 
   # RAG API (Python/FastAPI)
@@ -218,6 +218,28 @@ services:
       - drm-network
     volumes:
       - ./apps/rag-api:/app
+
+  # Web Frontend (Next.js)
+  web-frontend:
+    build:
+      context: ./web-frontend
+      dockerfile: Dockerfile
+    container_name: drm-web-frontend
+    ports:
+      - '3001:3000'
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://api-gateway:3000
+      NEXT_PUBLIC_RAG_API_URL: http://rag-api:8000
+    depends_on:
+      - api-gateway
+      - rag-api
+    networks:
+      - drm-network
+    volumes:
+      - ./web-frontend:/app
+      - /app/node_modules
+      - /app/.next
 
   # Prometheus for monitoring
   prometheus:

@@ -1,31 +1,51 @@
-# DRM Suite v1.0 - Dandori Relation Management System
+# DRM Suite v1.0 - マイクロサービス型CRM + RAG Copilot
 
-マイクロサービス型CRM + RAG Copilotシステム
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue.svg)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-14.2-black.svg)](https://nextjs.org/)
+[![NestJS](https://img.shields.io/badge/NestJS-10.0-red.svg)](https://nestjs.com/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.109-green.svg)](https://fastapi.tiangolo.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue.svg)](https://www.postgresql.org/)
 
-## 🏗️ アーキテクチャ
+## 🏗️ アーキテクチャ概要
 
-### Apps (マイクロサービス)
+DRM Suite（Dandori Relation Management）は、建設・リフォーム業界向けのマイクロサービス型CRMシステムです。
 
-- **api-gateway**: NestJS + tRPC + OpenAPI - APIゲートウェイ
-- **svc-estimate**: 見積・原価・発注管理
-- **svc-inventory**: 在庫・棚卸管理
-- **svc-booking**: 会議室／車両予約管理
-- **svc-marketing**: キャンペーン・CPA分析 (ClickHouse)
-- **rag-api**: LangChain (FastAPI) - RAG Copilot
+### 📦 サービス構成
 
-### Libs (共通ライブラリ)
+- **api-gateway** - API Gateway（NestJS + tRPC）
+- **svc-estimate** - 見積・原価・発注サービス
+- **svc-inventory** - 在庫・棚卸サービス
+- **svc-booking** - 会議室・車両予約サービス
+- **svc-marketing** - キャンペーン・CPA分析サービス
+- **rag-api** - RAG Copilot（FastAPI + LangChain）
+- **web-frontend** - フロントエンド（Next.js + shadcn/ui）
 
-- **auth**: OpenFGA RBAC認証・認可
-- **event-bus**: Apache Kafka イベントストリーミング
-- **rag**: 埋め込み生成・検索・マスキング
+### 🛠️ 技術スタック
 
-### データストア
+#### Backend
 
-- **PostgreSQL + PostGIS**: メインDB（地理空間データ対応）
-- **pgvector**: ベクトルDB（RAG用）
-- **ClickHouse**: 分析用データベース
-- **Redis**: キャッシュ・キュー
-- **Kafka**: イベントストリーミング
+- **NestJS** - マイクロサービスフレームワーク
+- **FastAPI** - RAG API（Python）
+- **Prisma** - ORM & マイグレーション
+- **PostgreSQL + PostGIS + pgvector** - メインDB
+- **ClickHouse** - 分析データ
+- **Redis** - キャッシュ & セッション
+- **Apache Kafka** - イベントストリーミング
+
+#### Frontend
+
+- **Next.js 14** - App Router
+- **TypeScript** - 型安全性
+- **Tailwind CSS** - スタイリング
+- **shadcn/ui** - UIコンポーネント
+
+#### AI & RAG
+
+- **OpenAI GPT-4** - メインLLM
+- **Claude 3 Haiku** - 長文要約
+- **text-embedding-3-large** - 埋め込みモデル
+- **LangChain** - RAGフレームワーク
+- **pgvector** - ベクトル検索
 
 ## Run tasks
 
