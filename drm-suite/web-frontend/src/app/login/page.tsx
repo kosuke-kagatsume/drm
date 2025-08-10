@@ -164,7 +164,7 @@ export default function LoginPage() {
                 </div>
 
                 {selectedAccount?.email === account.email && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-dandori/90 rounded-2xl animate-fade-in">
+                  <div className="absolute inset-0 flex items-center justify-center bg-dandori-blue/90 rounded-2xl animate-fade-in">
                     <div className="text-white text-center">
                       <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-white/30 border-t-white mb-2"></div>
                       <p className="text-sm font-medium">ログイン中...</p>

@@ -16,6 +16,23 @@ module.exports = {
     '!./{src,pages,components,app}/**/*.{stories,spec}.{ts,tsx,js,jsx,html}',
     //     ...createGlobPatternsForDependencies(__dirname)
   ],
+  safelist: [
+    {
+      pattern: /bg-gradient-(to-br|dandori|warm)/,
+      variants: ['hover'],
+    },
+    {
+      pattern:
+        /from-(dandori-blue|dandori-orange|dandori-pink|dandori-yellow|purple-500)/,
+    },
+    {
+      pattern:
+        /to-(dandori-sky|dandori-yellow|dandori-orange|dandori-pink|green-400)/,
+    },
+    'animate-fade-in',
+    'animate-spin',
+    'animate-pulse',
+  ],
   theme: {
     extend: {
       colors: {
