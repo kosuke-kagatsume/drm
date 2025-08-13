@@ -1,8 +1,8 @@
 {
-  "buildCommand": "npx nx build web-frontend",
-  "outputDirectory": "dist/web-frontend/.next",
+  "buildCommand": "cd web-frontend && npm install && npm run build",
+  "outputDirectory": "web-frontend/.next",
   "framework": "nextjs",
-  "installCommand": "npm install",
+  "installCommand": "echo 'Skipping root install'",
   "regions": ["hnd1"],
   "env": {
     "NEXT_PUBLIC_CUSTOMER_SERVICE_URL": "http://localhost:3001",
