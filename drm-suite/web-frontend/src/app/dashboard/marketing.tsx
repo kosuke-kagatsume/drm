@@ -1132,12 +1132,6 @@ export default function MarketingDashboard({
                 📊 キャンペーンレポート
               </button>
               <button
-                onClick={handleCampaignCreate}
-                className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
-              >
-                🚀 新規キャンペーン
-              </button>
-              <button
                 onClick={() => router.push('/marketing/analytics')}
                 className="w-full bg-orange-600 text-white py-2 rounded hover:bg-orange-700"
               >
