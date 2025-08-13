@@ -4,12 +4,6 @@
   "framework": "nextjs",
   "installCommand": "npm install",
   "regions": ["hnd1"],
-  "functions": {
-    "web-frontend/src/app/api/*.ts": {
-      "runtime": "nodejs20.x",
-      "maxDuration": 10
-    }
-  },
   "env": {
     "NEXT_PUBLIC_CUSTOMER_SERVICE_URL": "http://localhost:3001",
     "NEXT_PUBLIC_ESTIMATE_SERVICE_URL": "http://localhost:3003",
