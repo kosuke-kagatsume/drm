@@ -71,112 +71,126 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
 
   return (
     <div className="space-y-6">
-      {/* 支店KPIダッシュボード */}
-      <div className="bg-gradient-dandori text-white rounded-2xl shadow-xl p-6 animate-fade-in">
-        <h2 className="text-2xl font-bold mb-6">📊 支店パフォーマンス</h2>
+      {/* BRANCH KPI DASHBOARD */}
+      <div className="bg-zinc-950 border border-zinc-800 p-6">
+        <h2 className="text-sm font-normal text-white tracking-widest mb-6">
+          BRANCH PERFORMANCE
+        </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div>
-            <p className="text-white/80 text-sm">粗利率</p>
+          <div className="border border-zinc-800 p-4">
+            <p className="text-xs text-zinc-500 tracking-wider mb-2">
+              GROSS PROFIT
+            </p>
             <p
-              className={`text-3xl font-bold ${
+              className={`text-3xl font-thin ${
                 branchKPI.grossProfit >= branchKPI.targetProfit
-                  ? 'text-dandori-yellow'
-                  : 'text-dandori-pink'
+                  ? 'text-emerald-500'
+                  : 'text-amber-500'
               }`}
             >
               {branchKPI.grossProfit}%
             </p>
-            <p className="text-xs text-white/60 mt-1">
-              目標: {branchKPI.targetProfit}%
+            <p className="text-xs text-zinc-600 tracking-wider mt-2">
+              TARGET: {branchKPI.targetProfit}%
             </p>
           </div>
-          <div>
-            <p className="text-white/80 text-sm">月間契約数</p>
-            <p className="text-3xl font-bold">{branchKPI.contracts}件</p>
-            <div className="mt-2 bg-white/20 rounded-full h-2">
+          <div className="border border-zinc-800 p-4">
+            <p className="text-xs text-zinc-500 tracking-wider mb-2">
+              MONTHLY CONTRACTS
+            </p>
+            <p className="text-3xl font-thin text-white">
+              {branchKPI.contracts}
+            </p>
+            <div className="mt-3 bg-zinc-900 h-1">
               <div
-                className="bg-dandori-yellow h-2 rounded-full transition-all duration-500"
+                className="bg-blue-500/50 h-1 transition-all duration-500"
                 style={{
                   width: `${(branchKPI.contracts / branchKPI.targetContracts) * 100}%`,
                 }}
               />
             </div>
-            <p className="text-xs text-white/60 mt-1">
-              目標: {branchKPI.targetContracts}件
+            <p className="text-xs text-zinc-600 tracking-wider mt-2">
+              TARGET: {branchKPI.targetContracts}
             </p>
           </div>
-          <div className="bg-dandori-orange/20 backdrop-blur-sm p-3 rounded-xl border border-dandori-orange/30">
-            <p className="text-white/80 text-sm">承認待ち</p>
-            <p className="text-3xl font-bold text-white">
-              {branchKPI.pendingApprovals}件
+          <div className="border border-amber-500/30 p-4">
+            <p className="text-xs text-zinc-500 tracking-wider mb-2">PENDING</p>
+            <p className="text-3xl font-thin text-amber-500">
+              {branchKPI.pendingApprovals}
             </p>
-            <p className="text-xs text-white/70 mt-1">要確認</p>
+            <p className="text-xs text-amber-500/70 tracking-wider mt-2">
+              REQUIRES ACTION
+            </p>
           </div>
-          <div className="bg-dandori-pink/20 backdrop-blur-sm p-3 rounded-xl border border-dandori-pink/30">
-            <p className="text-white/80 text-sm">遅延案件</p>
-            <p className="text-3xl font-bold text-white">
-              {branchKPI.delayedProjects}件
+          <div className="border border-red-500/30 p-4">
+            <p className="text-xs text-zinc-500 tracking-wider mb-2">DELAYED</p>
+            <p className="text-3xl font-thin text-red-500">
+              {branchKPI.delayedProjects}
             </p>
-            <p className="text-xs text-white/70 mt-1">要対応</p>
+            <p className="text-xs text-red-500/70 tracking-wider mt-2">
+              CRITICAL
+            </p>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          {/* 承認待ち案件 */}
-          <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h2 className="text-lg font-semibold">✅ 本日の承認待ち案件</h2>
+          {/* PENDING APPROVALS */}
+          <div className="bg-zinc-950 border border-zinc-800">
+            <div className="px-6 py-4 border-b border-zinc-800">
+              <h2 className="text-sm font-normal text-white tracking-widest">
+                TODAY'S PENDING APPROVALS
+              </h2>
             </div>
             <div className="p-6">
               <div className="space-y-4">
                 {pendingApprovals.map((item) => (
                   <div
                     key={item.id}
-                    className={`border rounded-xl p-4 hover:border-dandori-blue transition-colors duration-200 ${
+                    className={`border p-4 hover:border-zinc-700 transition-colors duration-200 ${
                       item.urgent
-                        ? 'border-dandori-pink bg-dandori-pink/5'
-                        : 'border-gray-200'
+                        ? 'border-red-500/30 bg-red-500/5'
+                        : 'border-zinc-800'
                     }`}
                   >
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-medium text-gray-900">
-                            {item.customer}
+                        <div className="flex items-center gap-3">
+                          <h4 className="text-white font-light tracking-wider">
+                            {item.customer.toUpperCase()}
                           </h4>
                           {item.urgent && (
-                            <span className="px-2 py-0.5 bg-dandori-pink text-white text-xs rounded-full animate-pulse">
-                              至急
+                            <span className="px-3 py-1 border border-red-500/50 text-red-500 text-xs tracking-wider">
+                              URGENT
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">
-                          担当: {item.sales}
+                        <p className="text-xs text-zinc-500 tracking-wider mt-1">
+                          SALES: {item.sales.toUpperCase()}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-bold text-dandori-blue">
+                        <p className="text-xl font-thin text-white">
                           ¥{(item.amount / 1000000).toFixed(1)}M
                         </p>
                         <p
-                          className={`text-sm ${
+                          className={`text-xs tracking-wider mt-1 ${
                             item.profit >= 20
-                              ? 'text-dandori-blue'
-                              : 'text-dandori-orange'
+                              ? 'text-emerald-500'
+                              : 'text-amber-500'
                           }`}
                         >
-                          粗利: {item.profit}%
+                          MARGIN: {item.profit}%
                         </p>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <button className="flex-1 px-3 py-1.5 bg-gradient-dandori text-white rounded-lg text-sm hover:shadow-md transform hover:scale-105 transition-all duration-200">
-                        承認
+                    <div className="flex gap-3 mt-4">
+                      <button className="flex-1 px-4 py-2 bg-white text-black text-xs tracking-wider hover:bg-zinc-200 transition-colors">
+                        APPROVE
                       </button>
-                      <button className="flex-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors duration-200">
-                        詳細確認
+                      <button className="flex-1 px-4 py-2 border border-zinc-800 text-white text-xs tracking-wider hover:bg-zinc-900 transition-colors">
+                        REVIEW
                       </button>
                     </div>
                   </div>
@@ -185,38 +199,42 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
             </div>
           </div>
 
-          {/* チームパフォーマンス */}
-          <div className="bg-white rounded-2xl shadow-lg mt-6 hover:shadow-xl transition-shadow duration-300">
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h2 className="text-lg font-semibold">👥 チームパフォーマンス</h2>
+          {/* TEAM PERFORMANCE */}
+          <div className="bg-zinc-950 border border-zinc-800 mt-6">
+            <div className="px-6 py-4 border-b border-zinc-800">
+              <h2 className="text-sm font-normal text-white tracking-widest">
+                TEAM PERFORMANCE
+              </h2>
             </div>
             <div className="p-6">
               <div className="space-y-4">
                 {staffPerformance.map((staff) => (
                   <div
                     key={staff.name}
-                    className="border border-gray-200 rounded-xl p-4 hover:border-dandori-blue transition-colors duration-200"
+                    className="border border-zinc-800 p-4 hover:border-zinc-700 transition-colors duration-200"
                   >
                     <div className="flex justify-between items-center">
                       <div>
-                        <h4 className="font-medium text-gray-900">
-                          {staff.name}
+                        <h4 className="text-white font-light tracking-wider">
+                          {staff.name.toUpperCase()}
                         </h4>
-                        <p className="text-sm text-gray-600">{staff.role}</p>
-                        <div className="mt-2 flex gap-4">
-                          <span className="text-sm">
-                            契約:{' '}
-                            <span className="font-bold">
-                              {staff.contracts}件
+                        <p className="text-xs text-zinc-500 tracking-wider">
+                          {staff.role.toUpperCase()}
+                        </p>
+                        <div className="mt-3 flex gap-6">
+                          <span className="text-xs text-zinc-400">
+                            CONTRACTS:{' '}
+                            <span className="text-white font-light">
+                              {staff.contracts}
                             </span>
                           </span>
-                          <span className="text-sm">
-                            粗利:{' '}
+                          <span className="text-xs text-zinc-400">
+                            MARGIN:{' '}
                             <span
-                              className={`font-bold ${
+                              className={`font-light ${
                                 staff.profit >= 20
-                                  ? 'text-dandori-blue'
-                                  : 'text-dandori-orange'
+                                  ? 'text-emerald-500'
+                                  : 'text-amber-500'
                               }`}
                             >
                               {staff.profit}%
@@ -225,29 +243,29 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
                         </div>
                       </div>
                       <span
-                        className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        className={`px-3 py-1 border text-xs tracking-wider ${
                           staff.status === 'good'
-                            ? 'bg-dandori-blue/10 text-dandori-blue'
+                            ? 'border-emerald-500/50 text-emerald-500'
                             : staff.status === 'warning'
-                              ? 'bg-dandori-yellow/20 text-dandori-orange'
-                              : 'bg-dandori-pink/10 text-dandori-pink'
+                              ? 'border-amber-500/50 text-amber-500'
+                              : 'border-red-500/50 text-red-500'
                         }`}
                       >
                         {staff.status === 'good'
-                          ? '好調'
+                          ? 'GOOD'
                           : staff.status === 'warning'
-                            ? '要支援'
-                            : '要改善'}
+                            ? 'WARNING'
+                            : 'CRITICAL'}
                       </span>
                     </div>
-                    <div className="mt-3 bg-gray-100 rounded-full h-2 overflow-hidden">
+                    <div className="mt-3 bg-zinc-900 h-1">
                       <div
-                        className={`h-2 rounded-full transition-all duration-500 ${
+                        className={`h-1 transition-all duration-500 ${
                           staff.status === 'good'
-                            ? 'bg-gradient-to-r from-dandori-blue to-dandori-sky'
+                            ? 'bg-emerald-500/50'
                             : staff.status === 'warning'
-                              ? 'bg-gradient-to-r from-dandori-yellow to-dandori-orange'
-                              : 'bg-gradient-to-r from-dandori-pink to-dandori-orange'
+                              ? 'bg-amber-500/50'
+                              : 'bg-red-500/50'
                         }`}
                         style={{ width: `${(staff.contracts / 10) * 100}%` }}
                       />
@@ -258,162 +276,212 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
             </div>
           </div>
 
-          {/* 顧客・営業管理 */}
-          <div className="bg-white rounded-2xl shadow-lg mt-6 overflow-hidden">
-            <div className="px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
-              <h3 className="font-semibold">👥 顧客・営業管理</h3>
+          {/* CUSTOMER & SALES MANAGEMENT */}
+          <div className="bg-zinc-950 border border-zinc-800 mt-6">
+            <div className="px-6 py-4 border-b border-zinc-800">
+              <h3 className="text-sm font-normal text-white tracking-widest">
+                CUSTOMER & SALES MANAGEMENT
+              </h3>
             </div>
             <div className="p-4">
               <button
                 onClick={() => router.push('/customers')}
-                className="w-full mb-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white p-4 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                className="w-full mb-4 border border-zinc-800 p-6 hover:bg-zinc-900 transition-colors"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <span className="text-3xl mr-3">👥</span>
+                    <div className="w-12 h-12 border border-zinc-700 flex items-center justify-center text-zinc-400 font-light text-lg mr-4">
+                      01
+                    </div>
                     <div className="text-left">
-                      <p className="font-bold">顧客管理センター</p>
-                      <p className="text-xs text-white/80">
-                        支店全体の顧客データベース
+                      <p className="text-white font-light tracking-wider">
+                        CUSTOMER CENTER
+                      </p>
+                      <p className="text-xs text-zinc-500 tracking-wider mt-1">
+                        BRANCH DATABASE
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-xl font-bold">125</p>
-                    <p className="text-xs">顧客数</p>
+                    <p className="text-2xl font-thin text-white">125</p>
+                    <p className="text-xs text-zinc-500 tracking-wider">
+                      CUSTOMERS
+                    </p>
                   </div>
                 </div>
               </button>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => router.push('/estimates')}
-                  className="text-center bg-gradient-to-r from-dandori-blue/5 to-dandori-sky/5 p-3 rounded-lg hover:from-dandori-blue/10 hover:to-dandori-sky/10 transition-all duration-200"
+                  className="text-center border border-zinc-800 p-4 hover:bg-zinc-900 transition-colors"
                 >
-                  <p className="text-2xl mb-1">📝</p>
-                  <p className="text-xs font-medium text-gray-900">見積</p>
-                  <p className="text-xs text-gray-600">15件</p>
+                  <p className="text-xs text-zinc-500 tracking-wider mb-2">
+                    02
+                  </p>
+                  <p className="text-xs text-white tracking-wider">ESTIMATES</p>
+                  <p className="text-xs text-zinc-600 tracking-wider mt-1">
+                    15 ITEMS
+                  </p>
                 </button>
                 <button
                   onClick={() => router.push('/contracts')}
-                  className="text-center bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-lg hover:from-green-100 hover:to-emerald-100 transition-all duration-200"
+                  className="text-center border border-zinc-800 p-4 hover:bg-zinc-900 transition-colors"
                 >
-                  <p className="text-2xl mb-1">📄</p>
-                  <p className="text-xs font-medium text-gray-900">契約</p>
-                  <p className="text-xs text-gray-600">5件</p>
+                  <p className="text-xs text-zinc-500 tracking-wider mb-2">
+                    03
+                  </p>
+                  <p className="text-xs text-white tracking-wider">CONTRACTS</p>
+                  <p className="text-xs text-zinc-600 tracking-wider mt-1">
+                    5 ITEMS
+                  </p>
                 </button>
               </div>
             </div>
           </div>
 
-          {/* 財務管理 */}
-          <div className="bg-white rounded-2xl shadow-lg mt-6 overflow-hidden">
-            <div className="px-6 py-4 bg-gradient-to-r from-dandori-blue to-dandori-sky text-white">
-              <h3 className="font-semibold">💰 支店財務管理</h3>
+          {/* FINANCIAL MANAGEMENT */}
+          <div className="bg-zinc-950 border border-zinc-800 mt-6">
+            <div className="px-6 py-4 border-b border-zinc-800">
+              <h3 className="text-sm font-normal text-white tracking-widest">
+                BRANCH FINANCIAL MANAGEMENT
+              </h3>
             </div>
             <div className="p-4">
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-3">
                 <button
                   onClick={() => router.push('/invoices')}
-                  className="text-center bg-gradient-to-r from-dandori-orange/5 to-dandori-yellow/5 p-3 rounded-lg hover:from-dandori-orange/10 hover:to-dandori-yellow/10 transition-all duration-200"
+                  className="text-center border border-zinc-800 p-4 hover:bg-zinc-900 transition-colors"
                 >
-                  <p className="text-2xl mb-1">📋</p>
-                  <p className="text-xs font-medium text-gray-900">請求</p>
-                  <p className="text-xs text-gray-600">8件</p>
+                  <p className="text-xs text-zinc-500 tracking-wider mb-2">
+                    04
+                  </p>
+                  <p className="text-xs text-white tracking-wider">INVOICES</p>
+                  <p className="text-xs text-zinc-600 tracking-wider mt-1">8</p>
                 </button>
                 <button
                   onClick={() => router.push('/payments')}
-                  className="text-center bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-lg hover:from-green-100 hover:to-emerald-100 transition-all duration-200"
+                  className="text-center border border-zinc-800 p-4 hover:bg-zinc-900 transition-colors"
                 >
-                  <p className="text-2xl mb-1">💵</p>
-                  <p className="text-xs font-medium text-gray-900">入金</p>
-                  <p className="text-xs text-gray-600">¥8M</p>
+                  <p className="text-xs text-zinc-500 tracking-wider mb-2">
+                    05
+                  </p>
+                  <p className="text-xs text-white tracking-wider">PAYMENTS</p>
+                  <p className="text-xs text-zinc-600 tracking-wider mt-1">
+                    ¥8M
+                  </p>
                 </button>
                 <button
                   onClick={() => router.push('/expenses')}
-                  className="text-center bg-gradient-to-r from-red-50 to-pink-50 p-3 rounded-lg hover:from-red-100 hover:to-pink-100 transition-all duration-200"
+                  className="text-center border border-zinc-800 p-4 hover:bg-zinc-900 transition-colors"
                 >
-                  <p className="text-2xl mb-1">💳</p>
-                  <p className="text-xs font-medium text-gray-900">経費</p>
-                  <p className="text-xs text-gray-600">¥2M</p>
+                  <p className="text-xs text-zinc-500 tracking-wider mb-2">
+                    06
+                  </p>
+                  <p className="text-xs text-white tracking-wider">EXPENSES</p>
+                  <p className="text-xs text-zinc-600 tracking-wider mt-1">
+                    ¥2M
+                  </p>
                 </button>
               </div>
             </div>
           </div>
 
-          {/* 統合財務分析ダッシュボード */}
-          <div className="bg-white rounded-2xl shadow-lg mt-6 overflow-hidden">
-            <div className="px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
-              <h3 className="font-semibold">📊 支店統合財務分析</h3>
+          {/* INTEGRATED FINANCIAL ANALYSIS */}
+          <div className="bg-zinc-950 border border-zinc-800 mt-6">
+            <div className="px-6 py-4 border-b border-zinc-800">
+              <h3 className="text-sm font-normal text-white tracking-widest">
+                BRANCH INTEGRATED FINANCIAL ANALYSIS
+              </h3>
             </div>
             <div className="p-6">
-              {/* 主要財務指標 */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <h5 className="font-bold text-green-800 mb-2">
-                    💰 収益性指標
+              {/* KEY FINANCIAL METRICS */}
+              <div className="grid grid-cols-2 gap-6 mb-6">
+                <div className="border border-zinc-800 p-4">
+                  <h5 className="text-xs font-normal text-white tracking-widest mb-4">
+                    PROFITABILITY
                   </h5>
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-3 text-xs">
                     <div className="flex justify-between">
-                      <span>営業利益率</span>
-                      <span className="font-bold">23.4%</span>
+                      <span className="text-zinc-500 tracking-wider">
+                        OPERATING MARGIN
+                      </span>
+                      <span className="text-white font-light">23.4%</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>粗利益率</span>
-                      <span className="font-bold">35.8%</span>
+                      <span className="text-zinc-500 tracking-wider">
+                        GROSS MARGIN
+                      </span>
+                      <span className="text-white font-light">35.8%</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>ROI</span>
-                      <span className="font-bold">18.7%</span>
+                      <span className="text-zinc-500 tracking-wider">ROI</span>
+                      <span className="text-white font-light">18.7%</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h5 className="font-bold text-blue-800 mb-2">📈 成長指標</h5>
-                  <div className="space-y-2 text-sm">
+                <div className="border border-zinc-800 p-4">
+                  <h5 className="text-xs font-normal text-white tracking-widest mb-4">
+                    GROWTH METRICS
+                  </h5>
+                  <div className="space-y-3 text-xs">
                     <div className="flex justify-between">
-                      <span>売上成長率</span>
-                      <span className="font-bold text-green-600">+12.3%</span>
+                      <span className="text-zinc-500 tracking-wider">
+                        SALES GROWTH
+                      </span>
+                      <span className="text-emerald-500 font-light">
+                        +12.3%
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span>契約数成長</span>
-                      <span className="font-bold text-green-600">+8.5%</span>
+                      <span className="text-zinc-500 tracking-wider">
+                        CONTRACT GROWTH
+                      </span>
+                      <span className="text-emerald-500 font-light">+8.5%</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>市場シェア</span>
-                      <span className="font-bold">15.2%</span>
+                      <span className="text-zinc-500 tracking-wider">
+                        MARKET SHARE
+                      </span>
+                      <span className="text-white font-light">15.2%</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* 予算管理 */}
-              <div className="bg-yellow-50 p-4 rounded-lg mb-4">
-                <h5 className="font-bold text-yellow-800 mb-2">
-                  📊 予算執行状況
+              {/* BUDGET MANAGEMENT */}
+              <div className="border border-zinc-800 p-4 mb-4">
+                <h5 className="text-xs font-normal text-white tracking-widest mb-4">
+                  BUDGET EXECUTION
                 </h5>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>月次予算</span>
-                      <span>¥45M / ¥50M</span>
+                    <div className="flex justify-between text-xs mb-2">
+                      <span className="text-zinc-500 tracking-wider">
+                        MONTHLY BUDGET
+                      </span>
+                      <span className="text-white font-light">¥45M / ¥50M</span>
                     </div>
-                    <div className="w-full bg-yellow-200 rounded-full h-2">
+                    <div className="w-full bg-zinc-900 h-1">
                       <div
-                        className="bg-yellow-600 h-2 rounded-full"
+                        className="bg-amber-500/50 h-1"
                         style={{ width: '90%' }}
                       ></div>
                     </div>
                   </div>
                   <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>経費予算</span>
-                      <span>¥8.5M / ¥10M</span>
+                    <div className="flex justify-between text-xs mb-2">
+                      <span className="text-zinc-500 tracking-wider">
+                        EXPENSE BUDGET
+                      </span>
+                      <span className="text-white font-light">
+                        ¥8.5M / ¥10M
+                      </span>
                     </div>
-                    <div className="w-full bg-yellow-200 rounded-full h-2">
+                    <div className="w-full bg-zinc-900 h-1">
                       <div
-                        className="bg-green-500 h-2 rounded-full"
+                        className="bg-emerald-500/50 h-1"
                         style={{ width: '85%' }}
                       ></div>
                     </div>
@@ -421,85 +489,109 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
                 </div>
               </div>
 
-              {/* クイックアクセス */}
-              <div className="grid grid-cols-3 gap-2">
+              {/* QUICK ACCESS */}
+              <div className="grid grid-cols-3 gap-3">
                 <button
                   onClick={() => router.push('/expenses')}
-                  className="p-3 bg-red-50 rounded-lg hover:bg-red-100 transition text-center"
+                  className="p-4 border border-zinc-800 hover:bg-zinc-900 transition text-center"
                 >
-                  <div className="text-xl mb-1">💳</div>
-                  <div className="text-xs font-medium">経費管理</div>
+                  <div className="text-xs text-zinc-500 tracking-wider mb-2">
+                    07
+                  </div>
+                  <div className="text-xs text-white tracking-wider">
+                    EXPENSES
+                  </div>
                 </button>
                 <button
                   onClick={() => router.push('/inventory')}
-                  className="p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition text-center"
+                  className="p-4 border border-zinc-800 hover:bg-zinc-900 transition text-center"
                 >
-                  <div className="text-xl mb-1">📦</div>
-                  <div className="text-xs font-medium">在庫管理</div>
+                  <div className="text-xs text-zinc-500 tracking-wider mb-2">
+                    08
+                  </div>
+                  <div className="text-xs text-white tracking-wider">
+                    INVENTORY
+                  </div>
                 </button>
-                <button className="p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition text-center">
-                  <div className="text-xl mb-1">📊</div>
-                  <div className="text-xs font-medium">詳細分析</div>
+                <button className="p-4 border border-zinc-800 hover:bg-zinc-900 transition text-center">
+                  <div className="text-xs text-zinc-500 tracking-wider mb-2">
+                    09
+                  </div>
+                  <div className="text-xs text-white tracking-wider">
+                    ANALYSIS
+                  </div>
                 </button>
               </div>
             </div>
           </div>
 
-          {/* 地図分析 */}
-          <div className="bg-white rounded-2xl shadow-lg mt-6 hover:shadow-xl transition-shadow duration-300">
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h2 className="text-lg font-semibold">🗺️ 支店エリア分析</h2>
+          {/* MAP ANALYSIS */}
+          <div className="bg-zinc-950 border border-zinc-800 mt-6">
+            <div className="px-6 py-4 border-b border-zinc-800">
+              <h2 className="text-sm font-normal text-white tracking-widest">
+                BRANCH AREA ANALYSIS
+              </h2>
             </div>
             <div className="p-6">
               <div className="space-y-4">
                 <div className="grid grid-cols-3 gap-4">
-                  <div className="bg-gradient-to-br from-dandori-blue/10 to-dandori-sky/10 p-3 rounded-xl">
-                    <p className="text-xs text-gray-600">営業中</p>
-                    <p className="text-xl font-bold text-dandori-blue">15件</p>
+                  <div className="border border-zinc-800 p-4">
+                    <p className="text-xs text-zinc-500 tracking-wider mb-2">
+                      ACTIVE
+                    </p>
+                    <p className="text-2xl font-thin text-blue-500">15</p>
                   </div>
-                  <div className="bg-gradient-to-br from-dandori-orange/10 to-dandori-yellow/10 p-3 rounded-xl">
-                    <p className="text-xs text-gray-600">工事中</p>
-                    <p className="text-xl font-bold text-dandori-orange">8件</p>
+                  <div className="border border-zinc-800 p-4">
+                    <p className="text-xs text-zinc-500 tracking-wider mb-2">
+                      IN PROGRESS
+                    </p>
+                    <p className="text-2xl font-thin text-amber-500">8</p>
                   </div>
-                  <div className="bg-gradient-to-br from-dandori-pink/10 to-dandori-orange/10 p-3 rounded-xl">
-                    <p className="text-xs text-gray-600">完了</p>
-                    <p className="text-xl font-bold text-dandori-pink">23件</p>
+                  <div className="border border-zinc-800 p-4">
+                    <p className="text-xs text-zinc-500 tracking-wider mb-2">
+                      COMPLETED
+                    </p>
+                    <p className="text-2xl font-thin text-emerald-500">23</p>
                   </div>
                 </div>
                 <button
                   onClick={() => router.push('/map')}
-                  className="w-full bg-gradient-dandori text-white py-3 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-medium"
+                  className="w-full border border-zinc-800 text-white py-3 text-xs tracking-wider hover:bg-zinc-900 transition-colors"
                 >
-                  地図で案件分布を確認 →
+                  VIEW MAP DISTRIBUTION →
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* マネジメントAI */}
+        {/* MANAGEMENT AI */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-2xl shadow-lg sticky top-6 overflow-hidden">
-            <div className="px-6 py-4 bg-gradient-warm text-white">
-              <h3 className="font-semibold">🤖 マネジメントAI</h3>
+          <div className="bg-zinc-950 border border-zinc-800 sticky top-6">
+            <div className="px-6 py-4 border-b border-zinc-800">
+              <h3 className="text-sm font-normal text-white tracking-widest">
+                MANAGEMENT AI
+              </h3>
             </div>
             <div className="p-4">
-              <div className="bg-gradient-to-br from-dandori-blue/5 to-dandori-sky/5 p-4 rounded-xl mb-4 border border-dandori-blue/10">
-                <p className="text-sm font-medium text-dandori-blue-dark mb-2">
-                  📋 本日の重要タスク
+              <div className="border border-zinc-800 p-4 mb-4">
+                <p className="text-xs text-zinc-500 tracking-wider mb-3">
+                  TODAY'S PRIORITY TASKS
                 </p>
-                <ul className="space-y-2 text-xs text-dandori-blue">
+                <ul className="space-y-3 text-xs text-zinc-400">
                   <li className="flex items-start">
-                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-dandori-pink mt-1 mr-2 animate-pulse" />
-                    佐藤ビル改修の承認（至急）
+                    <span className="inline-block w-1 h-1 bg-red-500 mt-1 mr-3" />
+                    <span className="tracking-wider">
+                      SATO BUILDING APPROVAL (URGENT)
+                    </span>
                   </li>
                   <li className="flex items-start">
-                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-dandori-orange mt-1 mr-2" />
-                    鈴木一郎さんの営業支援
+                    <span className="inline-block w-1 h-1 bg-amber-500 mt-1 mr-3" />
+                    <span className="tracking-wider">SUPPORT SUZUKI SALES</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-dandori-blue mt-1 mr-2" />
-                    月次レポート作成
+                    <span className="inline-block w-1 h-1 bg-blue-500 mt-1 mr-3" />
+                    <span className="tracking-wider">MONTHLY REPORT</span>
                   </li>
                 </ul>
               </div>
@@ -507,44 +599,44 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
               <div className="space-y-3">
                 <button
                   onClick={() => router.push('/estimates')}
-                  className="w-full px-4 py-3 bg-gradient-dandori text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                  className="w-full px-4 py-3 bg-white text-black text-xs tracking-wider hover:bg-zinc-200 transition-colors"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-medium">見積一覧</span>
-                    <span className="text-2xl">→</span>
+                    <span>ESTIMATE LIST</span>
+                    <span>→</span>
                   </div>
                 </button>
                 <button
                   onClick={() => router.push('/estimates/create')}
-                  className="w-full px-4 py-3 bg-gradient-warm text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                  className="w-full px-4 py-3 border border-zinc-800 text-white text-xs tracking-wider hover:bg-zinc-900 transition-colors"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-medium">新規見積作成</span>
-                    <span className="text-2xl">+</span>
+                    <span>NEW ESTIMATE</span>
+                    <span>+</span>
                   </div>
                 </button>
                 <button
                   onClick={() => router.push('/vendors')}
-                  className="w-full px-4 py-3 bg-white border border-dandori-blue text-dandori-blue rounded-xl hover:bg-dandori-blue/5 transition-all duration-200"
+                  className="w-full px-4 py-3 border border-zinc-800 text-white text-xs tracking-wider hover:bg-zinc-900 transition-colors"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-medium">協力会社管理</span>
-                    <span className="text-2xl">→</span>
+                    <span>VENDOR MANAGEMENT</span>
+                    <span>→</span>
                   </div>
                 </button>
               </div>
 
-              <div className="mt-4 pt-4 border-t">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  AIアシスタント
+              <div className="mt-4 pt-4 border-t border-zinc-800">
+                <label className="block text-xs text-zinc-500 tracking-wider mb-2">
+                  AI ASSISTANT
                 </label>
                 <textarea
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-dandori-blue focus:ring-2 focus:ring-dandori-blue/20 transition-all duration-200"
+                  className="w-full px-4 py-3 bg-black border border-zinc-800 text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-600 transition-colors text-sm"
                   rows={3}
-                  placeholder="例: 今月の目標達成のための施策は？"
+                  placeholder="Enter your question..."
                 />
-                <button className="mt-2 w-full bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm">
-                  AIに相談
+                <button className="mt-3 w-full border border-zinc-800 text-white py-3 text-xs tracking-wider hover:bg-zinc-900 transition-colors">
+                  CONSULT AI
                 </button>
               </div>
             </div>

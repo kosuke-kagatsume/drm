@@ -66,16 +66,16 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
     }
   };
 
-  const getTypeIcon = (type: string) => {
+  const getTypeIndicator = (type: string) => {
     switch (type) {
       case 'estimate':
-        return '📝';
+        return '01';
       case 'contract':
-        return '📋';
+        return '02';
       case 'visit':
-        return '🏠';
+        return '03';
       default:
-        return '📌';
+        return '00';
     }
   };
 
@@ -125,9 +125,9 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center">
-                        <span className="text-2xl mr-3">
-                          {getTypeIcon(todo.type)}
-                        </span>
+                        <div className="w-10 h-10 border border-zinc-700 flex items-center justify-center text-zinc-400 font-light text-sm mr-4">
+                          {getTypeIndicator(todo.type)}
+                        </div>
                         <div>
                           <h4 className="font-medium text-gray-900">
                             {todo.title}
