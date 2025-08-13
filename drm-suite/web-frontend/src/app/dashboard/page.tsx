@@ -75,8 +75,10 @@ export default function DashboardPage() {
       >
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold">{getRoleTitle(user.role)}</h1>
+            <div className="flex-1">
+              <h1 className="text-xl sm:text-2xl font-bold whitespace-nowrap">
+                {getRoleTitle(user.role)}
+              </h1>
               <p className="text-sm opacity-90 mt-1">
                 {new Date().toLocaleDateString('ja-JP', {
                   year: 'numeric',
@@ -86,21 +88,22 @@ export default function DashboardPage() {
                 })}
               </p>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <a
                 href="/dark/dashboard"
-                className="bg-black text-white px-4 py-2 rounded hover:bg-zinc-900 transition flex items-center"
+                className="bg-black text-white px-3 sm:px-4 py-2 rounded hover:bg-zinc-900 transition flex items-center text-sm sm:text-base"
               >
-                <span className="mr-2">🌙</span>
-                ダークモード
+                <span className="mr-1 sm:mr-2">🌙</span>
+                <span className="hidden sm:inline">ダークモード</span>
+                <span className="sm:hidden">ダーク</span>
               </a>
-              <div className="text-right">
+              <div className="text-right hidden sm:block">
                 <p className="text-sm opacity-90">ログイン中</p>
-                <p className="font-medium">{user.email}</p>
+                <p className="font-medium text-sm">{user.email}</p>
               </div>
               <button
                 onClick={logout}
-                className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded transition"
+                className="bg-white/20 hover:bg-white/30 px-3 sm:px-4 py-2 rounded transition text-sm sm:text-base"
               >
                 ログアウト
               </button>

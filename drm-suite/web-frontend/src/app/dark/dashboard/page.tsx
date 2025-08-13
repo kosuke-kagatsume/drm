@@ -57,8 +57,8 @@ export default function DarkDashboardPage() {
       <nav className="bg-zinc-950 border-b border-zinc-800">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-thin text-white tracking-widest">
+            <div className="flex-1">
+              <h1 className="text-xl sm:text-2xl font-thin text-white tracking-widest whitespace-nowrap">
                 {getRoleTitle(user.role)}
               </h1>
               <p className="text-xs text-zinc-500 tracking-wider mt-1">
@@ -72,22 +72,23 @@ export default function DarkDashboardPage() {
                   .toUpperCase()}
               </p>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <a
                 href="/dashboard"
-                className="border border-zinc-800 text-white px-6 py-2 text-xs tracking-wider hover:bg-zinc-900 transition-colors flex items-center"
+                className="border border-zinc-800 text-white px-3 sm:px-6 py-2 text-xs tracking-wider hover:bg-zinc-900 transition-colors flex items-center"
               >
-                COLORFUL MODE
+                <span className="hidden sm:inline">COLORFUL MODE</span>
+                <span className="sm:hidden">COLOR</span>
               </a>
-              <div className="text-right">
+              <div className="text-right hidden sm:block">
                 <p className="text-xs text-zinc-500 tracking-wider">
                   LOGGED IN AS
                 </p>
-                <p className="font-light text-white">{user.email}</p>
+                <p className="font-light text-white text-sm">{user.email}</p>
               </div>
               <button
                 onClick={logout}
-                className="border border-zinc-800 hover:bg-zinc-900 px-6 py-2 text-white text-xs tracking-wider transition-colors"
+                className="border border-zinc-800 hover:bg-zinc-900 px-3 sm:px-6 py-2 text-white text-xs tracking-wider transition-colors"
               >
                 LOGOUT
               </button>
