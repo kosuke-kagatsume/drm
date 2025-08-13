@@ -11,8 +11,8 @@
     }
   },
   "env": {
-    "NEXT_PUBLIC_CUSTOMER_SERVICE_URL": "@drm-customer-api",
-    "NEXT_PUBLIC_ESTIMATE_SERVICE_URL": "@drm-estimate-api",
-    "DATABASE_URL": "@database-url"
+    "NEXT_PUBLIC_CUSTOMER_SERVICE_URL": "http://localhost:3001",
+    "NEXT_PUBLIC_ESTIMATE_SERVICE_URL": "http://localhost:3003",
+    "DATABASE_URL": "file:./prisma/dev.db"
   }
 }
