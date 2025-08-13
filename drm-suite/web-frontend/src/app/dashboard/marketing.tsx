@@ -382,8 +382,81 @@ export default function MarketingDashboard({
   };
 
   const handleExport = (type: string) => {
-    // Simulate export functionality
-    alert(`${type}レポートをエクスポートしています...`);
+    if (type === 'campaign-report') {
+      // キャンペーンレポートの詳細データを生成
+      const reportData = {
+        reportType: 'campaign-performance',
+        period: selectedPeriod,
+        generatedAt: new Date().toISOString(),
+        campaigns: campaigns.map((campaign) => ({
+          id: campaign.id,
+          name: campaign.name,
+          type: campaign.type,
+          status: campaign.status,
+          budget: campaign.budget,
+          spent: campaign.spent,
+          leads: campaign.leads,
+          conversion: campaign.conversion,
+          roi: campaign.roi,
+          period: `${campaign.startDate} - ${campaign.endDate}`,
+        })),
+        summary: {
+          totalCampaigns: campaigns.length,
+          totalBudget: campaigns.reduce((sum, c) => sum + c.budget, 0),
+          totalSpent: campaigns.reduce((sum, c) => sum + c.spent, 0),
+          totalLeads: campaigns.reduce((sum, c) => sum + c.leads, 0),
+          averageROI:
+            campaigns.reduce((sum, c) => sum + c.roi, 0) / campaigns.length,
+        },
+      };
+
+      // CSVフォーマットでエクスポート
+      const csvHeaders = [
+        'キャンペーン名',
+        'タイプ',
+        'ステータス',
+        '予算',
+        '消化額',
+        'リード数',
+        '成約率',
+        'ROI',
+        '期間',
+      ];
+      const csvData = campaigns.map((campaign) => [
+        campaign.name,
+        campaign.type,
+        campaign.status,
+        campaign.budget,
+        campaign.spent,
+        campaign.leads,
+        campaign.conversion + '%',
+        campaign.roi + '%',
+        `${campaign.startDate} - ${campaign.endDate}`,
+      ]);
+
+      const csvContent = [csvHeaders, ...csvData]
+        .map((row) => row.join(','))
+        .join('\n');
+
+      // ダウンロードリンクを作成
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute(
+        'download',
+        `campaign-report-${selectedPeriod}-${new Date().toISOString().split('T')[0]}.csv`,
+      );
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      alert('キャンペーンレポートをダウンロードしました！');
+    } else {
+      // その他のレポート
+      alert(`${type}レポートをエクスポートしています...`);
+    }
   };
 
   const handleMetricClick = (metric: string) => {
@@ -1026,7 +1099,7 @@ export default function MarketingDashboard({
                 </div>
               ))}
               <button
-                onClick={() => setActiveModal('social-scheduler')}
+                onClick={() => router.push('/marketing/social-scheduler')}
                 className="w-full bg-pink-600 text-white py-2 rounded hover:bg-pink-700 text-sm"
               >
                 📅 投稿スケジュール
@@ -1047,7 +1120,7 @@ export default function MarketingDashboard({
                 🗺️ 地図分析を開く
               </button>
               <button
-                onClick={() => setActiveModal('lead-capture-builder')}
+                onClick={() => router.push('/marketing/lead-form-builder')}
                 className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700"
               >
                 📝 リード獲得フォーム作成
@@ -1065,7 +1138,7 @@ export default function MarketingDashboard({
                 🚀 新規キャンペーン
               </button>
               <button
-                onClick={() => setActiveModal('analytics')}
+                onClick={() => router.push('/marketing/analytics')}
                 className="w-full bg-orange-600 text-white py-2 rounded hover:bg-orange-700"
               >
                 📈 詳細アナリティクス
