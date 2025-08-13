@@ -25,17 +25,17 @@ export default function DarkDashboardPage() {
     const mappedRole = getRoleMapping(role);
     switch (mappedRole) {
       case 'sales':
-        return 'SALES DASHBOARD';
+        return '営業ダッシュボード';
       case 'manager':
-        return 'MANAGER DASHBOARD';
+        return '支店長ダッシュボード';
       case 'marketing':
-        return 'MARKETING DASHBOARD';
+        return 'マーケティングダッシュボード';
       case 'accounting':
-        return 'ACCOUNTING DASHBOARD';
+        return '経理ダッシュボード';
       case 'executive':
-        return 'EXECUTIVE DASHBOARD';
+        return '経営者ダッシュボード';
       default:
-        return 'DASHBOARD';
+        return 'ダッシュボード';
     }
   };
 

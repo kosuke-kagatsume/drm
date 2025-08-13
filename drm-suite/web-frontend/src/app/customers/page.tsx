@@ -3,20 +3,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCustomers } from '@/hooks/useCustomers';
+import { Customer, CustomerStatus } from '@/types/customer';
 
-interface Customer {
-  id: string;
-  name: string;
-  company?: string;
-  email: string;
-  phone: string;
-  status: 'lead' | 'prospect' | 'customer' | 'inactive';
-  lastContact: string;
-  nextAction?: string;
-  value: number;
-  tags: string[];
-  assignee: string;
-}
+// Customer interface now imported from types
 
 interface RecentAction {
   id: string;
@@ -39,7 +29,25 @@ export default function CustomersPage() {
     null,
   );
 
-  const customers: Customer[] = [
+  // Use the customers hook
+  const {
+    customers,
+    loading: customersLoading,
+    error: customersError,
+    total,
+    createCustomer,
+    updateCustomer,
+    deleteCustomer,
+  } = useCustomers({
+    filter: {
+      search: searchTerm || undefined,
+      status:
+        filterStatus !== 'all' ? [filterStatus as CustomerStatus] : undefined,
+    },
+  });
+
+  // Mock data fallback when API is not available
+  const mockCustomers: Customer[] = [
     {
       id: '1',
       name: '田中太郎',
@@ -52,6 +60,9 @@ export default function CustomersPage() {
       value: 2500000,
       tags: ['外壁塗装', 'リピーター'],
       assignee: '山田花子',
+      createdAt: '2024-01-15T09:00:00Z',
+      updatedAt: '2024-02-10T14:30:00Z',
+      createdBy: 'system',
     },
     {
       id: '2',
@@ -65,6 +76,9 @@ export default function CustomersPage() {
       value: 0,
       tags: ['屋根工事', '新規'],
       assignee: '鈴木一郎',
+      createdAt: '2024-02-01T10:00:00Z',
+      updatedAt: '2024-02-12T16:00:00Z',
+      createdBy: 'suzuki',
     },
     {
       id: '3',
@@ -78,8 +92,14 @@ export default function CustomersPage() {
       value: 0,
       tags: ['法人', '大型案件'],
       assignee: '山田花子',
+      createdAt: '2024-02-05T11:00:00Z',
+      updatedAt: '2024-02-08T13:00:00Z',
+      createdBy: 'yamada',
     },
   ];
+
+  // Use API data if available, fallback to mock data
+  const displayCustomers = customers.length > 0 ? customers : mockCustomers;
 
   const recentActions: RecentAction[] = [
     {
@@ -173,7 +193,7 @@ export default function CustomersPage() {
     );
   }
 
-  const filteredCustomers = customers.filter((customer) => {
+  const filteredCustomers = displayCustomers.filter((customer) => {
     const matchesSearch =
       customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       customer.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -233,7 +253,7 @@ export default function CustomersPage() {
               </span>
             </div>
             <h4 className="text-2xl font-bold text-gray-900">
-              {customers.length}
+              {displayCustomers.length}
             </h4>
             <p className="text-sm text-gray-600">総顧客数</p>
           </div>
@@ -246,7 +266,7 @@ export default function CustomersPage() {
               </span>
             </div>
             <h4 className="text-2xl font-bold">
-              {customers.filter((c) => c.status === 'customer').length}
+              {displayCustomers.filter((c) => c.status === 'customer').length}
             </h4>
             <p className="text-sm text-white/90">アクティブ顧客</p>
           </div>
@@ -267,7 +287,7 @@ export default function CustomersPage() {
             <h4 className="text-2xl font-bold">
               ¥
               {(
-                customers.reduce((sum, c) => sum + c.value, 0) / 1000000
+                displayCustomers.reduce((sum, c) => sum + c.value, 0) / 1000000
               ).toFixed(1)}
               M
             </h4>

@@ -1,6 +1,12 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useTeamPerformance } from '@/hooks/useTeamPerformance';
+import { usePendingApprovals } from '@/hooks/usePendingApprovals';
+import { useFinancialMetrics } from '@/hooks/useFinancialMetrics';
+import { useCustomers } from '@/hooks/useCustomers';
+import { useEstimates } from '@/hooks/useEstimates';
 
 interface ManagerDashboardProps {
   userEmail: string;
@@ -8,66 +14,73 @@ interface ManagerDashboardProps {
 
 export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
   const router = useRouter();
-
-  const branchKPI = {
-    grossProfit: 23.5,
+  const [branchKPI, setBranchKPI] = useState({
+    grossProfit: 0,
     targetProfit: 25,
-    contracts: 42,
+    contracts: 0,
     targetContracts: 50,
-    pendingApprovals: 3,
-    delayedProjects: 2,
+    pendingApprovals: 0,
+    delayedProjects: 0,
+  });
+
+  // Fetch real data
+  const { performance, loading: performanceLoading } = useTeamPerformance({
+    autoFetch: true,
+  });
+  const {
+    approvals,
+    loading: approvalsLoading,
+    approveItem,
+    rejectItem,
+  } = usePendingApprovals({ autoFetch: true });
+  const { metrics: financialMetrics } = useFinancialMetrics({
+    autoFetch: true,
+  });
+  const { customers } = useCustomers({ autoFetch: true });
+  const { estimates } = useEstimates({ autoFetch: true });
+
+  // Update KPIs based on real data
+  useEffect(() => {
+    if (performance && financialMetrics && approvals) {
+      setBranchKPI({
+        grossProfit: financialMetrics.profit.margin || 0,
+        targetProfit: 25,
+        contracts: performance.totalContracts || 0,
+        targetContracts: 50,
+        pendingApprovals: approvals.length || 0,
+        delayedProjects:
+          estimates?.filter((e: any) => {
+            const validUntil = new Date(e.validUntil);
+            return validUntil < new Date() && e.status !== 'approved';
+          }).length || 0,
+      });
+    }
+  }, [performance, financialMetrics, approvals, estimates]);
+
+  // Use real performance data or fallback to defaults
+  const staffPerformance = performance?.members || [];
+
+  // Handle approval actions
+  const handleApprove = async (id: string) => {
+    const success = await approveItem(id);
+    if (success) {
+      alert('承認しました');
+    } else {
+      alert('承認に失敗しました');
+    }
   };
 
-  const staffPerformance = [
-    {
-      name: '山田太郎',
-      role: '営業',
-      contracts: 8,
-      profit: 24,
-      status: 'good',
-    },
-    {
-      name: '佐藤花子',
-      role: '営業',
-      contracts: 5,
-      profit: 18,
-      status: 'warning',
-    },
-    {
-      name: '鈴木一郎',
-      role: '営業',
-      contracts: 3,
-      profit: 15,
-      status: 'danger',
-    },
-  ];
-
-  const pendingApprovals = [
-    {
-      id: '1',
-      customer: '田中様邸',
-      amount: 2500000,
-      profit: 22,
-      sales: '山田太郎',
-      urgent: false,
-    },
-    {
-      id: '2',
-      customer: '佐藤ビル改修',
-      amount: 8000000,
-      profit: 18,
-      sales: '佐藤花子',
-      urgent: true,
-    },
-    {
-      id: '3',
-      customer: '鈴木マンション',
-      amount: 5500000,
-      profit: 20,
-      sales: '鈴木一郎',
-      urgent: false,
-    },
-  ];
+  const handleReject = async (id: string) => {
+    const reason = prompt('却下理由を入力してください');
+    if (reason) {
+      const success = await rejectItem(id, reason);
+      if (success) {
+        alert('却下しました');
+      } else {
+        alert('却下に失敗しました');
+      }
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -130,58 +143,75 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
               <h2 className="text-lg font-semibold">✅ 本日の承認待ち案件</h2>
             </div>
             <div className="p-6">
-              <div className="space-y-4">
-                {pendingApprovals.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`border rounded-xl p-4 hover:border-dandori-blue transition-colors duration-200 ${
-                      item.urgent
-                        ? 'border-dandori-pink bg-dandori-pink/5'
-                        : 'border-gray-200'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-medium text-gray-900">
-                            {item.customer}
-                          </h4>
-                          {item.urgent && (
-                            <span className="px-2 py-0.5 bg-dandori-pink text-white text-xs rounded-full animate-pulse">
-                              至急
-                            </span>
-                          )}
+              {approvalsLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-2 text-gray-600">データを読み込み中...</p>
+                </div>
+              ) : approvals.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <p>承認待ち案件はありません</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {approvals.map((item) => (
+                    <div
+                      key={item.id}
+                      className={`border rounded-xl p-4 hover:border-dandori-blue transition-colors duration-200 ${
+                        item.urgent
+                          ? 'border-dandori-pink bg-dandori-pink/5'
+                          : 'border-gray-200'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-medium text-gray-900">
+                              {item.customer}
+                            </h4>
+                            {item.urgent && (
+                              <span className="px-2 py-0.5 bg-dandori-pink text-white text-xs rounded-full animate-pulse">
+                                至急
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">
+                            担当: {item.salesPerson}
+                          </p>
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">
-                          担当: {item.sales}
-                        </p>
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-dandori-blue">
+                            ¥{(item.amount / 1000000).toFixed(1)}M
+                          </p>
+                          <p
+                            className={`text-sm ${
+                              item.profitMargin >= 20
+                                ? 'text-dandori-blue'
+                                : 'text-dandori-orange'
+                            }`}
+                          >
+                            粗利: {item.profitMargin.toFixed(1)}%
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-dandori-blue">
-                          ¥{(item.amount / 1000000).toFixed(1)}M
-                        </p>
-                        <p
-                          className={`text-sm ${
-                            item.profit >= 20
-                              ? 'text-dandori-blue'
-                              : 'text-dandori-orange'
-                          }`}
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleApprove(item.id)}
+                          className="flex-1 px-3 py-1.5 bg-gradient-dandori text-white rounded-lg text-sm hover:shadow-md transform hover:scale-105 transition-all duration-200"
                         >
-                          粗利: {item.profit}%
-                        </p>
+                          承認
+                        </button>
+                        <button
+                          onClick={() => router.push(`/estimates/${item.id}`)}
+                          className="flex-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors duration-200"
+                        >
+                          詳細確認
+                        </button>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <button className="flex-1 px-3 py-1.5 bg-gradient-dandori text-white rounded-lg text-sm hover:shadow-md transform hover:scale-105 transition-all duration-200">
-                        承認
-                      </button>
-                      <button className="flex-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors duration-200">
-                        詳細確認
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -191,70 +221,77 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
               <h2 className="text-lg font-semibold">👥 チームパフォーマンス</h2>
             </div>
             <div className="p-6">
-              <div className="space-y-4">
-                {staffPerformance.map((staff) => (
-                  <div
-                    key={staff.name}
-                    className="border border-gray-200 rounded-xl p-4 hover:border-dandori-blue transition-colors duration-200"
-                  >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h4 className="font-medium text-gray-900">
-                          {staff.name}
-                        </h4>
-                        <p className="text-sm text-gray-600">{staff.role}</p>
-                        <div className="mt-2 flex gap-4">
-                          <span className="text-sm">
-                            契約:{' '}
-                            <span className="font-bold">
-                              {staff.contracts}件
+              {performanceLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-2 text-gray-600">データを読み込み中...</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {staffPerformance.map((staff) => (
+                    <div
+                      key={staff.name}
+                      className="border border-gray-200 rounded-xl p-4 hover:border-dandori-blue transition-colors duration-200"
+                    >
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h4 className="font-medium text-gray-900">
+                            {staff.name}
+                          </h4>
+                          <p className="text-sm text-gray-600">{staff.role}</p>
+                          <div className="mt-2 flex gap-4">
+                            <span className="text-sm">
+                              契約:{' '}
+                              <span className="font-bold">
+                                {staff.contracts}件
+                              </span>
                             </span>
-                          </span>
-                          <span className="text-sm">
-                            粗利:{' '}
-                            <span
-                              className={`font-bold ${
-                                staff.profit >= 20
-                                  ? 'text-dandori-blue'
-                                  : 'text-dandori-orange'
-                              }`}
-                            >
-                              {staff.profit}%
+                            <span className="text-sm">
+                              粗利:{' '}
+                              <span
+                                className={`font-bold ${
+                                  staff.profitMargin >= 20
+                                    ? 'text-dandori-blue'
+                                    : 'text-dandori-orange'
+                                }`}
+                              >
+                                {staff.profitMargin.toFixed(1)}%
+                              </span>
                             </span>
-                          </span>
+                          </div>
                         </div>
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            staff.status === 'good'
+                              ? 'bg-dandori-blue/10 text-dandori-blue'
+                              : staff.status === 'warning'
+                                ? 'bg-dandori-yellow/20 text-dandori-orange'
+                                : 'bg-dandori-pink/10 text-dandori-pink'
+                          }`}
+                        >
+                          {staff.status === 'good'
+                            ? '好調'
+                            : staff.status === 'warning'
+                              ? '要支援'
+                              : '要改善'}
+                        </span>
                       </div>
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          staff.status === 'good'
-                            ? 'bg-dandori-blue/10 text-dandori-blue'
-                            : staff.status === 'warning'
-                              ? 'bg-dandori-yellow/20 text-dandori-orange'
-                              : 'bg-dandori-pink/10 text-dandori-pink'
-                        }`}
-                      >
-                        {staff.status === 'good'
-                          ? '好調'
-                          : staff.status === 'warning'
-                            ? '要支援'
-                            : '要改善'}
-                      </span>
+                      <div className="mt-3 bg-gray-100 rounded-full h-2 overflow-hidden">
+                        <div
+                          className={`h-2 rounded-full transition-all duration-500 ${
+                            staff.status === 'good'
+                              ? 'bg-gradient-to-r from-dandori-blue to-dandori-sky'
+                              : staff.status === 'warning'
+                                ? 'bg-gradient-to-r from-dandori-yellow to-dandori-orange'
+                                : 'bg-gradient-to-r from-dandori-pink to-dandori-orange'
+                          }`}
+                          style={{ width: `${(staff.contracts / 10) * 100}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className="mt-3 bg-gray-100 rounded-full h-2 overflow-hidden">
-                      <div
-                        className={`h-2 rounded-full transition-all duration-500 ${
-                          staff.status === 'good'
-                            ? 'bg-gradient-to-r from-dandori-blue to-dandori-sky'
-                            : staff.status === 'warning'
-                              ? 'bg-gradient-to-r from-dandori-yellow to-dandori-orange'
-                              : 'bg-gradient-to-r from-dandori-pink to-dandori-orange'
-                        }`}
-                        style={{ width: `${(staff.contracts / 10) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -279,7 +316,9 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-xl font-bold">125</p>
+                    <p className="text-xl font-bold">
+                      {customers?.length || 0}
+                    </p>
                     <p className="text-xs">顧客数</p>
                   </div>
                 </div>
@@ -292,7 +331,9 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
                 >
                   <p className="text-2xl mb-1">📝</p>
                   <p className="text-xs font-medium text-gray-900">見積</p>
-                  <p className="text-xs text-gray-600">15件</p>
+                  <p className="text-xs text-gray-600">
+                    {estimates?.length || 0}件
+                  </p>
                 </button>
                 <button
                   onClick={() => router.push('/contracts')}

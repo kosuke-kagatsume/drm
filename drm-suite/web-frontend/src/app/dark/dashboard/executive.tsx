@@ -31,42 +31,46 @@ export default function ExecutiveDashboard({
   const criticalAlerts = [
     {
       type: 'profit',
-      message: '千葉支店の粗利率が3ヶ月連続低下',
+      message: 'CHIBA BRANCH MARGIN DECLINING FOR 3 MONTHS',
       severity: 'high',
     },
     {
       type: 'payment',
-      message: '回収遅延が30日を超えた案件: 3件',
+      message: 'OVERDUE COLLECTIONS EXCEED 30 DAYS: 3 ITEMS',
       severity: 'high',
     },
     {
       type: 'inventory',
-      message: '在庫回転率が目標を下回っています',
+      message: 'INVENTORY TURNOVER BELOW TARGET',
       severity: 'medium',
     },
   ];
 
   return (
     <div className="space-y-6">
-      {/* 全社KPIダッシュボード */}
-      <div className="bg-gradient-dandori text-white rounded-2xl shadow-xl p-6 animate-fade-in">
-        <h2 className="text-2xl font-bold mb-6">🏢 全社パフォーマンス</h2>
+      {/* COMPANY KPI DASHBOARD */}
+      <div className="bg-zinc-950 border border-zinc-800 p-6">
+        <h2 className="text-sm font-normal text-white tracking-widest mb-6">
+          COMPANY PERFORMANCE
+        </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div>
-            <p className="text-white/80 text-sm">売上高</p>
-            <p className="text-3xl font-bold">
+          <div className="border border-zinc-800 p-4">
+            <p className="text-xs text-zinc-500 tracking-wider mb-2">
+              TOTAL REVENUE
+            </p>
+            <p className="text-3xl font-thin text-white">
               ¥{(companyKPI.totalRevenue / 1000000).toFixed(0)}M
             </p>
-            <div className="mt-2 bg-white/20 rounded-full h-2">
+            <div className="mt-3 bg-zinc-900 h-1">
               <div
-                className="bg-dandori-yellow h-2 rounded-full transition-all duration-500"
+                className="bg-blue-500/50 h-1 transition-all duration-500"
                 style={{
                   width: `${(companyKPI.totalRevenue / companyKPI.targetRevenue) * 100}%`,
                 }}
               />
             </div>
-            <p className="text-xs text-white/60 mt-1">
-              目標比:{' '}
+            <p className="text-xs text-zinc-600 tracking-wider mt-2">
+              TARGET:{' '}
               {(
                 (companyKPI.totalRevenue / companyKPI.targetRevenue) *
                 100
@@ -74,51 +78,61 @@ export default function ExecutiveDashboard({
               %
             </p>
           </div>
-          <div>
-            <p className="text-white/80 text-sm">粗利率</p>
+          <div className="border border-zinc-800 p-4">
+            <p className="text-xs text-zinc-500 tracking-wider mb-2">
+              GROSS PROFIT
+            </p>
             <p
-              className={`text-3xl font-bold ${companyKPI.grossProfit >= companyKPI.targetProfit ? 'text-dandori-yellow' : 'text-dandori-pink'}`}
+              className={`text-3xl font-thin ${companyKPI.grossProfit >= companyKPI.targetProfit ? 'text-emerald-500' : 'text-amber-500'}`}
             >
               {companyKPI.grossProfit}%
             </p>
-            <p className="text-xs text-white/60 mt-1">
-              目標: {companyKPI.targetProfit}%
+            <p className="text-xs text-zinc-600 tracking-wider mt-2">
+              TARGET: {companyKPI.targetProfit}%
             </p>
           </div>
-          <div>
-            <p className="text-white/80 text-sm">キャッシュフロー</p>
-            <p className="text-3xl font-bold text-dandori-sky">
+          <div className="border border-zinc-800 p-4">
+            <p className="text-xs text-zinc-500 tracking-wider mb-2">
+              CASH FLOW
+            </p>
+            <p className="text-3xl font-thin text-blue-500">
               ¥{(companyKPI.cashFlow / 1000000).toFixed(0)}M
             </p>
-            <p className="text-xs text-white/60 mt-1">健全</p>
-          </div>
-          <div className="bg-dandori-pink/20 backdrop-blur-sm p-3 rounded-xl border border-dandori-pink/30">
-            <p className="text-white/80 text-sm">回収遅延</p>
-            <p className="text-3xl font-bold text-white">
-              {companyKPI.overduePayments}件
+            <p className="text-xs text-blue-500/70 tracking-wider mt-2">
+              HEALTHY
             </p>
-            <p className="text-xs text-white/70 mt-1">要対応</p>
+          </div>
+          <div className="border border-red-500/30 p-4">
+            <p className="text-xs text-zinc-500 tracking-wider mb-2">
+              OVERDUE PAYMENTS
+            </p>
+            <p className="text-3xl font-thin text-red-500">
+              {companyKPI.overduePayments}
+            </p>
+            <p className="text-xs text-red-500/70 tracking-wider mt-2">
+              CRITICAL
+            </p>
           </div>
         </div>
       </div>
 
-      {/* 重要アラート */}
+      {/* CRITICAL ALERTS */}
       {criticalAlerts.length > 0 && (
-        <div className="bg-gradient-to-r from-dandori-pink/10 to-dandori-orange/10 border-l-4 border-dandori-pink rounded-xl p-4 backdrop-blur-sm">
-          <h3 className="font-semibold text-dandori-blue-dark mb-3">
-            ⚠️ 経営判断が必要な事項
+        <div className="bg-zinc-950 border border-red-500/30 p-6">
+          <h3 className="text-xs font-normal text-red-500 tracking-widest mb-4">
+            CRITICAL MANAGEMENT DECISIONS REQUIRED
           </h3>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {criticalAlerts.map((alert, idx) => (
               <div key={idx} className="flex items-start">
                 <span
-                  className={`inline-block w-2 h-2 rounded-full mt-1.5 mr-3 animate-pulse ${
-                    alert.severity === 'high'
-                      ? 'bg-dandori-pink'
-                      : 'bg-dandori-orange'
+                  className={`inline-block w-1 h-1 mt-2 mr-3 ${
+                    alert.severity === 'high' ? 'bg-red-500' : 'bg-amber-500'
                   }`}
                 />
-                <p className="text-sm text-gray-800">{alert.message}</p>
+                <p className="text-xs text-zinc-400 tracking-wider">
+                  {alert.message}
+                </p>
               </div>
             ))}
           </div>
@@ -126,40 +140,46 @@ export default function ExecutiveDashboard({
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* 拠点別パフォーマンス */}
+        {/* BRANCH PERFORMANCE */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h2 className="text-lg font-semibold">📍 拠点別パフォーマンス</h2>
+          <div className="bg-zinc-950 border border-zinc-800">
+            <div className="px-6 py-4 border-b border-zinc-800">
+              <h2 className="text-sm font-normal text-white tracking-widest">
+                BRANCH PERFORMANCE
+              </h2>
             </div>
             <div className="p-6">
               <div className="space-y-4">
                 {branchPerformance.map((branch) => (
                   <div
                     key={branch.name}
-                    className="border border-gray-200 rounded-xl p-4 hover:border-dandori-blue transition-colors duration-200"
+                    className="border border-zinc-800 p-4 hover:border-zinc-700 transition-colors duration-200"
                   >
                     <div className="flex justify-between items-center">
                       <div className="flex-1">
-                        <h4 className="font-medium text-gray-900">
-                          {branch.name}
+                        <h4 className="text-white font-light tracking-wider">
+                          {branch.name.toUpperCase()}
                         </h4>
-                        <div className="mt-2 grid grid-cols-2 gap-4">
+                        <div className="mt-3 grid grid-cols-2 gap-6">
                           <div>
-                            <p className="text-sm text-gray-600">売上</p>
-                            <p className="text-xl font-bold">
+                            <p className="text-xs text-zinc-500 tracking-wider">
+                              REVENUE
+                            </p>
+                            <p className="text-xl font-thin text-white">
                               ¥{(branch.revenue / 1000000).toFixed(0)}M
                             </p>
                           </div>
                           <div>
-                            <p className="text-sm text-gray-600">粗利率</p>
+                            <p className="text-xs text-zinc-500 tracking-wider">
+                              MARGIN
+                            </p>
                             <p
-                              className={`text-xl font-bold ${
+                              className={`text-xl font-thin ${
                                 branch.profit >= 25
-                                  ? 'text-dandori-blue'
+                                  ? 'text-emerald-500'
                                   : branch.profit >= 22
-                                    ? 'text-dandori-orange'
-                                    : 'text-dandori-pink'
+                                    ? 'text-amber-500'
+                                    : 'text-red-500'
                               }`}
                             >
                               {branch.profit}%
@@ -169,34 +189,34 @@ export default function ExecutiveDashboard({
                       </div>
                       <div className="ml-4">
                         <span
-                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                          className={`px-3 py-1 border text-xs tracking-wider ${
                             branch.status === 'good'
-                              ? 'bg-dandori-blue/10 text-dandori-blue'
+                              ? 'border-emerald-500/50 text-emerald-500'
                               : branch.status === 'normal'
-                                ? 'bg-gray-100 text-gray-700'
+                                ? 'border-zinc-600 text-zinc-400'
                                 : branch.status === 'warning'
-                                  ? 'bg-dandori-yellow/20 text-dandori-orange'
-                                  : 'bg-dandori-pink/10 text-dandori-pink'
+                                  ? 'border-amber-500/50 text-amber-500'
+                                  : 'border-red-500/50 text-red-500'
                           }`}
                         >
                           {branch.status === 'good'
-                            ? '好調'
+                            ? 'EXCELLENT'
                             : branch.status === 'normal'
-                              ? '標準'
+                              ? 'STANDARD'
                               : branch.status === 'warning'
-                                ? '要注意'
-                                : '要改善'}
+                                ? 'WARNING'
+                                : 'CRITICAL'}
                         </span>
                       </div>
                     </div>
-                    <div className="mt-3 bg-gray-100 rounded-full h-2 overflow-hidden">
+                    <div className="mt-3 bg-zinc-900 h-1">
                       <div
-                        className={`h-2 rounded-full transition-all duration-500 ${
+                        className={`h-1 transition-all duration-500 ${
                           branch.profit >= 25
-                            ? 'bg-gradient-to-r from-dandori-blue to-dandori-sky'
+                            ? 'bg-emerald-500/50'
                             : branch.profit >= 22
-                              ? 'bg-gradient-to-r from-dandori-yellow to-dandori-orange'
-                              : 'bg-gradient-to-r from-dandori-pink to-dandori-orange'
+                              ? 'bg-amber-500/50'
+                              : 'bg-red-500/50'
                         }`}
                         style={{ width: `${(branch.profit / 30) * 100}%` }}
                       />
@@ -207,126 +227,160 @@ export default function ExecutiveDashboard({
             </div>
           </div>
 
-          {/* 統合財務分析ダッシュボード */}
-          <div className="bg-white rounded-2xl shadow-lg mt-6 overflow-hidden">
-            <div className="px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
-              <h3 className="font-semibold">📊 経営統合財務分析</h3>
+          {/* INTEGRATED FINANCIAL ANALYSIS */}
+          <div className="bg-zinc-950 border border-zinc-800 mt-6">
+            <div className="px-6 py-4 border-b border-zinc-800">
+              <h3 className="text-sm font-normal text-white tracking-widest">
+                EXECUTIVE INTEGRATED FINANCIAL ANALYSIS
+              </h3>
             </div>
             <div className="p-6">
-              {/* 主要財務指標 */}
-              <div className="grid grid-cols-3 gap-4 mb-6">
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <h5 className="font-bold text-green-800 mb-2">
-                    💰 収益性指標
+              {/* KEY FINANCIAL METRICS */}
+              <div className="grid grid-cols-3 gap-6 mb-6">
+                <div className="border border-zinc-800 p-4">
+                  <h5 className="text-xs font-normal text-white tracking-widest mb-4">
+                    PROFITABILITY
                   </h5>
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-3 text-xs">
                     <div className="flex justify-between">
-                      <span>営業利益率</span>
-                      <span className="font-bold">24.2%</span>
+                      <span className="text-zinc-500 tracking-wider">
+                        OPERATING MARGIN
+                      </span>
+                      <span className="text-white font-light">24.2%</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>総資産利益率</span>
-                      <span className="font-bold">12.8%</span>
+                      <span className="text-zinc-500 tracking-wider">
+                        TOTAL ASSET RETURN
+                      </span>
+                      <span className="text-white font-light">12.8%</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>自己資本利益率</span>
-                      <span className="font-bold">18.5%</span>
+                      <span className="text-zinc-500 tracking-wider">
+                        EQUITY RETURN
+                      </span>
+                      <span className="text-white font-light">18.5%</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h5 className="font-bold text-blue-800 mb-2">📈 成長指標</h5>
-                  <div className="space-y-2 text-sm">
+                <div className="border border-zinc-800 p-4">
+                  <h5 className="text-xs font-normal text-white tracking-widest mb-4">
+                    GROWTH METRICS
+                  </h5>
+                  <div className="space-y-3 text-xs">
                     <div className="flex justify-between">
-                      <span>売上成長率</span>
-                      <span className="font-bold text-green-600">+15.7%</span>
+                      <span className="text-zinc-500 tracking-wider">
+                        SALES GROWTH
+                      </span>
+                      <span className="text-emerald-500 font-light">
+                        +15.7%
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span>利益成長率</span>
-                      <span className="font-bold text-green-600">+22.1%</span>
+                      <span className="text-zinc-500 tracking-wider">
+                        PROFIT GROWTH
+                      </span>
+                      <span className="text-emerald-500 font-light">
+                        +22.1%
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span>市場シェア</span>
-                      <span className="font-bold">18.3%</span>
+                      <span className="text-zinc-500 tracking-wider">
+                        MARKET SHARE
+                      </span>
+                      <span className="text-white font-light">18.3%</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-orange-50 p-4 rounded-lg">
-                  <h5 className="font-bold text-orange-800 mb-2">
-                    ⚡ 効率指標
+                <div className="border border-zinc-800 p-4">
+                  <h5 className="text-xs font-normal text-white tracking-widest mb-4">
+                    EFFICIENCY
                   </h5>
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-3 text-xs">
                     <div className="flex justify-between">
-                      <span>資産回転率</span>
-                      <span className="font-bold">1.2回</span>
+                      <span className="text-zinc-500 tracking-wider">
+                        ASSET TURNOVER
+                      </span>
+                      <span className="text-white font-light">1.2x</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>在庫回転率</span>
-                      <span className="font-bold">8.5回</span>
+                      <span className="text-zinc-500 tracking-wider">
+                        INVENTORY TURNOVER
+                      </span>
+                      <span className="text-white font-light">8.5x</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>売上債権回転率</span>
-                      <span className="font-bold">6.2回</span>
+                      <span className="text-zinc-500 tracking-wider">
+                        RECEIVABLE TURNOVER
+                      </span>
+                      <span className="text-white font-light">6.2x</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* 財政健全性 */}
-              <div className="bg-indigo-50 p-4 rounded-lg mb-4">
-                <h5 className="font-bold text-indigo-800 mb-2">
-                  💎 財政健全性
+              {/* FINANCIAL HEALTH */}
+              <div className="border border-zinc-800 p-4 mb-4">
+                <h5 className="text-xs font-normal text-white tracking-widest mb-4">
+                  FINANCIAL HEALTH
                 </h5>
                 <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>自己資本比率</span>
-                        <span>65%</span>
+                      <div className="flex justify-between text-xs mb-2">
+                        <span className="text-zinc-500 tracking-wider">
+                          EQUITY RATIO
+                        </span>
+                        <span className="text-white font-light">65%</span>
                       </div>
-                      <div className="w-full bg-indigo-200 rounded-full h-2">
+                      <div className="w-full bg-zinc-900 h-1">
                         <div
-                          className="bg-indigo-600 h-2 rounded-full"
+                          className="bg-blue-500/50 h-1"
                           style={{ width: '65%' }}
                         ></div>
                       </div>
                     </div>
                     <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>流動比率</span>
-                        <span>180%</span>
+                      <div className="flex justify-between text-xs mb-2">
+                        <span className="text-zinc-500 tracking-wider">
+                          CURRENT RATIO
+                        </span>
+                        <span className="text-white font-light">180%</span>
                       </div>
-                      <div className="w-full bg-indigo-200 rounded-full h-2">
+                      <div className="w-full bg-zinc-900 h-1">
                         <div
-                          className="bg-green-500 h-2 rounded-full"
+                          className="bg-emerald-500/50 h-1"
                           style={{ width: '90%' }}
                         ></div>
                       </div>
                     </div>
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>デット・エクイティ・レシオ</span>
-                        <span>0.35</span>
+                      <div className="flex justify-between text-xs mb-2">
+                        <span className="text-zinc-500 tracking-wider">
+                          DEBT-EQUITY RATIO
+                        </span>
+                        <span className="text-white font-light">0.35</span>
                       </div>
-                      <div className="w-full bg-indigo-200 rounded-full h-2">
+                      <div className="w-full bg-zinc-900 h-1">
                         <div
-                          className="bg-green-500 h-2 rounded-full"
+                          className="bg-emerald-500/50 h-1"
                           style={{ width: '75%' }}
                         ></div>
                       </div>
                     </div>
                     <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>インタレスト・カバレッジ</span>
-                        <span>12.5倍</span>
+                      <div className="flex justify-between text-xs mb-2">
+                        <span className="text-zinc-500 tracking-wider">
+                          INTEREST COVERAGE
+                        </span>
+                        <span className="text-white font-light">12.5x</span>
                       </div>
-                      <div className="w-full bg-indigo-200 rounded-full h-2">
+                      <div className="w-full bg-zinc-900 h-1">
                         <div
-                          className="bg-green-500 h-2 rounded-full"
+                          className="bg-emerald-500/50 h-1"
                           style={{ width: '95%' }}
                         ></div>
                       </div>
@@ -335,210 +389,255 @@ export default function ExecutiveDashboard({
                 </div>
               </div>
 
-              {/* クイックアクセス */}
-              <div className="grid grid-cols-4 gap-2">
+              {/* QUICK ACCESS */}
+              <div className="grid grid-cols-4 gap-3">
                 <button
                   onClick={() => router.push('/expenses/dashboard')}
-                  className="p-3 bg-red-50 rounded-lg hover:bg-red-100 transition text-center"
+                  className="p-4 border border-zinc-800 hover:bg-zinc-900 transition text-center"
                 >
-                  <div className="text-xl mb-1">💳</div>
-                  <div className="text-xs font-medium">経費分析</div>
+                  <div className="text-xs text-zinc-500 tracking-wider mb-2">
+                    01
+                  </div>
+                  <div className="text-xs text-white tracking-wider">
+                    EXPENSES
+                  </div>
                 </button>
                 <button
                   onClick={() => router.push('/inventory')}
-                  className="p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition text-center"
+                  className="p-4 border border-zinc-800 hover:bg-zinc-900 transition text-center"
                 >
-                  <div className="text-xl mb-1">📦</div>
-                  <div className="text-xs font-medium">在庫分析</div>
+                  <div className="text-xs text-zinc-500 tracking-wider mb-2">
+                    02
+                  </div>
+                  <div className="text-xs text-white tracking-wider">
+                    INVENTORY
+                  </div>
                 </button>
-                <button className="p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition text-center">
-                  <div className="text-xl mb-1">📊</div>
-                  <div className="text-xs font-medium">財務分析</div>
+                <button className="p-4 border border-zinc-800 hover:bg-zinc-900 transition text-center">
+                  <div className="text-xs text-zinc-500 tracking-wider mb-2">
+                    03
+                  </div>
+                  <div className="text-xs text-white tracking-wider">
+                    FINANCE
+                  </div>
                 </button>
-                <button className="p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition text-center">
-                  <div className="text-xl mb-1">🎯</div>
-                  <div className="text-xs font-medium">戦略分析</div>
+                <button className="p-4 border border-zinc-800 hover:bg-zinc-900 transition text-center">
+                  <div className="text-xs text-zinc-500 tracking-wider mb-2">
+                    04
+                  </div>
+                  <div className="text-xs text-white tracking-wider">
+                    STRATEGY
+                  </div>
                 </button>
               </div>
             </div>
           </div>
 
-          {/* 地図分析 */}
-          <div className="bg-white rounded-2xl shadow-lg mt-6 hover:shadow-xl transition-shadow duration-300">
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h2 className="text-lg font-semibold">
-                🗺️ 全社プロジェクト地図分析
+          {/* MAP ANALYSIS */}
+          <div className="bg-zinc-950 border border-zinc-800 mt-6">
+            <div className="px-6 py-4 border-b border-zinc-800">
+              <h2 className="text-sm font-normal text-white tracking-widest">
+                COMPANY PROJECT MAP ANALYSIS
               </h2>
             </div>
             <div className="p-6">
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gradient-to-br from-dandori-blue/10 to-dandori-sky/10 p-4 rounded-xl">
-                    <p className="text-sm text-gray-600">進行中案件</p>
-                    <p className="text-2xl font-bold text-dandori-blue">48件</p>
-                  </div>
-                  <div className="bg-gradient-to-br from-dandori-orange/10 to-dandori-yellow/10 p-4 rounded-xl">
-                    <p className="text-sm text-gray-600">エリア別収益</p>
-                    <p className="text-2xl font-bold text-dandori-orange">
-                      ¥125M
+                  <div className="border border-zinc-800 p-4">
+                    <p className="text-xs text-zinc-500 tracking-wider mb-2">
+                      ACTIVE PROJECTS
                     </p>
+                    <p className="text-2xl font-thin text-blue-500">48</p>
+                  </div>
+                  <div className="border border-zinc-800 p-4">
+                    <p className="text-xs text-zinc-500 tracking-wider mb-2">
+                      AREA REVENUE
+                    </p>
+                    <p className="text-2xl font-thin text-amber-500">¥125M</p>
                   </div>
                 </div>
                 <button
                   onClick={() => router.push('/map')}
-                  className="w-full bg-gradient-dandori text-white py-3 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-medium"
+                  className="w-full border border-zinc-800 text-white py-3 text-xs tracking-wider hover:bg-zinc-900 transition-colors"
                 >
-                  地図分析ダッシュボードを開く →
+                  OPEN MAP ANALYSIS DASHBOARD →
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* 右サイドバー */}
+        {/* RIGHT SIDEBAR */}
         <div className="lg:col-span-1">
-          {/* 顧客データベース */}
-          <div className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white rounded-2xl shadow-lg mb-6 overflow-hidden">
+          {/* CUSTOMER DATABASE */}
+          <div className="bg-zinc-950 border border-zinc-800 mb-6">
             <div className="p-6">
-              <h3 className="font-bold text-xl mb-4 flex items-center">
-                <span className="text-2xl mr-2">👥</span>
-                全社顧客データベース
+              <h3 className="text-sm font-normal text-white tracking-widest mb-4">
+                COMPANY CUSTOMER DATABASE
               </h3>
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-white/20 backdrop-blur-sm p-3 rounded-lg">
-                  <p className="text-3xl font-bold">458</p>
-                  <p className="text-xs text-white/80">総顧客数</p>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="border border-zinc-800 p-3">
+                  <p className="text-2xl font-thin text-white">458</p>
+                  <p className="text-xs text-zinc-500 tracking-wider">
+                    TOTAL CUSTOMERS
+                  </p>
                 </div>
-                <div className="bg-white/20 backdrop-blur-sm p-3 rounded-lg">
-                  <p className="text-3xl font-bold">¥285M</p>
-                  <p className="text-xs text-white/80">顧客価値</p>
+                <div className="border border-zinc-800 p-3">
+                  <p className="text-2xl font-thin text-white">¥285M</p>
+                  <p className="text-xs text-zinc-500 tracking-wider">
+                    CUSTOMER VALUE
+                  </p>
                 </div>
               </div>
               <button
                 onClick={() => router.push('/customers')}
-                className="w-full bg-white text-purple-600 py-3 rounded-xl font-bold hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                className="w-full bg-white text-black py-3 text-xs tracking-wider hover:bg-zinc-200 transition-colors"
               >
-                顧客管理センターへ →
+                CUSTOMER MANAGEMENT CENTER →
               </button>
             </div>
           </div>
 
-          {/* 財務管理 */}
-          <div className="bg-white rounded-2xl shadow-lg mb-6 overflow-hidden">
-            <div className="px-6 py-4 bg-gradient-to-r from-dandori-blue to-dandori-sky text-white">
-              <h3 className="font-semibold">💰 財務管理</h3>
+          {/* FINANCIAL MANAGEMENT */}
+          <div className="bg-zinc-950 border border-zinc-800 mb-6">
+            <div className="px-6 py-4 border-b border-zinc-800">
+              <h3 className="text-sm font-normal text-white tracking-widest">
+                FINANCIAL MANAGEMENT
+              </h3>
             </div>
             <div className="p-4">
               <div className="space-y-3">
                 <button
                   onClick={() => router.push('/finance/analysis')}
-                  className="w-full text-left bg-gradient-to-r from-purple-50 to-indigo-50 p-3 rounded-lg hover:from-purple-100 hover:to-indigo-100 transition-all duration-200 border border-purple-200"
+                  className="w-full text-left border border-zinc-800 p-3 hover:bg-zinc-900 transition-colors"
                 >
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="font-medium text-purple-900">
-                        財務詳細分析
+                      <p className="text-white font-light text-xs tracking-wider">
+                        DETAILED FINANCIAL ANALYSIS
                       </p>
-                      <p className="text-xs text-purple-600">P/L, B/S, CF</p>
+                      <p className="text-xs text-zinc-600 tracking-wider">
+                        P/L, B/S, CF
+                      </p>
                     </div>
-                    <span className="text-purple-600 text-xl">📊</span>
+                    <span className="text-zinc-500">01</span>
                   </div>
                 </button>
                 <button
                   onClick={() => router.push('/strategy/analysis')}
-                  className="w-full text-left bg-gradient-to-r from-indigo-50 to-blue-50 p-3 rounded-lg hover:from-indigo-100 hover:to-blue-100 transition-all duration-200 border border-indigo-200"
+                  className="w-full text-left border border-zinc-800 p-3 hover:bg-zinc-900 transition-colors"
                 >
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="font-medium text-indigo-900">戦略分析</p>
-                      <p className="text-xs text-indigo-600">SWOT, 競合分析</p>
+                      <p className="text-white font-light text-xs tracking-wider">
+                        STRATEGIC ANALYSIS
+                      </p>
+                      <p className="text-xs text-zinc-600 tracking-wider">
+                        SWOT, COMPETITIVE
+                      </p>
                     </div>
-                    <span className="text-indigo-600 text-xl">🎯</span>
+                    <span className="text-zinc-500">02</span>
                   </div>
                 </button>
                 <button
                   onClick={() => router.push('/contracts')}
-                  className="w-full text-left bg-gradient-to-r from-dandori-blue/5 to-dandori-sky/5 p-3 rounded-lg hover:from-dandori-blue/10 hover:to-dandori-sky/10 transition-all duration-200"
+                  className="w-full text-left border border-zinc-800 p-3 hover:bg-zinc-900 transition-colors"
                 >
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="font-medium text-gray-900">契約管理</p>
-                      <p className="text-xs text-gray-600">5件の進行中</p>
+                      <p className="text-white font-light text-xs tracking-wider">
+                        CONTRACT MANAGEMENT
+                      </p>
+                      <p className="text-xs text-zinc-600 tracking-wider">
+                        5 IN PROGRESS
+                      </p>
                     </div>
-                    <span className="text-dandori-blue">→</span>
+                    <span className="text-zinc-500">03</span>
                   </div>
                 </button>
                 <button
                   onClick={() => router.push('/payments')}
-                  className="w-full text-left bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-lg hover:from-green-100 hover:to-emerald-100 transition-all duration-200"
+                  className="w-full text-left border border-zinc-800 p-3 hover:bg-zinc-900 transition-colors"
                 >
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="font-medium text-gray-900">入金管理</p>
-                      <p className="text-xs text-gray-600">今月¥22M入金済</p>
+                      <p className="text-white font-light text-xs tracking-wider">
+                        PAYMENT MANAGEMENT
+                      </p>
+                      <p className="text-xs text-zinc-600 tracking-wider">
+                        ¥22M RECEIVED THIS MONTH
+                      </p>
                     </div>
-                    <span className="text-green-600">→</span>
+                    <span className="text-zinc-500">04</span>
                   </div>
                 </button>
               </div>
-              <div className="mt-4 p-3 bg-dandori-pink/5 rounded-lg border border-dandori-pink/20">
-                <p className="text-xs font-medium text-dandori-pink mb-1">
-                  ⚠️ 要確認
+              <div className="mt-4 p-3 border border-red-500/30 bg-red-500/5">
+                <p className="text-xs text-red-500 tracking-wider mb-1">
+                  ATTENTION REQUIRED
                 </p>
-                <p className="text-xs text-gray-700">
-                  期限超過の請求が3件あります
+                <p className="text-xs text-zinc-400 tracking-wider">
+                  3 OVERDUE INVOICES REQUIRING ACTION
                 </p>
               </div>
             </div>
           </div>
 
-          {/* 経営分析RAG */}
-          <div className="bg-white rounded-2xl shadow-lg sticky top-6 overflow-hidden">
-            <div className="px-6 py-4 bg-gradient-warm text-white">
-              <h3 className="font-semibold">🤖 経営分析AI</h3>
+          {/* EXECUTIVE ANALYSIS AI */}
+          <div className="bg-zinc-950 border border-zinc-800 sticky top-6">
+            <div className="px-6 py-4 border-b border-zinc-800">
+              <h3 className="text-sm font-normal text-white tracking-widest">
+                EXECUTIVE ANALYSIS AI
+              </h3>
             </div>
             <div className="p-4">
-              <div className="bg-gradient-to-br from-dandori-blue/5 to-dandori-sky/5 p-4 rounded-xl mb-4 border border-dandori-blue/10">
-                <p className="text-sm font-medium text-dandori-blue-dark mb-2">
-                  💡 本日の分析提案
+              <div className="border border-zinc-800 p-4 mb-4">
+                <p className="text-xs text-zinc-500 tracking-wider mb-3">
+                  TODAY'S ANALYSIS RECOMMENDATIONS
                 </p>
-                <div className="space-y-2 text-xs text-dandori-blue">
-                  <p>• 千葉支店の粗利低下要因を分析</p>
-                  <p>• 回収遅延案件の共通パターン抽出</p>
-                  <p>• 来月の資金繰り予測</p>
+                <div className="space-y-3 text-xs text-zinc-400">
+                  <p className="tracking-wider">
+                    • ANALYZE CHIBA BRANCH MARGIN DECLINE FACTORS
+                  </p>
+                  <p className="tracking-wider">
+                    • EXTRACT COMMON PATTERNS FROM OVERDUE COLLECTIONS
+                  </p>
+                  <p className="tracking-wider">
+                    • FORECAST NEXT MONTH'S CASH FLOW
+                  </p>
                 </div>
-                <button className="mt-3 w-full bg-gradient-dandori text-white py-2 rounded-lg text-sm hover:shadow-lg transform hover:scale-105 transition-all duration-200">
-                  分析レポート生成
+                <button className="mt-3 w-full bg-white text-black py-3 text-xs tracking-wider hover:bg-zinc-200 transition-colors">
+                  GENERATE ANALYSIS REPORT
                 </button>
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  経営に関する質問
+                <label className="block text-xs text-zinc-500 tracking-wider mb-2">
+                  EXECUTIVE INQUIRY
                 </label>
                 <textarea
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-dandori-blue focus:ring-2 focus:ring-dandori-blue/20 transition-all duration-200"
+                  className="w-full px-4 py-3 bg-black border border-zinc-800 text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-600 transition-colors text-sm"
                   rows={3}
-                  placeholder="例: 粗利率を25%に改善するための施策は？"
+                  placeholder="Enter your strategic question..."
                 />
-                <button className="mt-2 w-full bg-gradient-warm text-white py-2 rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200 text-sm">
-                  AIに相談
+                <button className="mt-3 w-full border border-zinc-800 text-white py-3 text-xs tracking-wider hover:bg-zinc-900 transition-colors">
+                  CONSULT AI
                 </button>
               </div>
 
-              <div className="border-t pt-4">
-                <h4 className="text-sm font-medium text-gray-700 mb-2">
-                  クイック分析
+              <div className="border-t border-zinc-800 pt-4">
+                <h4 className="text-xs text-zinc-500 tracking-wider mb-3">
+                  QUICK ANALYSIS
                 </h4>
                 <div className="space-y-2">
-                  <button className="w-full text-left text-sm bg-gray-50 p-2 rounded-lg hover:bg-dandori-blue/5 hover:text-dandori-blue transition-colors duration-200">
-                    前年同期比較
+                  <button className="w-full text-left text-xs border border-zinc-800 p-3 hover:bg-zinc-900 transition-colors text-zinc-400 tracking-wider">
+                    PREVIOUS YEAR COMPARISON
                   </button>
-                  <button className="w-full text-left text-sm bg-gray-50 p-2 rounded-lg hover:bg-dandori-blue/5 hover:text-dandori-blue transition-colors duration-200">
-                    競合ベンチマーク
+                  <button className="w-full text-left text-xs border border-zinc-800 p-3 hover:bg-zinc-900 transition-colors text-zinc-400 tracking-wider">
+                    COMPETITIVE BENCHMARK
                   </button>
-                  <button className="w-full text-left text-sm bg-gray-50 p-2 rounded-lg hover:bg-dandori-blue/5 hover:text-dandori-blue transition-colors duration-200">
-                    シナリオ分析
+                  <button className="w-full text-left text-xs border border-zinc-800 p-3 hover:bg-zinc-900 transition-colors text-zinc-400 tracking-wider">
+                    SCENARIO ANALYSIS
                   </button>
                 </div>
               </div>

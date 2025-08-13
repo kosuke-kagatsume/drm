@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 // ==================== Multi-tenant Base ====================
@@ -16,13 +16,14 @@ model Company {
   name      String
   code      String   @unique
   plan      String   @default("standard") // standard, premium, enterprise
-  settings  Json     @default("{}")
+  settings  String     @default("{}")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
   users             User[]
   stores            Store[]
+  customers         Customer[]
   estimates         Estimate[]
   inventories       Inventory[]
   bookings          Booking[]
@@ -44,8 +45,8 @@ model Store {
   name      String
   code      String
   address   String?
-  location  Json?    // PostGIS point {lat, lng}
-  settings  Json     @default("{}")
+  location  String?    // PostGIS point {lat, lng}
+  settings  String     @default("{}")
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -53,6 +54,7 @@ model Store {
   // Relations
   company     Company      @relation(fields: [companyId], references: [id])
   users       User[]
+  customers   Customer[]
   estimates   Estimate[]
   inventories Inventory[]
   bookings    Booking[]
@@ -72,7 +74,7 @@ model User {
   email        String   @unique
   name         String
   role         String   // OpenFGA role ID
-  permissions  Json     @default("[]")
+  permissions  String     @default("[]")
   passwordHash String?
   isActive     Boolean  @default(true)
   lastLoginAt  DateTime?
@@ -96,6 +98,111 @@ model User {
   @@map("users")
 }
 
+// ==================== Customer Management ====================
+model Customer {
+  id          String   @id @default(cuid())
+  companyId   String
+  storeId     String?
+  customerNumber String // auto-generated customer number
+  name        String
+  companyName String?
+  email       String
+  phone       String?
+  address     String?
+  postalCode  String?
+  location    String?    // address + coordinates
+  status      String   // lead, prospect, customer, inactive
+  priority    Int      @default(0) // 1-5
+  tags        String     @default("[]")
+  
+  // Business info
+  industry    String?
+  employees   Int?
+  revenue     Float?
+  
+  // Interaction tracking
+  firstContact    DateTime?
+  lastContact     DateTime?
+  nextActionDate  DateTime?
+  nextAction      String?
+  assignee        String?  // user ID
+  
+  // CRM data
+  leadSource      String?  // website, referral, campaign, etc
+  lifeTimeValue   Float  @default(0)
+  acquisitionCost Float  @default(0)
+  
+  // Communication preferences
+  preferredContact String? // email, phone, sms, line
+  communicationHistory String @default("[]")
+  
+  // Metadata
+  metadata    String     @default("{}")
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String
+
+  // Relations
+  company     Company           @relation(fields: [companyId], references: [id])
+  store       Store?            @relation(fields: [storeId], references: [id])
+  interactions CustomerInteraction[]
+  estimates   CustomerEstimate[]
+
+  @@unique([companyId, customerNumber])
+  @@index([companyId])
+  @@index([email])
+  @@index([status])
+  @@index([assignee])
+  @@map("customers")
+}
+
+model CustomerInteraction {
+  id          String   @id @default(cuid())
+  customerId  String
+  type        String   // call, email, meeting, chat, line, note, visit
+  direction   String   // inbound, outbound
+  subject     String?
+  content     String   
+  outcome     String?  // interested, not_interested, follow_up_scheduled, etc
+  nextAction  String?
+  scheduledAt DateTime?
+  completedAt DateTime?
+  createdBy   String
+  metadata    String     @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("customer_interactions")
+}
+
+model CustomerEstimate {
+  id           String   @id @default(cuid())
+  customerId   String
+  estimateId   String
+  status       String   // draft, sent, viewed, accepted, rejected
+  sentAt       DateTime?
+  viewedAt     DateTime?
+  respondedAt  DateTime?
+  response     String?  // customer response/feedback
+  metadata     String     @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+  @@index([estimateId])
+  @@map("customer_estimates")
+}
+
 // ==================== Estimate Service ====================
 model Estimate {
   id              String   @id @default(cuid())
@@ -111,15 +218,15 @@ model Estimate {
   propertyType    String?  // house, apartment, commercial
   constructMethod String?  // new, reform, renovation
   structure       String?  // wood, steel, rc
-  location        Json?    // address + coordinates
-  totalAmount     Decimal  @db.Decimal(12, 2)
-  taxAmount       Decimal  @db.Decimal(12, 2)
-  discountAmount  Decimal  @default(0) @db.Decimal(12, 2)
-  profitMargin    Decimal? @db.Decimal(5, 2)
+  location        String?    // address + coordinates
+  totalAmount     Float 
+  taxAmount       Float 
+  discountAmount  Float  @default(0)
+  profitMargin    Float?
   validUntil      DateTime
   notes           String?
-  approvalFlow    Json?    // workflow definition
-  metadata        Json     @default("{}")
+  approvalFlow    String?    // workflow definition
+  metadata        String     @default("{}")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -146,12 +253,12 @@ model EstimateItem {
   name        String
   description String?
   category    String
-  quantity    Decimal  @db.Decimal(10, 2)
+  quantity    Float 
   unit        String
-  unitPrice   Decimal  @db.Decimal(10, 2)
-  totalPrice  Decimal  @db.Decimal(12, 2)
-  costPrice   Decimal? @db.Decimal(10, 2)
-  metadata    Json     @default("{}")
+  unitPrice   Float 
+  totalPrice  Float 
+  costPrice   Float?
+  metadata    String     @default("{}")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -167,7 +274,7 @@ model Cost {
   estimateId String
   category   String   // material, labor, equipment, subcontract
   name       String
-  amount     Decimal  @db.Decimal(12, 2)
+  amount     Float 
   supplier   String?
   notes      String?
   createdAt  DateTime @default(now())
@@ -186,7 +293,7 @@ model Contractor {
   name       String
   type       String   // subcontractor, supplier
   scope      String
-  amount     Decimal  @db.Decimal(12, 2)
+  amount     Float 
   status     String   // pending, confirmed, completed
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -225,10 +332,10 @@ model Inventory {
   name         String
   description  String?
   category     String
-  attributes   Json     @default("{}")  // flexible attributes
-  currentStock Decimal  @db.Decimal(10, 2)
-  minStock     Decimal  @db.Decimal(10, 2)
-  maxStock     Decimal  @db.Decimal(10, 2)
+  attributes   String     @default("{}")  // flexible attributes
+  currentStock Float 
+  minStock     Float 
+  maxStock     Float 
   unit         String
   location     String?  // warehouse location
   isActive     Boolean  @default(true)
@@ -252,9 +359,9 @@ model InventoryLot {
   id          String   @id @default(cuid())
   inventoryId String
   lotNumber   String
-  quantity    Decimal  @db.Decimal(10, 2)
+  quantity    Float 
   expiryDate  DateTime?
-  metadata    Json     @default("{}")
+  metadata    String     @default("{}")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -269,10 +376,10 @@ model StockMovement {
   id          String   @id @default(cuid())
   inventoryId String
   type        String   // in, out, adjust
-  quantity    Decimal  @db.Decimal(10, 2)
+  quantity    Float 
   reason      String
   reference   String?  // order number, etc
-  metadata    Json     @default("{}")
+  metadata    String     @default("{}")
   createdAt   DateTime @default(now())
 
   // Relations
@@ -287,9 +394,9 @@ model StockCount {
   id           String   @id @default(cuid())
   inventoryId  String
   sessionId    String
-  countedQty   Decimal  @db.Decimal(10, 2)
-  systemQty    Decimal  @db.Decimal(10, 2)
-  variance     Decimal  @db.Decimal(10, 2)
+  countedQty   Float 
+  systemQty    Float 
+  variance     Float 
   status       String   // pending, approved, rejected
   countedBy    String
   countedAt    DateTime
@@ -310,7 +417,7 @@ model Resource {
   name      String
   capacity  Int?
   location  String?
-  metadata  Json     @default("{}")
+  metadata  String     @default("{}")
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -334,7 +441,7 @@ model Booking {
   status     String   // confirmed, cancelled, completed
   priority   Int      @default(0) // CRM priority
   notes      String?
-  metadata   Json     @default("{}")
+  metadata   String     @default("{}")
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -359,13 +466,13 @@ model Campaign {
   name           String
   type           String   // email, social, event, etc
   status         String   // draft, active, paused, completed
-  budgetPlanned  Decimal  @db.Decimal(12, 2)
-  budgetActual   Decimal  @default(0) @db.Decimal(12, 2)
+  budgetPlanned  Float 
+  budgetActual   Float  @default(0)
   startDate      DateTime
   endDate        DateTime
-  targetAudience Json     @default("{}")
-  channels       Json     @default("[]")
-  metrics        Json     @default("{}")
+  targetAudience String     @default("{}")
+  channels       String     @default("[]")
+  metrics        String     @default("{}")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -391,7 +498,7 @@ model Lead {
   score        Int      @default(0)
   assignedTo   String?
   convertedAt  DateTime?
-  metadata     Json     @default("{}")
+  metadata     String     @default("{}")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -414,7 +521,7 @@ model RagDocument {
   fileUrl    String
   fileSize   Int
   status     String   // pending, processing, completed, failed
-  metadata   Json     @default("{}")
+  metadata   String     @default("{}")
   processedAt DateTime?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -432,9 +539,9 @@ model RagEmbedding {
   id           String   @id @default(cuid())
   documentId   String
   chunkIndex   Int
-  chunkText    String   @db.Text
-  embedding    Float[]  // pgvector
-  metadata     Json     @default("{}")
+  chunkText    String
+  embedding    String  // JSON array for SQLite
+  metadata     String     @default("{}")
   createdAt    DateTime @default(now())
 
   // Relations
@@ -447,9 +554,9 @@ model RagEmbedding {
 model RagQueryLog {
   id            String   @id @default(cuid())
   userId        String
-  query         String   @db.Text
-  answer        String   @db.Text
-  retrievedDocs Json     @default("[]")
+  query         String   
+  answer        String   
+  retrievedDocs String     @default("[]")
   confidence    Float?
   feedback      String?  // positive, negative, neutral
   responseTime  Int      // milliseconds
@@ -494,7 +601,7 @@ model Expense {
   categoryId  String
   title       String
   description String?
-  amount      Decimal  @db.Decimal(10, 2)
+  amount      Float 
   currency    String   @default("JPY")
   expenseDate DateTime
   status      String   // draft, submitted, approved, rejected, paid
@@ -504,7 +611,7 @@ model Expense {
   projectId   String?
   vendorId    String?
   receiptUrl  String?
-  metadata    Json     @default("{}")
+  metadata    String     @default("{}")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -562,7 +669,7 @@ model Budget {
   companyId  String
   categoryId String
   fiscal     String   // 2024Q1, 2024M01, 2024
-  amount     Decimal  @db.Decimal(10, 2)
+  amount     Float 
   currency   String   @default("JPY")
   isActive   Boolean  @default(true)
   createdAt  DateTime @default(now())
@@ -583,7 +690,7 @@ model PaymentMethod {
   companyId String
   name      String
   type      String   // credit_card, bank_transfer, cash, etc
-  details   Json     @default("{}")
+  details   String     @default("{}")
   isDefault Boolean  @default(false)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -604,8 +711,8 @@ model AuditLog {
   action    String
   entity    String
   entityId  String
-  oldValue  Json?
-  newValue  Json?
+  oldValue  String?
+  newValue  String?
   ipAddress String?
   userAgent String?
   createdAt DateTime @default(now())

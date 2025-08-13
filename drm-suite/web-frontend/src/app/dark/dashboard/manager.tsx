@@ -74,13 +74,11 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
       {/* BRANCH KPI DASHBOARD */}
       <div className="bg-zinc-950 border border-zinc-800 p-6">
         <h2 className="text-sm font-normal text-white tracking-widest mb-6">
-          BRANCH PERFORMANCE
+          支店パフォーマンス
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div className="border border-zinc-800 p-4">
-            <p className="text-xs text-zinc-500 tracking-wider mb-2">
-              GROSS PROFIT
-            </p>
+            <p className="text-xs text-zinc-500 tracking-wider mb-2">粗利率</p>
             <p
               className={`text-3xl font-thin ${
                 branchKPI.grossProfit >= branchKPI.targetProfit
@@ -91,12 +89,12 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
               {branchKPI.grossProfit}%
             </p>
             <p className="text-xs text-zinc-600 tracking-wider mt-2">
-              TARGET: {branchKPI.targetProfit}%
+              目標: {branchKPI.targetProfit}%
             </p>
           </div>
           <div className="border border-zinc-800 p-4">
             <p className="text-xs text-zinc-500 tracking-wider mb-2">
-              MONTHLY CONTRACTS
+              月間契約数
             </p>
             <p className="text-3xl font-thin text-white">
               {branchKPI.contracts}
@@ -110,20 +108,20 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
               />
             </div>
             <p className="text-xs text-zinc-600 tracking-wider mt-2">
-              TARGET: {branchKPI.targetContracts}
+              目標: {branchKPI.targetContracts}
             </p>
           </div>
           <div className="border border-amber-500/30 p-4">
-            <p className="text-xs text-zinc-500 tracking-wider mb-2">PENDING</p>
+            <p className="text-xs text-zinc-500 tracking-wider mb-2">保留中</p>
             <p className="text-3xl font-thin text-amber-500">
               {branchKPI.pendingApprovals}
             </p>
             <p className="text-xs text-amber-500/70 tracking-wider mt-2">
-              REQUIRES ACTION
+              要対応
             </p>
           </div>
           <div className="border border-red-500/30 p-4">
-            <p className="text-xs text-zinc-500 tracking-wider mb-2">DELAYED</p>
+            <p className="text-xs text-zinc-500 tracking-wider mb-2">遅延</p>
             <p className="text-3xl font-thin text-red-500">
               {branchKPI.delayedProjects}
             </p>
@@ -140,7 +138,7 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
           <div className="bg-zinc-950 border border-zinc-800">
             <div className="px-6 py-4 border-b border-zinc-800">
               <h2 className="text-sm font-normal text-white tracking-widest">
-                TODAY'S PENDING APPROVALS
+                本日の承認待ち
               </h2>
             </div>
             <div className="p-6">
@@ -158,7 +156,7 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
                       <div>
                         <div className="flex items-center gap-3">
                           <h4 className="text-white font-light tracking-wider">
-                            {item.customer.toUpperCase()}
+                            {item.customer}
                           </h4>
                           {item.urgent && (
                             <span className="px-3 py-1 border border-red-500/50 text-red-500 text-xs tracking-wider">
@@ -167,7 +165,7 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
                           )}
                         </div>
                         <p className="text-xs text-zinc-500 tracking-wider mt-1">
-                          SALES: {item.sales.toUpperCase()}
+                          営業担当: {item.sales}
                         </p>
                       </div>
                       <div className="text-right">
@@ -181,16 +179,16 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
                               : 'text-amber-500'
                           }`}
                         >
-                          MARGIN: {item.profit}%
+                          利益率: {item.profit}%
                         </p>
                       </div>
                     </div>
                     <div className="flex gap-3 mt-4">
                       <button className="flex-1 px-4 py-2 bg-white text-black text-xs tracking-wider hover:bg-zinc-200 transition-colors">
-                        APPROVE
+                        承認
                       </button>
                       <button className="flex-1 px-4 py-2 border border-zinc-800 text-white text-xs tracking-wider hover:bg-zinc-900 transition-colors">
-                        REVIEW
+                        詳細確認
                       </button>
                     </div>
                   </div>
@@ -203,7 +201,7 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
           <div className="bg-zinc-950 border border-zinc-800 mt-6">
             <div className="px-6 py-4 border-b border-zinc-800">
               <h2 className="text-sm font-normal text-white tracking-widest">
-                TEAM PERFORMANCE
+                チームパフォーマンス
               </h2>
             </div>
             <div className="p-6">
@@ -216,20 +214,20 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
                     <div className="flex justify-between items-center">
                       <div>
                         <h4 className="text-white font-light tracking-wider">
-                          {staff.name.toUpperCase()}
+                          {staff.name}
                         </h4>
                         <p className="text-xs text-zinc-500 tracking-wider">
-                          {staff.role.toUpperCase()}
+                          {staff.role}
                         </p>
                         <div className="mt-3 flex gap-6">
                           <span className="text-xs text-zinc-400">
-                            CONTRACTS:{' '}
+                            契約数:{' '}
                             <span className="text-white font-light">
                               {staff.contracts}
                             </span>
                           </span>
                           <span className="text-xs text-zinc-400">
-                            MARGIN:{' '}
+                            利益率:{' '}
                             <span
                               className={`font-light ${
                                 staff.profit >= 20
@@ -280,12 +278,12 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
           <div className="bg-zinc-950 border border-zinc-800 mt-6">
             <div className="px-6 py-4 border-b border-zinc-800">
               <h3 className="text-sm font-normal text-white tracking-widest">
-                CUSTOMER & SALES MANAGEMENT
+                顧客・営業管理
               </h3>
             </div>
             <div className="p-4">
               <button
-                onClick={() => router.push('/customers')}
+                onClick={() => router.push('/dark/customers')}
                 className="w-full mb-4 border border-zinc-800 p-6 hover:bg-zinc-900 transition-colors"
               >
                 <div className="flex items-center justify-between">
@@ -295,17 +293,17 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
                     </div>
                     <div className="text-left">
                       <p className="text-white font-light tracking-wider">
-                        CUSTOMER CENTER
+                        顧客センター
                       </p>
                       <p className="text-xs text-zinc-500 tracking-wider mt-1">
-                        BRANCH DATABASE
+                        支店データベース
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-thin text-white">125</p>
                     <p className="text-xs text-zinc-500 tracking-wider">
-                      CUSTOMERS
+                      顧客数
                     </p>
                   </div>
                 </div>
@@ -313,27 +311,27 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
 
               <div className="grid grid-cols-2 gap-3">
                 <button
-                  onClick={() => router.push('/estimates')}
+                  onClick={() => router.push('/dark/estimates')}
                   className="text-center border border-zinc-800 p-4 hover:bg-zinc-900 transition-colors"
                 >
                   <p className="text-xs text-zinc-500 tracking-wider mb-2">
                     02
                   </p>
-                  <p className="text-xs text-white tracking-wider">ESTIMATES</p>
+                  <p className="text-xs text-white tracking-wider">見積書</p>
                   <p className="text-xs text-zinc-600 tracking-wider mt-1">
-                    15 ITEMS
+                    15 件
                   </p>
                 </button>
                 <button
-                  onClick={() => router.push('/contracts')}
+                  onClick={() => router.push('/dark/contracts')}
                   className="text-center border border-zinc-800 p-4 hover:bg-zinc-900 transition-colors"
                 >
                   <p className="text-xs text-zinc-500 tracking-wider mb-2">
                     03
                   </p>
-                  <p className="text-xs text-white tracking-wider">CONTRACTS</p>
+                  <p className="text-xs text-white tracking-wider">契約書</p>
                   <p className="text-xs text-zinc-600 tracking-wider mt-1">
-                    5 ITEMS
+                    5 件
                   </p>
                 </button>
               </div>
@@ -344,35 +342,35 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
           <div className="bg-zinc-950 border border-zinc-800 mt-6">
             <div className="px-6 py-4 border-b border-zinc-800">
               <h3 className="text-sm font-normal text-white tracking-widest">
-                BRANCH FINANCIAL MANAGEMENT
+                支店財務管理
               </h3>
             </div>
             <div className="p-4">
               <div className="grid grid-cols-3 gap-3">
                 <button
-                  onClick={() => router.push('/invoices')}
+                  onClick={() => router.push('/dark/invoices')}
                   className="text-center border border-zinc-800 p-4 hover:bg-zinc-900 transition-colors"
                 >
                   <p className="text-xs text-zinc-500 tracking-wider mb-2">
                     04
                   </p>
-                  <p className="text-xs text-white tracking-wider">INVOICES</p>
+                  <p className="text-xs text-white tracking-wider">請求書</p>
                   <p className="text-xs text-zinc-600 tracking-wider mt-1">8</p>
                 </button>
                 <button
-                  onClick={() => router.push('/payments')}
+                  onClick={() => router.push('/dark/payments')}
                   className="text-center border border-zinc-800 p-4 hover:bg-zinc-900 transition-colors"
                 >
                   <p className="text-xs text-zinc-500 tracking-wider mb-2">
                     05
                   </p>
-                  <p className="text-xs text-white tracking-wider">PAYMENTS</p>
+                  <p className="text-xs text-white tracking-wider">支払い</p>
                   <p className="text-xs text-zinc-600 tracking-wider mt-1">
                     ¥8M
                   </p>
                 </button>
                 <button
-                  onClick={() => router.push('/expenses')}
+                  onClick={() => router.push('/dark/expenses')}
                   className="text-center border border-zinc-800 p-4 hover:bg-zinc-900 transition-colors"
                 >
                   <p className="text-xs text-zinc-500 tracking-wider mb-2">
@@ -391,7 +389,7 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
           <div className="bg-zinc-950 border border-zinc-800 mt-6">
             <div className="px-6 py-4 border-b border-zinc-800">
               <h3 className="text-sm font-normal text-white tracking-widest">
-                BRANCH INTEGRATED FINANCIAL ANALYSIS
+                支店総合財務分析
               </h3>
             </div>
             <div className="p-6">
@@ -399,18 +397,18 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
               <div className="grid grid-cols-2 gap-6 mb-6">
                 <div className="border border-zinc-800 p-4">
                   <h5 className="text-xs font-normal text-white tracking-widest mb-4">
-                    PROFITABILITY
+                    収益性
                   </h5>
                   <div className="space-y-3 text-xs">
                     <div className="flex justify-between">
                       <span className="text-zinc-500 tracking-wider">
-                        OPERATING MARGIN
+                        営業利益率
                       </span>
                       <span className="text-white font-light">23.4%</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-zinc-500 tracking-wider">
-                        GROSS MARGIN
+                        粗利率
                       </span>
                       <span className="text-white font-light">35.8%</span>
                     </div>
@@ -423,12 +421,12 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
 
                 <div className="border border-zinc-800 p-4">
                   <h5 className="text-xs font-normal text-white tracking-widest mb-4">
-                    GROWTH METRICS
+                    成長指標
                   </h5>
                   <div className="space-y-3 text-xs">
                     <div className="flex justify-between">
                       <span className="text-zinc-500 tracking-wider">
-                        SALES GROWTH
+                        売上成長率
                       </span>
                       <span className="text-emerald-500 font-light">
                         +12.3%
@@ -436,13 +434,13 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-zinc-500 tracking-wider">
-                        CONTRACT GROWTH
+                        契約成長率
                       </span>
                       <span className="text-emerald-500 font-light">+8.5%</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-zinc-500 tracking-wider">
-                        MARKET SHARE
+                        市場シェア
                       </span>
                       <span className="text-white font-light">15.2%</span>
                     </div>
@@ -453,13 +451,13 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
               {/* BUDGET MANAGEMENT */}
               <div className="border border-zinc-800 p-4 mb-4">
                 <h5 className="text-xs font-normal text-white tracking-widest mb-4">
-                  BUDGET EXECUTION
+                  予算執行状況
                 </h5>
                 <div className="space-y-4">
                   <div>
                     <div className="flex justify-between text-xs mb-2">
                       <span className="text-zinc-500 tracking-wider">
-                        MONTHLY BUDGET
+                        月予算
                       </span>
                       <span className="text-white font-light">¥45M / ¥50M</span>
                     </div>
@@ -473,7 +471,7 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
                   <div>
                     <div className="flex justify-between text-xs mb-2">
                       <span className="text-zinc-500 tracking-wider">
-                        EXPENSE BUDGET
+                        経費予算
                       </span>
                       <span className="text-white font-light">
                         ¥8.5M / ¥10M
@@ -492,34 +490,28 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
               {/* QUICK ACCESS */}
               <div className="grid grid-cols-3 gap-3">
                 <button
-                  onClick={() => router.push('/expenses')}
+                  onClick={() => router.push('/dark/expenses')}
                   className="p-4 border border-zinc-800 hover:bg-zinc-900 transition text-center"
                 >
                   <div className="text-xs text-zinc-500 tracking-wider mb-2">
                     07
                   </div>
-                  <div className="text-xs text-white tracking-wider">
-                    EXPENSES
-                  </div>
+                  <div className="text-xs text-white tracking-wider">経費</div>
                 </button>
                 <button
-                  onClick={() => router.push('/inventory')}
+                  onClick={() => router.push('/dark/inventory')}
                   className="p-4 border border-zinc-800 hover:bg-zinc-900 transition text-center"
                 >
                   <div className="text-xs text-zinc-500 tracking-wider mb-2">
                     08
                   </div>
-                  <div className="text-xs text-white tracking-wider">
-                    INVENTORY
-                  </div>
+                  <div className="text-xs text-white tracking-wider">在庫</div>
                 </button>
                 <button className="p-4 border border-zinc-800 hover:bg-zinc-900 transition text-center">
                   <div className="text-xs text-zinc-500 tracking-wider mb-2">
                     09
                   </div>
-                  <div className="text-xs text-white tracking-wider">
-                    ANALYSIS
-                  </div>
+                  <div className="text-xs text-white tracking-wider">分析</div>
                 </button>
               </div>
             </div>
@@ -529,7 +521,7 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
           <div className="bg-zinc-950 border border-zinc-800 mt-6">
             <div className="px-6 py-4 border-b border-zinc-800">
               <h2 className="text-sm font-normal text-white tracking-widest">
-                BRANCH AREA ANALYSIS
+                支店エリア分析
               </h2>
             </div>
             <div className="p-6">
@@ -537,28 +529,28 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
                 <div className="grid grid-cols-3 gap-4">
                   <div className="border border-zinc-800 p-4">
                     <p className="text-xs text-zinc-500 tracking-wider mb-2">
-                      ACTIVE
+                      進行中
                     </p>
                     <p className="text-2xl font-thin text-blue-500">15</p>
                   </div>
                   <div className="border border-zinc-800 p-4">
                     <p className="text-xs text-zinc-500 tracking-wider mb-2">
-                      IN PROGRESS
+                      作業中
                     </p>
                     <p className="text-2xl font-thin text-amber-500">8</p>
                   </div>
                   <div className="border border-zinc-800 p-4">
                     <p className="text-xs text-zinc-500 tracking-wider mb-2">
-                      COMPLETED
+                      完了
                     </p>
                     <p className="text-2xl font-thin text-emerald-500">23</p>
                   </div>
                 </div>
                 <button
-                  onClick={() => router.push('/map')}
+                  onClick={() => router.push('/dark/map')}
                   className="w-full border border-zinc-800 text-white py-3 text-xs tracking-wider hover:bg-zinc-900 transition-colors"
                 >
-                  VIEW MAP DISTRIBUTION →
+                  マップ分布を表示 →
                 </button>
               </div>
             </div>
@@ -570,57 +562,55 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
           <div className="bg-zinc-950 border border-zinc-800 sticky top-6">
             <div className="px-6 py-4 border-b border-zinc-800">
               <h3 className="text-sm font-normal text-white tracking-widest">
-                MANAGEMENT AI
+                管理AI
               </h3>
             </div>
             <div className="p-4">
               <div className="border border-zinc-800 p-4 mb-4">
                 <p className="text-xs text-zinc-500 tracking-wider mb-3">
-                  TODAY'S PRIORITY TASKS
+                  本日の優先タスク
                 </p>
                 <ul className="space-y-3 text-xs text-zinc-400">
                   <li className="flex items-start">
                     <span className="inline-block w-1 h-1 bg-red-500 mt-1 mr-3" />
-                    <span className="tracking-wider">
-                      SATO BUILDING APPROVAL (URGENT)
-                    </span>
+                    <span className="tracking-wider">佐藤ビル承認 (緊急)</span>
                   </li>
                   <li className="flex items-start">
                     <span className="inline-block w-1 h-1 bg-amber-500 mt-1 mr-3" />
-                    <span className="tracking-wider">SUPPORT SUZUKI SALES</span>
+                    <span className="tracking-wider">鈴木営業サポート</span>
                   </li>
                   <li className="flex items-start">
                     <span className="inline-block w-1 h-1 bg-blue-500 mt-1 mr-3" />
-                    <span className="tracking-wider">MONTHLY REPORT</span>
+                    <span className="tracking-wider">月次レポート</span>
                   </li>
                 </ul>
               </div>
 
               <div className="space-y-3">
                 <button
-                  onClick={() => router.push('/estimates')}
+                  onClick={() => router.push('/dark/estimates')}
                   className="w-full px-4 py-3 bg-white text-black text-xs tracking-wider hover:bg-zinc-200 transition-colors"
                 >
                   <div className="flex items-center justify-between">
-                    <span>ESTIMATE LIST</span>
+                    <span>見積リスト</span>
                     <span>→</span>
                   </div>
                 </button>
                 <button
-                  onClick={() => router.push('/estimates/create')}
+                  onClick={() => router.push('/dark/estimates/new')}
                   className="w-full px-4 py-3 border border-zinc-800 text-white text-xs tracking-wider hover:bg-zinc-900 transition-colors"
                 >
                   <div className="flex items-center justify-between">
-                    <span>NEW ESTIMATE</span>
+                    <span>新規見積</span>
                     <span>+</span>
                   </div>
                 </button>
                 <button
-                  onClick={() => router.push('/vendors')}
+                  onClick={() => router.push('/dark/vendors')}
                   className="w-full px-4 py-3 border border-zinc-800 text-white text-xs tracking-wider hover:bg-zinc-900 transition-colors"
                 >
                   <div className="flex items-center justify-between">
-                    <span>VENDOR MANAGEMENT</span>
+                    <span>業者管理</span>
                     <span>→</span>
                   </div>
                 </button>
@@ -628,15 +618,15 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
 
               <div className="mt-4 pt-4 border-t border-zinc-800">
                 <label className="block text-xs text-zinc-500 tracking-wider mb-2">
-                  AI ASSISTANT
+                  AIアシスタント
                 </label>
                 <textarea
                   className="w-full px-4 py-3 bg-black border border-zinc-800 text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-600 transition-colors text-sm"
                   rows={3}
-                  placeholder="Enter your question..."
+                  placeholder="質問を入力..."
                 />
                 <button className="mt-3 w-full border border-zinc-800 text-white py-3 text-xs tracking-wider hover:bg-zinc-900 transition-colors">
-                  CONSULT AI
+                  AIに相談
                 </button>
               </div>
             </div>

@@ -1,6 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useCustomers } from '@/hooks/useCustomers';
+import { useEstimates } from '@/hooks/useEstimates';
+import { useFinancialMetrics } from '@/hooks/useFinancialMetrics';
 
 interface TodoItem {
   id: string;
@@ -18,8 +22,132 @@ interface SalesDashboardProps {
 
 export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
   const router = useRouter();
+  const [todayTodos, setTodayTodos] = useState<TodoItem[]>([]);
+  const [stats, setStats] = useState({
+    monthlyRevenue: 0,
+    newLeads: 0,
+    pendingEstimates: 0,
+    conversionRate: 0,
+  });
 
-  const todayTodos: TodoItem[] = [
+  // API hooks
+  const { customers, loading: customersLoading } = useCustomers({
+    filter: { assignee: userEmail },
+    autoFetch: true,
+  });
+
+  const { estimates, loading: estimatesLoading } = useEstimates({
+    filter: { assignee: userEmail, status: ['draft', 'pending'] },
+    autoFetch: true,
+  });
+
+  const { metrics: financialMetrics, loading: metricsLoading } =
+    useFinancialMetrics({
+      userId: userEmail,
+      autoFetch: true,
+    });
+
+  // Build todos from real data
+  useEffect(() => {
+    const todos: TodoItem[] = [];
+
+    // Add customers with next actions
+    customers?.forEach((customer) => {
+      if (customer.nextActionDate) {
+        const nextDate = new Date(customer.nextActionDate);
+        const today = new Date();
+        const isToday = nextDate.toDateString() === today.toDateString();
+        const isSoon =
+          nextDate.getTime() - today.getTime() < 7 * 24 * 60 * 60 * 1000;
+
+        if (isToday || isSoon) {
+          todos.push({
+            id: `customer-${customer.id}`,
+            title: customer.nextAction || '顧客フォローアップ',
+            deadline: isToday
+              ? `本日 ${nextDate.getHours()}:00`
+              : nextDate.toLocaleDateString('ja-JP'),
+            priority:
+              customer.priority > 3
+                ? 'high'
+                : customer.priority > 1
+                  ? 'medium'
+                  : 'low',
+            type: 'visit',
+            customer: customer.companyName || customer.name,
+          });
+        }
+      }
+    });
+
+    // Add pending estimates
+    estimates?.forEach((estimate) => {
+      const validUntil = new Date(estimate.validUntil);
+      const today = new Date();
+      const daysLeft = Math.floor(
+        (validUntil.getTime() - today.getTime()) / (24 * 60 * 60 * 1000),
+      );
+
+      if (daysLeft <= 7) {
+        todos.push({
+          id: `estimate-${estimate.id}`,
+          title: `${estimate.projectName} 見積フォロー`,
+          deadline: `あと${daysLeft}日`,
+          priority: daysLeft <= 3 ? 'high' : 'medium',
+          type: 'estimate',
+          customer: estimate.customerName,
+          amount: estimate.totalAmount,
+        });
+      }
+    });
+
+    // Sort by priority and deadline
+    todos.sort((a, b) => {
+      const priorityOrder = { high: 0, medium: 1, low: 2 };
+      return priorityOrder[a.priority] - priorityOrder[b.priority];
+    });
+
+    setTodayTodos(todos.slice(0, 5));
+  }, [customers, estimates]);
+
+  // Calculate stats from real data
+  useEffect(() => {
+    const monthlyRevenue =
+      estimates
+        ?.filter((e) => e.status === 'approved')
+        ?.reduce((sum, e) => sum + e.totalAmount, 0) || 0;
+
+    const newLeads =
+      customers?.filter((c) => {
+        const created = new Date(c.createdAt);
+        const monthAgo = new Date();
+        monthAgo.setMonth(monthAgo.getMonth() - 1);
+        return created > monthAgo && c.status === 'lead';
+      }).length || 0;
+
+    const pendingEstimates =
+      estimates?.filter((e) => e.status === 'draft' || e.status === 'pending')
+        .length || 0;
+
+    const totalLeads =
+      customers?.filter((c) => c.status === 'lead').length || 0;
+    const totalCustomers =
+      customers?.filter((c) => c.status === 'customer').length || 0;
+    const conversionRate =
+      totalLeads > 0
+        ? (totalCustomers / (totalLeads + totalCustomers)) * 100
+        : 0;
+
+    setStats({
+      monthlyRevenue,
+      newLeads,
+      pendingEstimates,
+      conversionRate,
+    });
+  }, [customers, estimates]);
+
+  // Mock data as fallback
+  const mockTodos: TodoItem[] = [
     {
       id: '1',
       title: '田中様邸 見積提出',
@@ -48,12 +176,8 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
     },
   ];
 
-  const kpiData = {
-    monthlyTarget: 10,
-    currentContracts: 7,
-    conversionRate: 35,
-    averageAmount: 2100000,
-  };
+  // Use real data if available, otherwise fallback to mock
+  const displayTodos = todayTodos.length > 0 ? todayTodos : mockTodos;
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -112,48 +236,55 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
               <h2 className="text-lg font-semibold flex items-center">
                 📌 今日やること
                 <span className="ml-2 bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded">
-                  {todayTodos.length}件
+                  {displayTodos.length}件
                 </span>
               </h2>
             </div>
             <div className="p-6 space-y-4">
-              {todayTodos.map((todo) => (
-                <div
-                  key={todo.id}
-                  className={`border-l-4 p-4 rounded ${getPriorityColor(todo.priority)}`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center">
-                        <span className="text-2xl mr-3">
-                          {getTypeIcon(todo.type)}
-                        </span>
-                        <div>
-                          <h4 className="font-medium text-gray-900">
-                            {todo.title}
-                          </h4>
-                          <p className="text-sm text-gray-600 mt-1">
-                            顧客: {todo.customer}
-                            {todo.amount && (
-                              <span className="ml-3">
-                                金額: ¥{todo.amount.toLocaleString()}
-                              </span>
-                            )}
-                          </p>
+              {customersLoading || estimatesLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-2 text-gray-600">データを読み込み中...</p>
+                </div>
+              ) : (
+                displayTodos.map((todo) => (
+                  <div
+                    key={todo.id}
+                    className={`border-l-4 p-4 rounded ${getPriorityColor(todo.priority)}`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center">
+                          <span className="text-2xl mr-3">
+                            {getTypeIcon(todo.type)}
+                          </span>
+                          <div>
+                            <h4 className="font-medium text-gray-900">
+                              {todo.title}
+                            </h4>
+                            <p className="text-sm text-gray-600 mt-1">
+                              顧客: {todo.customer}
+                              {todo.amount && (
+                                <span className="ml-3">
+                                  金額: ¥{todo.amount.toLocaleString()}
+                                </span>
+                              )}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-gray-900">
-                        {todo.deadline}
-                      </p>
-                      <button className="mt-2 text-blue-600 hover:text-blue-800 text-sm">
-                        詳細 →
-                      </button>
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-gray-900">
+                          {todo.deadline}
+                        </p>
+                        <button className="mt-2 text-blue-600 hover:text-blue-800 text-sm">
+                          詳細 →
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
@@ -165,15 +296,15 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
             <div className="p-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-600">契約件数</p>
+                  <p className="text-sm text-gray-600">月間売上</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {kpiData.currentContracts}/{kpiData.monthlyTarget}
+                    ¥{stats.monthlyRevenue.toLocaleString()}
                   </p>
                   <div className="mt-2 bg-gray-200 rounded-full h-2">
                     <div
                       className="bg-blue-500 h-2 rounded-full"
                       style={{
-                        width: `${(kpiData.currentContracts / kpiData.monthlyTarget) * 100}%`,
+                        width: `${Math.min((stats.monthlyRevenue / 10000000) * 100, 100)}%`,
                       }}
                     />
                   </div>
@@ -181,19 +312,25 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
                 <div>
                   <p className="text-sm text-gray-600">成約率</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {kpiData.conversionRate}%
+                    {stats.conversionRate.toFixed(1)}%
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">先月比 +5%</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">平均契約金額</p>
-                  <p className="text-xl font-bold text-gray-900">
-                    ¥{kpiData.averageAmount.toLocaleString()}
+                  <p className="text-xs text-gray-500 mt-1">
+                    {stats.conversionRate > 30 ? '良好' : '改善余地あり'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">目標達成率</p>
-                  <p className="text-2xl font-bold text-green-600">70%</p>
+                  <p className="text-sm text-gray-600">新規リード</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {stats.newLeads}件
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">今月獲得</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">保留見積</p>
+                  <p className="text-2xl font-bold text-orange-600">
+                    {stats.pendingEstimates}件
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">フォロー必要</p>
                 </div>
               </div>
             </div>
@@ -212,15 +349,30 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span>営業利益</span>
-                      <span className="font-bold">¥4.2M</span>
+                      <span className="font-bold">
+                        ¥
+                        {(
+                          (financialMetrics?.profit.amount || 0) / 1000000
+                        ).toFixed(1)}
+                        M
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>粗利率</span>
-                      <span className="font-bold">28.5%</span>
+                      <span className="font-bold">
+                        {financialMetrics?.profit.margin.toFixed(1) || 0}%
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>受注単価</span>
-                      <span className="font-bold">¥2.1M</span>
+                      <span className="font-bold">
+                        ¥
+                        {(
+                          (financialMetrics?.efficiency.avgDealSize || 0) /
+                          1000000
+                        ).toFixed(1)}
+                        M
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -230,15 +382,30 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span>成約率</span>
-                      <span className="font-bold text-green-600">35%</span>
+                      <span
+                        className={`font-bold ${(financialMetrics?.efficiency.conversionRate || 0) > 30 ? 'text-green-600' : 'text-orange-600'}`}
+                      >
+                        {financialMetrics?.efficiency.conversionRate.toFixed(
+                          1,
+                        ) || 0}
+                        %
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>リードタイム</span>
-                      <span className="font-bold">12日</span>
+                      <span className="font-bold">
+                        {financialMetrics?.efficiency.salesCycle || 0}日
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span>顧客単価</span>
-                      <span className="font-bold">¥1.8M</span>
+                      <span>月間売上</span>
+                      <span className="font-bold">
+                        ¥
+                        {(
+                          (financialMetrics?.revenue.monthly || 0) / 1000000
+                        ).toFixed(1)}
+                        M
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -251,24 +418,56 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span>月次売上目標</span>
-                      <span>¥14.7M / ¥21M</span>
+                      <span>
+                        ¥
+                        {(
+                          (financialMetrics?.revenue.monthly || 0) / 1000000
+                        ).toFixed(1)}
+                        M / ¥
+                        {(
+                          (financialMetrics?.projections.monthlyTarget ||
+                            10000000) / 1000000
+                        ).toFixed(0)}
+                        M
+                      </span>
                     </div>
                     <div className="w-full bg-yellow-200 rounded-full h-2">
                       <div
                         className="bg-yellow-600 h-2 rounded-full"
-                        style={{ width: '70%' }}
+                        style={{
+                          width: `${Math.min(financialMetrics?.projections.currentProgress || 0, 100)}%`,
+                        }}
                       ></div>
                     </div>
                   </div>
                   <div>
                     <div className="flex justify-between text-sm mb-1">
-                      <span>契約件数目標</span>
-                      <span>7件 / 10件</span>
+                      <span>四半期目標</span>
+                      <span>
+                        ¥
+                        {(
+                          (financialMetrics?.revenue.quarterly || 0) / 1000000
+                        ).toFixed(1)}
+                        M / ¥
+                        {(
+                          (financialMetrics?.projections.quarterlyTarget ||
+                            30000000) / 1000000
+                        ).toFixed(0)}
+                        M
+                      </span>
                     </div>
                     <div className="w-full bg-yellow-200 rounded-full h-2">
                       <div
                         className="bg-green-500 h-2 rounded-full"
-                        style={{ width: '70%' }}
+                        style={{
+                          width: `${Math.min(
+                            ((financialMetrics?.revenue.quarterly || 0) /
+                              (financialMetrics?.projections.quarterlyTarget ||
+                                30000000)) *
+                              100,
+                            100,
+                          )}%`,
+                        }}
                       ></div>
                     </div>
                   </div>

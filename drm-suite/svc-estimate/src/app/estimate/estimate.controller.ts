@@ -65,4 +65,32 @@ export class EstimateController {
   async getApprovalWorkflow(@Param('id') id: string) {
     return this.estimateService.getApprovalWorkflow(id);
   }
+
+  // RAG-based endpoints
+  @Get('rag/similar')
+  async findSimilarEstimates(
+    @Query('query') query: string,
+    @Query('limit') limit?: number,
+  ) {
+    const limitNum = limit ? parseInt(limit.toString()) : 5;
+    return this.estimateService.findSimilarEstimates(query, limitNum);
+  }
+
+  @Post('rag/suggest-items')
+  async suggestItems(
+    @Body('projectType') projectType: string,
+    @Body('description') description: string,
+  ) {
+    return this.estimateService.suggestItems(projectType, description);
+  }
+
+  @Post('rag/optimize-pricing')
+  async optimizePricing(@Body('sections') sections: any[]) {
+    return this.estimateService.optimizePricing(sections);
+  }
+
+  @Get('stats')
+  async getStats(@Query('period') period?: string) {
+    return this.estimateService.getEstimateStats(period);
+  }
 }

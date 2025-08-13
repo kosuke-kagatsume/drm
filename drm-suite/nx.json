@@ -36,7 +36,7 @@
       "options": {
         "targetName": "test"
       },
-      "exclude": ["web-frontend/svc-expense-e2e/**/*"]
+      "exclude": ["web-frontend/svc-expense-e2e/**/*", "svc-customer-e2e/**/*"]
     },
     {
       "plugin": "@nx/next/plugin",

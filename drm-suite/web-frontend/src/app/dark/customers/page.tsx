@@ -482,7 +482,9 @@ export default function CustomersPage() {
                       <div
                         key={customer.id}
                         className="bg-black border border-zinc-800 p-4 cursor-pointer hover:border-zinc-700 transition-colors"
-                        onClick={() => router.push(`/customers/${customer.id}`)}
+                        onClick={() =>
+                          router.push(`/dark/customers/${customer.id}`)
+                        }
                       >
                         <h4 className="text-white font-light text-sm">
                           {customer.name}
@@ -533,7 +535,7 @@ export default function CustomersPage() {
                       <h4 className="text-white font-light">
                         <button
                           onClick={() =>
-                            router.push(`/customers/${action.customerId}`)
+                            router.push(`/dark/customers/${action.customerId}`)
                           }
                           className="hover:text-zinc-400 transition-colors"
                         >
@@ -699,7 +701,7 @@ export default function CustomersPage() {
                 <div className="flex justify-between">
                   <button
                     onClick={() =>
-                      router.push(`/customers/${selectedCustomer.id}`)
+                      router.push(`/dark/customers/${selectedCustomer.id}`)
                     }
                     className="px-8 py-3 bg-white text-black text-xs tracking-wider font-medium hover:bg-zinc-200 transition-colors"
                   >

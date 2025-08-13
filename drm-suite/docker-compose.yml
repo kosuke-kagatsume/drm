@@ -97,6 +97,30 @@ services:
       - ./api-gateway:/app/api-gateway
       - ./libs:/app/libs
 
+  # Customer Service
+  svc-customer:
+    build:
+      context: .
+      dockerfile: svc-customer/Dockerfile
+    container_name: drm-svc-customer
+    ports:
+      - '3006:3001'
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgresql://drm_user:drm_password@postgres:5432/drm_db
+      REDIS_URL: redis://redis:6379
+      KAFKA_BROKERS: kafka:9092
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    networks:
+      - drm-network
+    volumes:
+      - ./svc-customer:/app/svc-customer
+      - ./libs:/app/libs
+
   # Estimate Service
   svc-estimate:
     build:

@@ -91,6 +91,10 @@ export class CreateEstimateDto {
   @IsString()
   estimateNumber: string;
 
+  @IsOptional()
+  @IsString()
+  status?: string;
+
   @IsString()
   customerName: string;
 

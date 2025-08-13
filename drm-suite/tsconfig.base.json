@@ -17,6 +17,7 @@
     "paths": {
       "@drm-suite/auth": ["libs/auth/src/index.ts"],
       "@drm-suite/event-bus": ["libs/event-bus/src/index.ts"],
+      "@drm-suite/prisma": ["libs/prisma/src/index.ts"],
       "@drm-suite/rag": ["libs/rag/src/index.ts"]
     }
   },

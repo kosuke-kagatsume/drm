@@ -1,6 +1,6 @@
 {
-  "buildCommand": "cd web-frontend && npm install && npm run build",
-  "outputDirectory": "web-frontend/.next",
+  "buildCommand": "npx nx build web-frontend",
+  "outputDirectory": "dist/web-frontend/.next",
   "framework": "nextjs",
   "installCommand": "npm install",
   "regions": ["hnd1"],
@@ -9,5 +9,10 @@
       "runtime": "nodejs20.x",
       "maxDuration": 10
     }
+  },
+  "env": {
+    "NEXT_PUBLIC_CUSTOMER_SERVICE_URL": "@drm-customer-api",
+    "NEXT_PUBLIC_ESTIMATE_SERVICE_URL": "@drm-estimate-api",
+    "DATABASE_URL": "@database-url"
   }
 }

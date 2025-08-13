@@ -58,11 +58,11 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'border-red-500 bg-red-50';
+        return 'border-red-500/50 bg-red-500/10';
       case 'medium':
-        return 'border-orange-500 bg-orange-50';
+        return 'border-amber-500/50 bg-amber-500/10';
       default:
-        return 'border-green-500 bg-green-50';
+        return 'border-emerald-500/50 bg-emerald-500/10';
     }
   };
 
@@ -81,23 +81,25 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
 
   return (
     <div className="space-y-6">
-      {/* 今日のアラート */}
-      <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+      {/* TODAY'S ALERT */}
+      <div className="bg-zinc-950 border border-red-500/30 p-6">
         <div className="flex items-center">
           <div className="flex-shrink-0">
-            <span className="text-2xl">⚠️</span>
+            <div className="w-8 h-8 border border-red-500/50 flex items-center justify-center text-red-500 font-light text-xs">
+              01
+            </div>
           </div>
-          <div className="ml-3">
-            <h3 className="text-sm font-medium text-red-800">
-              緊急：本日15時締切
+          <div className="ml-4">
+            <h3 className="text-xs font-normal text-red-500 tracking-widest">
+              URGENT: TODAY 15:00 DEADLINE
             </h3>
-            <div className="mt-2 text-sm text-red-700">
-              <p>田中様邸の見積提出期限が4時間後です。</p>
+            <div className="mt-2 text-xs text-zinc-400 tracking-wider">
+              <p>TANAKA RESIDENCE ESTIMATE SUBMISSION DUE IN 4 HOURS.</p>
               <button
-                onClick={() => router.push('/estimates/create')}
-                className="mt-2 bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
+                onClick={() => router.push('/dark/estimates/create')}
+                className="mt-3 bg-white text-black px-4 py-2 text-xs tracking-wider hover:bg-zinc-200 transition-colors"
               >
-                見積作成へ →
+                CREATE ESTIMATE →
               </button>
             </div>
           </div>
@@ -105,14 +107,14 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* 今日のタスク */}
+        {/* TODAY'S TASKS */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b">
-              <h2 className="text-lg font-semibold flex items-center">
-                📌 今日やること
-                <span className="ml-2 bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded">
-                  {todayTodos.length}件
+          <div className="bg-zinc-950 border border-zinc-800">
+            <div className="px-6 py-4 border-b border-zinc-800">
+              <h2 className="text-sm font-normal text-white tracking-widest flex items-center">
+                TODAY'S TASKS
+                <span className="ml-3 border border-zinc-700 text-zinc-400 text-xs px-3 py-1 tracking-wider">
+                  {todayTodos.length} ITEMS
                 </span>
               </h2>
             </div>
@@ -129,14 +131,14 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
                           {getTypeIndicator(todo.type)}
                         </div>
                         <div>
-                          <h4 className="font-medium text-gray-900">
-                            {todo.title}
+                          <h4 className="font-light text-white tracking-wider">
+                            {todo.title.toUpperCase()}
                           </h4>
-                          <p className="text-sm text-gray-600 mt-1">
-                            顧客: {todo.customer}
+                          <p className="text-xs text-zinc-500 tracking-wider mt-1">
+                            CLIENT: {todo.customer.toUpperCase()}
                             {todo.amount && (
-                              <span className="ml-3">
-                                金額: ¥{todo.amount.toLocaleString()}
+                              <span className="ml-4">
+                                AMOUNT: ¥{todo.amount.toLocaleString()}
                               </span>
                             )}
                           </p>
@@ -144,11 +146,11 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-medium text-gray-900">
-                        {todo.deadline}
+                      <p className="text-xs font-light text-white tracking-wider">
+                        {todo.deadline.toUpperCase()}
                       </p>
-                      <button className="mt-2 text-blue-600 hover:text-blue-800 text-sm">
-                        詳細 →
+                      <button className="mt-2 text-zinc-500 hover:text-white transition-colors text-xs tracking-wider">
+                        DETAILS →
                       </button>
                     </div>
                   </div>
@@ -157,21 +159,25 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
             </div>
           </div>
 
-          {/* KPI進捗 */}
-          <div className="bg-white rounded-lg shadow mt-6">
-            <div className="px-6 py-4 border-b">
-              <h2 className="text-lg font-semibold">📊 今月の成績</h2>
+          {/* KPI PROGRESS */}
+          <div className="bg-zinc-950 border border-zinc-800 mt-6">
+            <div className="px-6 py-4 border-b border-zinc-800">
+              <h2 className="text-sm font-normal text-white tracking-widest">
+                THIS MONTH'S PERFORMANCE
+              </h2>
             </div>
             <div className="p-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-600">契約件数</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-xs text-zinc-500 tracking-wider">
+                    CONTRACT COUNT
+                  </p>
+                  <p className="text-2xl font-thin text-white">
                     {kpiData.currentContracts}/{kpiData.monthlyTarget}
                   </p>
-                  <div className="mt-2 bg-gray-200 rounded-full h-2">
+                  <div className="mt-2 bg-zinc-900 h-1">
                     <div
-                      className="bg-blue-500 h-2 rounded-full"
+                      className="bg-blue-500/50 h-1 transition-all duration-500"
                       style={{
                         width: `${(kpiData.currentContracts / kpiData.monthlyTarget) * 100}%`,
                       }}
@@ -179,21 +185,29 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
                   </div>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">成約率</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-xs text-zinc-500 tracking-wider">
+                    CONVERSION RATE
+                  </p>
+                  <p className="text-2xl font-thin text-white">
                     {kpiData.conversionRate}%
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">先月比 +5%</p>
+                  <p className="text-xs text-emerald-500 tracking-wider mt-1">
+                    +5% FROM LAST MONTH
+                  </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">平均契約金額</p>
-                  <p className="text-xl font-bold text-gray-900">
+                  <p className="text-xs text-zinc-500 tracking-wider">
+                    AVERAGE AMOUNT
+                  </p>
+                  <p className="text-xl font-thin text-white">
                     ¥{kpiData.averageAmount.toLocaleString()}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">目標達成率</p>
-                  <p className="text-2xl font-bold text-green-600">70%</p>
+                  <p className="text-xs text-zinc-500 tracking-wider">
+                    TARGET ACHIEVEMENT
+                  </p>
+                  <p className="text-2xl font-thin text-emerald-500">70%</p>
                 </div>
               </div>
             </div>
