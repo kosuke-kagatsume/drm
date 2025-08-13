@@ -99,6 +99,12 @@ export default function CampaignsPage() {
       {/* ヘッダー */}
       <div className="bg-gradient-to-r from-indigo-600 to-blue-500 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="text-white/80 hover:text-white mb-2 flex items-center"
+          >
+            ← ダッシュボードに戻る
+          </button>
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold">キャンペーン管理</h1>

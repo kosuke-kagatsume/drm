@@ -209,6 +209,12 @@ export default function NewCampaignPage() {
       {/* ヘッダー */}
       <div className="bg-gradient-to-r from-indigo-600 to-blue-500 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <button
+            onClick={() => router.push('/campaigns')}
+            className="text-white/80 hover:text-white mb-2 flex items-center"
+          >
+            ← キャンペーン一覧に戻る
+          </button>
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold">新規キャンペーン作成</h1>
@@ -216,12 +222,20 @@ export default function NewCampaignPage() {
                 建築・リフォーム業界向けマーケティング施策を設定
               </p>
             </div>
-            <button
-              onClick={() => router.push('/campaigns')}
-              className="text-white/80 hover:text-white"
-            >
-              ✕ 閉じる
-            </button>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition"
+              >
+                🏠 ダッシュボード
+              </button>
+              <button
+                onClick={() => router.push('/campaigns')}
+                className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition"
+              >
+                ✕ 閉じる
+              </button>
+            </div>
           </div>
         </div>
       </div>

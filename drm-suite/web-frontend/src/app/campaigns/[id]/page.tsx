@@ -66,14 +66,25 @@ export default function CampaignDetailPage({
       {/* ヘッダー */}
       <div className="bg-gradient-to-r from-indigo-600 to-blue-500 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center space-x-4 mb-2">
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="text-white/80 hover:text-white flex items-center"
+            >
+              🏠 ダッシュボード
+            </button>
+            <span className="text-white/60">›</span>
+            <button
+              onClick={() => router.push('/campaigns')}
+              className="text-white/80 hover:text-white"
+            >
+              キャンペーン一覧
+            </button>
+            <span className="text-white/60">›</span>
+            <span className="text-white/90">{campaign.name}</span>
+          </div>
           <div className="flex justify-between items-center">
             <div>
-              <button
-                onClick={() => router.push('/campaigns')}
-                className="text-white/80 hover:text-white mb-2"
-              >
-                ← キャンペーン一覧
-              </button>
               <h1 className="text-3xl font-bold">{campaign.name}</h1>
               <p className="text-indigo-100 mt-1">{campaign.description}</p>
             </div>

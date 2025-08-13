@@ -409,16 +409,22 @@ export default function MarketingDashboard({
           </h2>
           <div className="flex space-x-2">
             <button
+              onClick={() => router.push('/campaigns')}
+              className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+            >
+              📋 キャンペーン一覧
+            </button>
+            <button
+              onClick={() => router.push('/campaigns/new')}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            >
+              ➕ 新規キャンペーン
+            </button>
+            <button
               onClick={() => handleExport('marketing')}
               className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
             >
               📊 エクスポート
-            </button>
-            <button
-              onClick={handleCampaignCreate}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-            >
-              ➕ 新規キャンペーン
             </button>
           </div>
         </div>
