@@ -1,5 +1,4 @@
 {
-  "rootDirectory": "web-frontend",
   "framework": "nextjs",
   "regions": ["hnd1"],
   "env": {
