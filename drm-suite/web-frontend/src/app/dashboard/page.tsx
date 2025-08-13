@@ -91,21 +91,22 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2 sm:gap-4">
               <a
                 href="/dark/dashboard"
-                className="bg-black text-white px-3 sm:px-4 py-2 rounded hover:bg-zinc-900 transition flex items-center text-sm sm:text-base"
+                className="bg-black text-white px-3 sm:px-4 py-2 rounded hover:bg-zinc-900 transition flex items-center text-sm sm:text-base whitespace-nowrap"
               >
                 <span className="mr-1 sm:mr-2">🌙</span>
-                <span className="hidden sm:inline">ダークモード</span>
-                <span className="sm:hidden">ダーク</span>
+                <span className="hidden md:inline">ダークモード</span>
+                <span className="md:hidden">ダーク</span>
               </a>
-              <div className="text-right hidden sm:block">
+              <div className="text-right hidden md:block">
                 <p className="text-sm opacity-90">ログイン中</p>
                 <p className="font-medium text-sm">{user.email}</p>
               </div>
               <button
                 onClick={logout}
-                className="bg-white/20 hover:bg-white/30 px-3 sm:px-4 py-2 rounded transition text-sm sm:text-base"
+                className="bg-white/20 hover:bg-white/30 px-3 sm:px-4 py-2 rounded transition text-sm sm:text-base whitespace-nowrap"
               >
-                ログアウト
+                <span className="hidden sm:inline">ログアウト</span>
+                <span className="sm:hidden">ログアウト</span>
               </button>
             </div>
           </div>

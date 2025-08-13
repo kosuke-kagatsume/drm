@@ -75,12 +75,12 @@ export default function DarkDashboardPage() {
             <div className="flex items-center gap-2 sm:gap-4">
               <a
                 href="/dashboard"
-                className="border border-zinc-800 text-white px-3 sm:px-6 py-2 text-xs tracking-wider hover:bg-zinc-900 transition-colors flex items-center"
+                className="border border-zinc-800 text-white px-3 sm:px-6 py-2 text-xs tracking-wider hover:bg-zinc-900 transition-colors flex items-center whitespace-nowrap"
               >
-                <span className="hidden sm:inline">COLORFUL MODE</span>
-                <span className="sm:hidden">COLOR</span>
+                <span className="hidden md:inline">COLORFUL MODE</span>
+                <span className="md:hidden">COLOR</span>
               </a>
-              <div className="text-right hidden sm:block">
+              <div className="text-right hidden md:block">
                 <p className="text-xs text-zinc-500 tracking-wider">
                   LOGGED IN AS
                 </p>
@@ -88,7 +88,7 @@ export default function DarkDashboardPage() {
               </div>
               <button
                 onClick={logout}
-                className="border border-zinc-800 hover:bg-zinc-900 px-3 sm:px-6 py-2 text-white text-xs tracking-wider transition-colors"
+                className="border border-zinc-800 hover:bg-zinc-900 px-3 sm:px-6 py-2 text-white text-xs tracking-wider transition-colors whitespace-nowrap"
               >
                 LOGOUT
               </button>
