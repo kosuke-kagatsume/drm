@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   GoogleMap,
   LoadScript,
@@ -10,6 +10,7 @@ import {
   MarkerClusterer,
 } from '@react-google-maps/api';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ProjectLocation {
   id: string;
@@ -50,8 +51,12 @@ const libraries: ('places' | 'drawing' | 'geometry' | 'visualization')[] = [
   'places',
 ];
 
+// Google Maps APIキーを環境変数から取得
+const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+
 export default function MapDashboard() {
   const router = useRouter();
+  const { user, isLoading } = useAuth();
   const [selectedMarker, setSelectedMarker] = useState<ProjectLocation | null>(
     null,
   );
@@ -65,21 +70,6 @@ export default function MapDashboard() {
   const [showClusters, setShowClusters] = useState(true);
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [valueRange, setValueRange] = useState({ min: 0, max: 10000000 });
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Check localStorage for login information
-    if (typeof window !== 'undefined') {
-      const role = localStorage.getItem('userRole');
-      const email = localStorage.getItem('userEmail');
-
-      if (!role || !email) {
-        router.push('/login');
-      } else {
-        setIsLoading(false);
-      }
-    }
-  }, [router]);
 
   // Sample data for demonstration
   const projectLocations: ProjectLocation[] = [
@@ -257,7 +247,7 @@ export default function MapDashboard() {
     return stats;
   }, [filteredLocations]);
 
-  if (isLoading) {
+  if (isLoading || !user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -467,128 +457,177 @@ export default function MapDashboard() {
 
       {/* Map */}
       <div className="flex-1 relative">
-        <LoadScript
-          googleMapsApiKey={
-            process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ||
-            'AIzaSyBNLrJhOMz6idD05pzfn5lhA-TAw-mAZCU'
-          }
-          libraries={libraries}
-        >
-          <GoogleMap
-            mapContainerStyle={mapContainerStyle}
-            center={center}
-            zoom={11}
-            options={{ ...mapOptions, mapTypeId: mapType }}
-          >
-            {/* Heatmap Layer */}
-            {showHeatmap && heatmapData.length > 0 && (
-              <HeatmapLayer
-                data={heatmapData}
-                options={{
-                  radius: 50,
-                  opacity: 0.6,
-                }}
-              />
-            )}
-
-            {/* Markers with Clustering */}
-            {showClusters ? (
-              <MarkerClusterer>
-                {(clusterer) => (
-                  <>
-                    {filteredLocations.map((location) => (
-                      <Marker
-                        key={location.id}
-                        position={{ lat: location.lat, lng: location.lng }}
-                        icon={getMarkerIcon(location.type)}
-                        onClick={() => setSelectedMarker(location)}
-                        clusterer={clusterer}
-                      />
-                    ))}
-                  </>
-                )}
-              </MarkerClusterer>
-            ) : (
-              filteredLocations.map((location) => (
-                <Marker
-                  key={location.id}
-                  position={{ lat: location.lat, lng: location.lng }}
-                  icon={getMarkerIcon(location.type)}
-                  onClick={() => setSelectedMarker(location)}
-                />
-              ))
-            )}
-
-            {/* Info Window */}
-            {selectedMarker && (
-              <InfoWindow
-                position={{ lat: selectedMarker.lat, lng: selectedMarker.lng }}
-                onCloseClick={() => setSelectedMarker(null)}
+        {!GOOGLE_MAPS_API_KEY ||
+        GOOGLE_MAPS_API_KEY === 'AIzaSyBGVEu7pxJUhDl9vR9mLkN5N4JhYPFfPHE' ? (
+          <div className="h-full flex items-center justify-center bg-gray-100">
+            <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-md">
+              <div className="text-6xl mb-4">🗺️</div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                Google Maps APIキーが無効です
+              </h2>
+              <p className="text-gray-600 mb-4">
+                現在のAPIキーでは地図が表示できません。
+              </p>
+              <div className="bg-gray-100 rounded-lg p-4 text-left mb-4">
+                <p className="text-sm text-gray-700 mb-2">
+                  ✅ 必要なAPIを有効化:
+                </p>
+                <ul className="text-sm text-gray-600 ml-4 space-y-1">
+                  <li>• Maps JavaScript API</li>
+                  <li>• Geocoding API</li>
+                  <li>• Places API</li>
+                </ul>
+                <p className="text-sm text-gray-700 mt-3">
+                  🔑 APIキーの制限を確認:
+                </p>
+                <ul className="text-sm text-gray-600 ml-4 space-y-1">
+                  <li>• HTTPリファラー制限</li>
+                  <li>• APIキー制限</li>
+                </ul>
+              </div>
+              <a
+                href="https://console.cloud.google.com/apis/dashboard"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block px-6 py-2 bg-dandori-blue text-white rounded-lg hover:bg-dandori-blue-dark"
               >
-                <div className="p-2 min-w-[200px]">
-                  <h3 className="font-bold text-lg mb-2">
-                    {selectedMarker.name}
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-1">
-                    {selectedMarker.address}
-                  </p>
-                  <p className="text-sm mb-2">
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-medium ${
-                        selectedMarker.type === 'ongoing'
-                          ? 'bg-blue-100 text-blue-800'
-                          : selectedMarker.type === 'completed'
-                            ? 'bg-green-100 text-green-800'
-                            : selectedMarker.type === 'estimate'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-purple-100 text-purple-800'
-                      }`}
-                    >
-                      {selectedMarker.status}
-                    </span>
-                  </p>
-                  {selectedMarker.value > 0 && (
-                    <p className="text-lg font-bold text-green-600 mb-2">
-                      ¥{selectedMarker.value.toLocaleString()}
-                    </p>
-                  )}
-                  {selectedMarker.manager && (
-                    <p className="text-sm text-gray-600">
-                      担当: {selectedMarker.manager}
-                    </p>
-                  )}
-                  {selectedMarker.startDate && (
-                    <p className="text-sm text-gray-600">
-                      期間: {selectedMarker.startDate} 〜{' '}
-                      {selectedMarker.endDate || '進行中'}
-                    </p>
-                  )}
-                  {selectedMarker.quality && (
-                    <p className="text-sm">
-                      品質評価: {'★'.repeat(Math.floor(selectedMarker.quality))}
-                      <span className="text-gray-400">
-                        {'★'.repeat(5 - Math.floor(selectedMarker.quality))}
-                      </span>
-                      ({selectedMarker.quality})
-                    </p>
-                  )}
-                  <button
-                    onClick={() => {
-                      if (selectedMarker.type === 'vendor') {
-                        router.push(`/vendors/${selectedMarker.id}`);
-                      } else {
-                        router.push(`/projects/${selectedMarker.id}`);
-                      }
-                    }}
-                    className="mt-3 w-full bg-blue-600 text-white py-1 px-3 rounded text-sm hover:bg-blue-700"
-                  >
-                    詳細を見る
-                  </button>
+                Google Cloud Consoleを開く
+              </a>
+            </div>
+          </div>
+        ) : (
+          <LoadScript
+            googleMapsApiKey={GOOGLE_MAPS_API_KEY}
+            libraries={libraries}
+            loadingElement={
+              <div className="h-full flex items-center justify-center bg-gray-100">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dandori-blue mx-auto"></div>
+                  <p className="mt-4 text-gray-600">地図を読み込み中...</p>
                 </div>
-              </InfoWindow>
-            )}
-          </GoogleMap>
-        </LoadScript>
+              </div>
+            }
+          >
+            <GoogleMap
+              mapContainerStyle={mapContainerStyle}
+              center={center}
+              zoom={11}
+              options={{ ...mapOptions, mapTypeId: mapType }}
+            >
+              {/* Heatmap Layer */}
+              {showHeatmap && heatmapData.length > 0 && (
+                <HeatmapLayer
+                  data={heatmapData}
+                  options={{
+                    radius: 50,
+                    opacity: 0.6,
+                  }}
+                />
+              )}
+
+              {/* Markers with Clustering */}
+              {showClusters ? (
+                <MarkerClusterer>
+                  {(clusterer) => (
+                    <>
+                      {filteredLocations.map((location) => (
+                        <Marker
+                          key={location.id}
+                          position={{ lat: location.lat, lng: location.lng }}
+                          icon={getMarkerIcon(location.type)}
+                          onClick={() => setSelectedMarker(location)}
+                          clusterer={clusterer}
+                        />
+                      ))}
+                    </>
+                  )}
+                </MarkerClusterer>
+              ) : (
+                filteredLocations.map((location) => (
+                  <Marker
+                    key={location.id}
+                    position={{ lat: location.lat, lng: location.lng }}
+                    icon={getMarkerIcon(location.type)}
+                    onClick={() => setSelectedMarker(location)}
+                  />
+                ))
+              )}
+
+              {/* Info Window */}
+              {selectedMarker && (
+                <InfoWindow
+                  position={{
+                    lat: selectedMarker.lat,
+                    lng: selectedMarker.lng,
+                  }}
+                  onCloseClick={() => setSelectedMarker(null)}
+                >
+                  <div className="p-2 min-w-[200px]">
+                    <h3 className="font-bold text-lg mb-2">
+                      {selectedMarker.name}
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-1">
+                      {selectedMarker.address}
+                    </p>
+                    <p className="text-sm mb-2">
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-medium ${
+                          selectedMarker.type === 'ongoing'
+                            ? 'bg-blue-100 text-blue-800'
+                            : selectedMarker.type === 'completed'
+                              ? 'bg-green-100 text-green-800'
+                              : selectedMarker.type === 'estimate'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-purple-100 text-purple-800'
+                        }`}
+                      >
+                        {selectedMarker.status}
+                      </span>
+                    </p>
+                    {selectedMarker.value > 0 && (
+                      <p className="text-lg font-bold text-green-600 mb-2">
+                        ¥{selectedMarker.value.toLocaleString()}
+                      </p>
+                    )}
+                    {selectedMarker.manager && (
+                      <p className="text-sm text-gray-600">
+                        担当: {selectedMarker.manager}
+                      </p>
+                    )}
+                    {selectedMarker.startDate && (
+                      <p className="text-sm text-gray-600">
+                        期間: {selectedMarker.startDate} 〜{' '}
+                        {selectedMarker.endDate || '進行中'}
+                      </p>
+                    )}
+                    {selectedMarker.quality && (
+                      <p className="text-sm">
+                        品質評価:{' '}
+                        {'★'.repeat(Math.floor(selectedMarker.quality))}
+                        <span className="text-gray-400">
+                          {'★'.repeat(5 - Math.floor(selectedMarker.quality))}
+                        </span>
+                        ({selectedMarker.quality})
+                      </p>
+                    )}
+                    <button
+                      onClick={() => {
+                        if (selectedMarker.type === 'vendor') {
+                          router.push(`/vendors/${selectedMarker.id}`);
+                        } else {
+                          router.push(`/projects/${selectedMarker.id}`);
+                        }
+                      }}
+                      className="mt-3 w-full bg-blue-600 text-white py-1 px-3 rounded text-sm hover:bg-blue-700"
+                    >
+                      詳細を見る
+                    </button>
+                  </div>
+                </InfoWindow>
+              )}
+            </GoogleMap>
+          </LoadScript>
+        )}
 
         {/* Floating Action Buttons */}
         <div className="absolute bottom-8 right-8 space-y-3">

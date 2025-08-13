@@ -2,125 +2,156 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-
-interface InventoryItem {
-  id: string;
-  sku: string;
-  name: string;
-  category: string;
-  quantity: number;
-  minQuantity: number;
-  price: number;
-  status: 'in_stock' | 'low_stock' | 'out_of_stock';
-}
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  inventoryService,
+  type InventoryItem,
+  type CreateInventoryDto,
+  type CreateStockMovementDto,
+} from '@/services/inventory.service';
 
 export default function InventoryPage() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-  const [items, setItems] = useState<InventoryItem[]>([
-    {
-      id: '1',
-      sku: 'SKU-001',
-      name: 'ノートパソコン',
-      category: 'IT機器',
-      quantity: 15,
-      minQuantity: 10,
-      price: 120000,
-      status: 'in_stock',
-    },
-    {
-      id: '2',
-      sku: 'SKU-002',
-      name: 'オフィスチェア',
-      category: '家具',
-      quantity: 8,
-      minQuantity: 10,
-      price: 35000,
-      status: 'low_stock',
-    },
-    {
-      id: '3',
-      sku: 'SKU-003',
-      name: 'プリンター用紙',
-      category: '消耗品',
-      quantity: 0,
-      minQuantity: 50,
-      price: 500,
-      status: 'out_of_stock',
-    },
-  ]);
+  const { user, isLoading } = useAuth();
+  const [items, setItems] = useState<InventoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [totalItems, setTotalItems] = useState(0);
+  const [filter, setFilter] = useState({
+    companyId: 'default-company',
+    storeId: 'default-store',
+    limit: 20,
+    offset: 0,
+  });
 
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showMovementModal, setShowMovementModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [movementType, setMovementType] = useState<'in' | 'out' | 'adjust'>(
+    'in',
+  );
+  const [movementQuantity, setMovementQuantity] = useState('');
+  const [movementReason, setMovementReason] = useState('');
+
   const [newItem, setNewItem] = useState({
+    sku: '',
     name: '',
+    description: '',
     category: '',
-    quantity: '',
-    minQuantity: '',
-    price: '',
+    currentStock: '',
+    minStock: '',
+    maxStock: '',
+    unit: '個',
+    location: '',
   });
 
   useEffect(() => {
-    // Check localStorage for login information
-    if (typeof window !== 'undefined') {
-      const role = localStorage.getItem('userRole');
-      const email = localStorage.getItem('userEmail');
+    fetchInventory();
+  }, [filter]);
 
-      if (!role || !email) {
-        router.push('/login');
-      } else {
-        setIsLoading(false);
-      }
+  const fetchInventory = async () => {
+    try {
+      setLoading(true);
+      const response = await inventoryService.getInventories(filter);
+      setItems(response.items);
+      setTotalItems(response.total);
+    } catch (err) {
+      setError('在庫データの取得に失敗しました');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-  }, [router]);
-
-  const handleAddItem = () => {
-    const item: InventoryItem = {
-      id: Date.now().toString(),
-      sku: `SKU-${String(items.length + 1).padStart(3, '0')}`,
-      name: newItem.name,
-      category: newItem.category,
-      quantity: Number(newItem.quantity),
-      minQuantity: Number(newItem.minQuantity),
-      price: Number(newItem.price),
-      status:
-        Number(newItem.quantity) === 0
-          ? 'out_of_stock'
-          : Number(newItem.quantity) < Number(newItem.minQuantity)
-            ? 'low_stock'
-            : 'in_stock',
-    };
-    setItems([...items, item]);
-    setShowAddModal(false);
-    setNewItem({
-      name: '',
-      category: '',
-      quantity: '',
-      minQuantity: '',
-      price: '',
-    });
   };
 
-  const getStatusBadge = (status: string) => {
-    const colors = {
-      in_stock: 'bg-green-100 text-green-800',
-      low_stock: 'bg-yellow-100 text-yellow-800',
-      out_of_stock: 'bg-red-100 text-red-800',
-    };
-    const labels = {
-      in_stock: '在庫あり',
-      low_stock: '在庫少',
-      out_of_stock: '在庫切れ',
-    };
+  const handleAddItem = async () => {
+    try {
+      const createDto: CreateInventoryDto = {
+        companyId: filter.companyId,
+        storeId: filter.storeId,
+        sku: newItem.sku || `SKU-${Date.now()}`,
+        name: newItem.name,
+        description: newItem.description,
+        category: newItem.category,
+        currentStock: Number(newItem.currentStock),
+        minStock: Number(newItem.minStock),
+        maxStock: Number(newItem.maxStock),
+        unit: newItem.unit,
+        location: newItem.location,
+        isActive: true,
+      };
+
+      await inventoryService.createInventory(createDto);
+      await fetchInventory();
+      setShowAddModal(false);
+      setNewItem({
+        sku: '',
+        name: '',
+        description: '',
+        category: '',
+        currentStock: '',
+        minStock: '',
+        maxStock: '',
+        unit: '個',
+        location: '',
+      });
+    } catch (err) {
+      alert('商品の追加に失敗しました');
+      console.error(err);
+    }
+  };
+
+  const handleStockMovement = async () => {
+    if (!selectedItem || !movementQuantity || !movementReason) return;
+
+    try {
+      const movementDto: CreateStockMovementDto = {
+        inventoryId: selectedItem.id,
+        type: movementType,
+        quantity: Number(movementQuantity),
+        reason: movementReason,
+      };
+
+      await inventoryService.createStockMovement(movementDto);
+      await fetchInventory();
+      setShowMovementModal(false);
+      setSelectedItem(null);
+      setMovementQuantity('');
+      setMovementReason('');
+    } catch (err) {
+      alert('在庫移動の記録に失敗しました');
+      console.error(err);
+    }
+  };
+
+  const getStatusBadge = (item: InventoryItem) => {
+    let status = 'normal';
+    let label = '正常';
+    let colorClass = 'bg-green-100 text-green-800';
+
+    if (item.currentStock === 0) {
+      status = 'out';
+      label = '在庫切れ';
+      colorClass = 'bg-red-100 text-red-800';
+    } else if (item.lowStock) {
+      status = 'low';
+      label = '在庫少';
+      colorClass = 'bg-yellow-100 text-yellow-800';
+    } else if (item.overStock) {
+      status = 'over';
+      label = '過剰在庫';
+      colorClass = 'bg-blue-100 text-blue-800';
+    }
+
     return (
       <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status as keyof typeof colors]}`}
+        className={`px-2 py-1 rounded-full text-xs font-medium ${colorClass}`}
       >
-        {labels[status as keyof typeof labels]}
+        {label}
       </span>
     );
   };
 
-  if (isLoading) {
+  if (isLoading || !user || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -152,19 +183,19 @@ export default function InventoryPage() {
           <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-sm font-medium text-gray-500 mb-2">総在庫数</h3>
             <p className="text-3xl font-bold text-gray-900">
-              {items.reduce((sum, item) => sum + item.quantity, 0)}
+              {items.reduce((sum, item) => sum + Number(item.currentStock), 0)}
             </p>
           </div>
           <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-sm font-medium text-gray-500 mb-2">在庫不足</h3>
             <p className="text-3xl font-bold text-yellow-600">
-              {items.filter((item) => item.status === 'low_stock').length}
+              {items.filter((item) => item.lowStock).length}
             </p>
           </div>
           <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-sm font-medium text-gray-500 mb-2">在庫切れ</h3>
             <p className="text-3xl font-bold text-red-600">
-              {items.filter((item) => item.status === 'out_of_stock').length}
+              {items.filter((item) => item.currentStock === 0).length}
             </p>
           </div>
         </div>
@@ -197,10 +228,10 @@ export default function InventoryPage() {
                     在庫数
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    最小在庫
+                    最小/最大在庫
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    単価
+                    単位
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                     ステータス
@@ -223,23 +254,26 @@ export default function InventoryPage() {
                       {item.category}
                     </td>
                     <td className="px-4 py-4 text-sm text-gray-900">
-                      {item.quantity}
+                      {Number(item.currentStock)}
                     </td>
                     <td className="px-4 py-4 text-sm text-gray-500">
-                      {item.minQuantity}
+                      {Number(item.minStock)} / {Number(item.maxStock)}
                     </td>
                     <td className="px-4 py-4 text-sm text-gray-900">
-                      ¥{item.price.toLocaleString()}
+                      {item.unit}
                     </td>
                     <td className="px-4 py-4 text-sm">
-                      {getStatusBadge(item.status)}
+                      {getStatusBadge(item)}
                     </td>
                     <td className="px-4 py-4 text-sm">
-                      <button className="text-blue-600 hover:text-blue-900 mr-3">
-                        編集
-                      </button>
-                      <button className="text-green-600 hover:text-green-900">
-                        入荷
+                      <button
+                        onClick={() => {
+                          setSelectedItem(item);
+                          setShowMovementModal(true);
+                        }}
+                        className="text-blue-600 hover:text-blue-900 mr-3"
+                      >
+                        在庫移動
                       </button>
                     </td>
                   </tr>

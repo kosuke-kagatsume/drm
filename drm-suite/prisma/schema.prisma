@@ -21,14 +21,18 @@ model Company {
   updatedAt DateTime @updatedAt
 
   // Relations
-  users        User[]
-  stores       Store[]
-  estimates    Estimate[]
-  inventories  Inventory[]
-  bookings     Booking[]
-  campaigns    Campaign[]
-  ragDocuments RagDocument[]
-  auditLogs    AuditLog[]
+  users             User[]
+  stores            Store[]
+  estimates         Estimate[]
+  inventories       Inventory[]
+  bookings          Booking[]
+  campaigns         Campaign[]
+  ragDocuments      RagDocument[]
+  auditLogs         AuditLog[]
+  expenseCategories ExpenseCategory[]
+  expenses          Expense[]
+  budgets           Budget[]
+  paymentMethods    PaymentMethod[]
 
   @@index([code])
   @@map("companies")
@@ -52,6 +56,7 @@ model Store {
   estimates   Estimate[]
   inventories Inventory[]
   bookings    Booking[]
+  expenses    Expense[]
   campaigns   Campaign[]
 
   @@unique([companyId, code])
@@ -75,13 +80,16 @@ model User {
   updatedAt    DateTime @updatedAt
 
   // Relations
-  company       Company        @relation(fields: [companyId], references: [id])
-  store         Store?         @relation(fields: [storeId], references: [id])
-  estimates     Estimate[]
-  bookings      Booking[]
-  campaigns     Campaign[]
-  auditLogs     AuditLog[]
-  ragQueryLogs  RagQueryLog[]
+  company          Company           @relation(fields: [companyId], references: [id])
+  store            Store?            @relation(fields: [storeId], references: [id])
+  estimates        Estimate[]
+  bookings         Booking[]
+  campaigns        Campaign[]
+  auditLogs        AuditLog[]
+  ragQueryLogs     RagQueryLog[]
+  expenses         Expense[]         @relation("ExpenseSubmitter")
+  approvedExpenses Expense[]         @relation("ExpenseApprover")
+  expenseApprovals ExpenseApproval[]
 
   @@index([companyId])
   @@index([email])
@@ -453,6 +461,139 @@ model RagQueryLog {
   @@index([userId])
   @@index([createdAt])
   @@map("rag_query_logs")
+}
+
+// ==================== Expense Management ====================
+model ExpenseCategory {
+  id        String   @id @default(cuid())
+  companyId String
+  name      String
+  code      String
+  parentId  String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  company   Company           @relation(fields: [companyId], references: [id])
+  parent    ExpenseCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children  ExpenseCategory[] @relation("CategoryHierarchy")
+  expenses  Expense[]
+  budgets   Budget[]
+
+  @@unique([companyId, code])
+  @@index([companyId])
+  @@map("expense_categories")
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  companyId   String
+  storeId     String?
+  userId      String
+  categoryId  String
+  title       String
+  description String?
+  amount      Decimal  @db.Decimal(10, 2)
+  currency    String   @default("JPY")
+  expenseDate DateTime
+  status      String   // draft, submitted, approved, rejected, paid
+  approvedBy  String?
+  approvedAt  DateTime?
+  paidAt      DateTime?
+  projectId   String?
+  vendorId    String?
+  receiptUrl  String?
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  company         Company              @relation(fields: [companyId], references: [id])
+  store           Store?               @relation(fields: [storeId], references: [id])
+  user            User                 @relation("ExpenseSubmitter", fields: [userId], references: [id])
+  approver        User?                @relation("ExpenseApprover", fields: [approvedBy], references: [id])
+  category        ExpenseCategory      @relation(fields: [categoryId], references: [id])
+  approvalHistory ExpenseApproval[]
+  attachments     ExpenseAttachment[]
+
+  @@index([companyId])
+  @@index([userId])
+  @@index([categoryId])
+  @@index([status])
+  @@index([expenseDate])
+  @@map("expenses")
+}
+
+model ExpenseApproval {
+  id         String   @id @default(cuid())
+  expenseId  String
+  userId     String
+  action     String   // approve, reject, request_info
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  // Relations
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@index([expenseId])
+  @@map("expense_approvals")
+}
+
+model ExpenseAttachment {
+  id         String   @id @default(cuid())
+  expenseId  String
+  fileName   String
+  fileUrl    String
+  fileSize   Int
+  fileType   String
+  uploadedAt DateTime @default(now())
+
+  // Relations
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+
+  @@index([expenseId])
+  @@map("expense_attachments")
+}
+
+model Budget {
+  id         String   @id @default(cuid())
+  companyId  String
+  categoryId String
+  fiscal     String   // 2024Q1, 2024M01, 2024
+  amount     Decimal  @db.Decimal(10, 2)
+  currency   String   @default("JPY")
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  company  Company         @relation(fields: [companyId], references: [id])
+  category ExpenseCategory @relation(fields: [categoryId], references: [id])
+
+  @@unique([companyId, categoryId, fiscal])
+  @@index([companyId])
+  @@index([categoryId])
+  @@map("budgets")
+}
+
+model PaymentMethod {
+  id        String   @id @default(cuid())
+  companyId String
+  name      String
+  type      String   // credit_card, bank_transfer, cash, etc
+  details   Json     @default("{}")
+  isDefault Boolean  @default(false)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+  @@map("payment_methods")
 }
 
 // ==================== System ====================

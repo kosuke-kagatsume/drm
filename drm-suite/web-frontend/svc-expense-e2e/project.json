@@ -1,0 +1,17 @@
+{
+  "name": "svc-expense-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": ["svc-expense"],
+  "projectType": "application",
+  "targets": {
+    "e2e": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{e2eProjectRoot}"],
+      "options": {
+        "jestConfig": "web-frontend/svc-expense-e2e/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "dependsOn": ["svc-expense:build", "svc-expense:serve"]
+    }
+  }
+}

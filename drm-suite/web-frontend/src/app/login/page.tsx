@@ -90,16 +90,16 @@ export default function LoginPage() {
 
   const handleQuickLogin = (account: QuickLoginAccount) => {
     setSelectedAccount(account);
-    // セッション保存のシミュレーション
+    // セッション保存
     if (typeof window !== 'undefined') {
       localStorage.setItem('userRole', account.role);
       localStorage.setItem('userEmail', account.email);
       localStorage.setItem('userName', account.name);
+      // ダッシュボードへ遷移
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 500);
     }
-    // ダッシュボードへ遷移
-    setTimeout(() => {
-      router.push('/dashboard');
-    }, 500);
   };
 
   if (!mounted) {

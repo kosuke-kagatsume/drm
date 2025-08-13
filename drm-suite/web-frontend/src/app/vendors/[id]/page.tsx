@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface VendorProject {
   id: string;
@@ -55,25 +56,11 @@ interface VendorDetail {
 export default function VendorDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const { user, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<
     'overview' | 'projects' | 'reviews' | 'contract'
   >('overview');
   const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Check localStorage for login information
-    if (typeof window !== 'undefined') {
-      const role = localStorage.getItem('userRole');
-      const email = localStorage.getItem('userEmail');
-
-      if (!role || !email) {
-        router.push('/login');
-      } else {
-        setIsLoading(false);
-      }
-    }
-  }, [router]);
 
   const [vendor, setVendor] = useState<VendorDetail>({
     id: params.id as string,
@@ -231,7 +218,7 @@ export default function VendorDetailPage() {
     ));
   };
 
-  if (isLoading) {
+  if (isLoading || !user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">

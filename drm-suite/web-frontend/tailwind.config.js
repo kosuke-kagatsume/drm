@@ -34,7 +34,37 @@ module.exports = {
     'animate-pulse',
   ],
   theme: {
+    container: {
+      center: true,
+      padding: {
+        DEFAULT: '1rem',
+        sm: '2rem',
+        lg: '3rem',
+        xl: '4rem',
+        '2xl': '5rem',
+      },
+      screens: {
+        sm: '640px',
+        md: '768px',
+        lg: '1024px',
+        xl: '1280px',
+        '2xl': '1536px',
+        '3xl': '1920px',
+        '4xl': '2560px',
+      },
+    },
     extend: {
+      screens: {
+        '3xl': '1920px',
+        '4xl': '2560px',
+      },
+      maxWidth: {
+        '8xl': '88rem',
+        '9xl': '96rem',
+        '10xl': '104rem',
+        'full-hd': '1920px',
+        '4k': '2560px',
+      },
       colors: {
         dandori: {
           blue: '#0099CC', // メインのターコイズブルー

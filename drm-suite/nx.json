@@ -35,7 +35,8 @@
       "plugin": "@nx/jest/plugin",
       "options": {
         "targetName": "test"
-      }
+      },
+      "exclude": ["web-frontend/svc-expense-e2e/**/*"]
     },
     {
       "plugin": "@nx/next/plugin",

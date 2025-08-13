@@ -1,11 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+
+interface EstimateSection {
+  id: string;
+  name: string;
+  order: number;
+  items: EstimateItem[];
+  subtotal: number;
+  isExpanded: boolean;
+}
 
 interface EstimateItem {
   id: string;
   category: string;
+  subcategory?: string;
   itemName: string;
   specification: string;
   quantity: number;
@@ -16,192 +27,445 @@ interface EstimateItem {
   grossProfit: number;
   profitRate: number;
   vendor?: string;
+  materialCost?: number;
+  laborCost?: number;
+  subcontractorCost?: number;
+  remarks?: string;
+  isHighlighted?: boolean;
 }
 
-interface Vendor {
-  id: string;
-  name: string;
-  category: string;
-  distance: number;
-  qualityScore: number;
-  priceLevel: 'low' | 'medium' | 'high';
-  availability: 'immediate' | 'next_week' | 'busy';
-}
+// 建設業界標準のテンプレート
+const ESTIMATE_TEMPLATES = {
+  reform: {
+    name: 'リフォーム工事',
+    description: '水回り・内装リフォーム',
+    icon: '🔧',
+    sections: [
+      {
+        name: '解体工事',
+        items: [
+          {
+            name: '内装解体',
+            unit: '㎡',
+            quantity: 30,
+            unitPrice: 3500,
+            spec: '床壁天井撤去',
+          },
+          {
+            name: '設備撤去',
+            unit: '式',
+            quantity: 1,
+            unitPrice: 80000,
+            spec: '既存設備機器撤去',
+          },
+          {
+            name: '廃材処分',
+            unit: 't',
+            quantity: 2,
+            unitPrice: 25000,
+            spec: '混合廃棄物',
+          },
+        ],
+      },
+      {
+        name: 'キッチン工事',
+        items: [
+          {
+            name: 'システムキッチン',
+            unit: '式',
+            quantity: 1,
+            unitPrice: 650000,
+            spec: 'W2550 食洗機付',
+          },
+          {
+            name: 'キッチンパネル',
+            unit: '㎡',
+            quantity: 6,
+            unitPrice: 12000,
+            spec: 'メラミン不燃化粧板',
+          },
+          {
+            name: '給排水工事',
+            unit: '式',
+            quantity: 1,
+            unitPrice: 85000,
+            spec: '配管接続工事',
+          },
+        ],
+      },
+    ],
+  },
+  exterior: {
+    name: '外壁・屋根塗装',
+    description: '外壁と屋根の塗装工事',
+    icon: '🎨',
+    sections: [
+      {
+        name: '仮設工事',
+        items: [
+          {
+            name: '足場架設',
+            unit: '㎡',
+            quantity: 250,
+            unitPrice: 800,
+            spec: 'くさび足場',
+          },
+          {
+            name: '養生シート',
+            unit: '㎡',
+            quantity: 250,
+            unitPrice: 200,
+            spec: 'メッシュシート',
+          },
+          {
+            name: '高圧洗浄',
+            unit: '㎡',
+            quantity: 180,
+            unitPrice: 300,
+            spec: '150kg/cm²',
+          },
+        ],
+      },
+      {
+        name: '外壁塗装工事',
+        items: [
+          {
+            name: 'シーリング打替',
+            unit: 'm',
+            quantity: 120,
+            unitPrice: 1200,
+            spec: '変成シリコン',
+          },
+          {
+            name: '下塗り',
+            unit: '㎡',
+            quantity: 180,
+            unitPrice: 800,
+            spec: 'シーラー',
+          },
+          {
+            name: '中塗り',
+            unit: '㎡',
+            quantity: 180,
+            unitPrice: 1200,
+            spec: 'シリコン塗料',
+          },
+          {
+            name: '上塗り',
+            unit: '㎡',
+            quantity: 180,
+            unitPrice: 1200,
+            spec: 'シリコン塗料',
+          },
+        ],
+      },
+    ],
+  },
+  newHouse: {
+    name: '新築住宅',
+    description: '木造2階建て住宅',
+    icon: '🏠',
+    sections: [
+      {
+        name: '基礎工事',
+        items: [
+          {
+            name: '掘削',
+            unit: 'm³',
+            quantity: 80,
+            unitPrice: 3500,
+            spec: 'バックホー0.25m³',
+          },
+          {
+            name: '砕石地業',
+            unit: '㎡',
+            quantity: 120,
+            unitPrice: 2800,
+            spec: '再生砕石t=100',
+          },
+          {
+            name: '基礎配筋',
+            unit: 't',
+            quantity: 3.5,
+            unitPrice: 95000,
+            spec: 'D13 @200',
+          },
+          {
+            name: '基礎コンクリート',
+            unit: 'm³',
+            quantity: 35,
+            unitPrice: 18000,
+            spec: 'FC24 S15',
+          },
+        ],
+      },
+      {
+        name: '躯体工事',
+        items: [
+          {
+            name: '土台',
+            unit: 'm³',
+            quantity: 2.5,
+            unitPrice: 85000,
+            spec: '檜120×120',
+          },
+          {
+            name: '柱',
+            unit: 'm³',
+            quantity: 8,
+            unitPrice: 75000,
+            spec: '杉120×120',
+          },
+          {
+            name: '梁',
+            unit: 'm³',
+            quantity: 6,
+            unitPrice: 80000,
+            spec: '米松',
+          },
+        ],
+      },
+    ],
+  },
+};
 
 export default function CreateEstimatePage() {
   const router = useRouter();
-  const [userRole] = useState('veteran'); // veteran/rookie
+  const { user, isLoading } = useAuth();
+  const [activeStep, setActiveStep] = useState(1);
+  const [selectedTemplate, setSelectedTemplate] = useState<
+    keyof typeof ESTIMATE_TEMPLATES | null
+  >(null);
   const [showRAG, setShowRAG] = useState(false);
   const [ragQuery, setRagQuery] = useState('');
-  const [ragResults, setRagResults] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Check localStorage for login information
-    if (typeof window !== 'undefined') {
-      const role = localStorage.getItem('userRole');
-      const email = localStorage.getItem('userEmail');
-
-      if (!role || !email) {
-        router.push('/login');
-      } else {
-        setIsLoading(false);
-      }
-    }
-  }, [router]);
-
-  const [estimateData, setEstimateData] = useState({
+  // 基本情報
+  const [basicInfo, setBasicInfo] = useState({
     customerName: '',
+    customerCompany: '',
     projectName: '',
-    projectType: 'reform', // new_build/reform/commercial
-    buildingType: 'wooden', // wooden/steel/rc
-    floors: 2,
-    area: 0,
+    projectAddress: '',
+    projectType: 'reform',
+    constructionPeriod: '',
+    paymentTerms: '契約時30%、中間時40%、完成時30%',
+    validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0],
   });
 
-  const [items, setItems] = useState<EstimateItem[]>([
+  // 見積もりセクション
+  const [sections, setSections] = useState<EstimateSection[]>([
     {
       id: '1',
-      category: '外壁工事',
-      itemName: '足場設置',
-      specification: '枠組足場 W900×H1800',
-      quantity: 150,
-      unit: '㎡',
-      unitPrice: 1200,
-      amount: 180000,
-      costPrice: 900,
-      grossProfit: 45000,
-      profitRate: 25,
-      vendor: '協力会社A',
-    },
-    {
-      id: '2',
-      category: '外壁工事',
-      itemName: '外壁塗装',
-      specification: 'シリコン塗料 3回塗り',
-      quantity: 120,
-      unit: '㎡',
-      unitPrice: 3500,
-      amount: 420000,
-      costPrice: 2800,
-      grossProfit: 84000,
-      profitRate: 20,
-      vendor: '協力会社B',
+      name: '外壁工事',
+      order: 1,
+      isExpanded: true,
+      subtotal: 600000,
+      items: [
+        {
+          id: '1-1',
+          category: '外壁工事',
+          itemName: '足場設置',
+          specification: '枠組足場 W900×H1800',
+          quantity: 150,
+          unit: '㎡',
+          unitPrice: 1200,
+          amount: 180000,
+          costPrice: 900,
+          grossProfit: 45000,
+          profitRate: 25,
+          vendor: '協力会社A',
+        },
+        {
+          id: '1-2',
+          category: '外壁工事',
+          itemName: '外壁塗装',
+          specification: 'シリコン塗料 3回塗り',
+          quantity: 120,
+          unit: '㎡',
+          unitPrice: 3500,
+          amount: 420000,
+          costPrice: 2800,
+          grossProfit: 84000,
+          profitRate: 20,
+          vendor: '協力会社B',
+        },
+      ],
     },
   ]);
 
-  const [vendors] = useState<Vendor[]>([
-    {
-      id: '1',
-      name: '協力会社A',
-      category: '足場',
-      distance: 5,
-      qualityScore: 95,
-      priceLevel: 'low',
-      availability: 'immediate',
-    },
-    {
-      id: '2',
-      name: '協力会社B',
-      category: '塗装',
-      distance: 8,
-      qualityScore: 90,
-      priceLevel: 'medium',
-      availability: 'next_week',
-    },
-    {
-      id: '3',
-      name: '協力会社C',
-      category: '足場',
-      distance: 15,
-      qualityScore: 85,
-      priceLevel: 'high',
-      availability: 'immediate',
-    },
-  ]);
+  // 諸経費設定
+  const [expenses, setExpenses] = useState({
+    siteManagementRate: 10,
+    generalManagementRate: 8,
+    profitRate: 10,
+    discountAmount: 0,
+    taxRate: 10,
+  });
 
-  const handleAddItem = () => {
+  const handleTemplateSelect = (template: keyof typeof ESTIMATE_TEMPLATES) => {
+    setSelectedTemplate(template);
+    const templateData = ESTIMATE_TEMPLATES[template];
+
+    // テンプレートから初期セクションを作成
+    const initialSections: EstimateSection[] = templateData.sections.map(
+      (section, index) => {
+        const items = section.items.map((item, itemIndex) => {
+          const estimateItem: EstimateItem = {
+            id: `item-${index}-${itemIndex}`,
+            category: section.name,
+            itemName: item.name,
+            specification: item.spec || '',
+            unit: item.unit,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            amount: item.quantity * item.unitPrice,
+            costPrice: Math.round(item.unitPrice * 0.7),
+            grossProfit: Math.round(item.quantity * item.unitPrice * 0.3),
+            profitRate: 30,
+          };
+          return estimateItem;
+        });
+
+        const subtotal = items.reduce((sum, item) => sum + item.amount, 0);
+
+        return {
+          id: `section-${index}`,
+          name: section.name,
+          order: index,
+          items,
+          subtotal,
+          isExpanded: true,
+        };
+      },
+    );
+
+    setSections(initialSections);
+    setActiveStep(2);
+  };
+
+  const addSection = () => {
+    const newSection: EstimateSection = {
+      id: `section-${sections.length}`,
+      name: '新規項目',
+      order: sections.length,
+      items: [],
+      subtotal: 0,
+      isExpanded: true,
+    };
+    setSections([...sections, newSection]);
+  };
+
+  const addItem = (sectionId: string) => {
     const newItem: EstimateItem = {
-      id: Date.now().toString(),
+      id: `item-${Date.now()}`,
       category: '',
       itemName: '',
       specification: '',
-      quantity: 0,
-      unit: '',
+      unit: '式',
+      quantity: 1,
       unitPrice: 0,
       amount: 0,
       costPrice: 0,
       grossProfit: 0,
       profitRate: 0,
     };
-    setItems([...items, newItem]);
+
+    setSections(
+      sections.map((section) =>
+        section.id === sectionId
+          ? { ...section, items: [...section.items, newItem] }
+          : section,
+      ),
+    );
   };
 
-  const handleItemChange = (
-    id: string,
+  const updateItem = (
+    sectionId: string,
+    itemId: string,
     field: keyof EstimateItem,
     value: any,
   ) => {
-    setItems(
-      items.map((item) => {
-        if (item.id === id) {
-          const updated = { ...item, [field]: value };
-          // 金額再計算
-          if (
-            field === 'quantity' ||
-            field === 'unitPrice' ||
-            field === 'costPrice'
-          ) {
-            updated.amount = updated.quantity * updated.unitPrice;
-            updated.grossProfit =
-              updated.amount - updated.quantity * updated.costPrice;
-            updated.profitRate =
-              updated.amount > 0
-                ? (updated.grossProfit / updated.amount) * 100
-                : 0;
-          }
-          return updated;
+    setSections(
+      sections.map((section) => {
+        if (section.id === sectionId) {
+          const updatedItems = section.items.map((item) => {
+            if (item.id === itemId) {
+              const updatedItem = { ...item, [field]: value };
+              if (['quantity', 'unitPrice'].includes(field)) {
+                updatedItem.amount =
+                  updatedItem.quantity * updatedItem.unitPrice;
+                updatedItem.grossProfit =
+                  updatedItem.amount -
+                  updatedItem.quantity * updatedItem.costPrice;
+                updatedItem.profitRate =
+                  updatedItem.amount > 0
+                    ? (updatedItem.grossProfit / updatedItem.amount) * 100
+                    : 0;
+              }
+              return updatedItem;
+            }
+            return item;
+          });
+
+          const subtotal = updatedItems.reduce(
+            (sum, item) => sum + item.amount,
+            0,
+          );
+          return { ...section, items: updatedItems, subtotal };
         }
-        return item;
+        return section;
       }),
     );
   };
 
-  const handleRAGSearch = () => {
-    // RAG検索のシミュレーション
-    setRagResults([
-      {
-        id: '1',
-        projectName: '田中様邸 外壁リフォーム',
-        date: '2023-06-15',
-        similarity: 95,
-        totalAmount: 1850000,
-        profitRate: 22,
-        items: [
-          { name: '足場設置', amount: 180000 },
-          { name: '外壁塗装', amount: 420000 },
-        ],
-      },
-      {
-        id: '2',
-        projectName: '山田様邸 屋根・外壁工事',
-        date: '2023-04-20',
-        similarity: 88,
-        totalAmount: 2300000,
-        profitRate: 25,
-      },
-    ]);
+  const deleteItem = (sectionId: string, itemId: string) => {
+    setSections(
+      sections.map((section) => {
+        if (section.id === sectionId) {
+          const updatedItems = section.items.filter(
+            (item) => item.id !== itemId,
+          );
+          const subtotal = updatedItems.reduce(
+            (sum, item) => sum + item.amount,
+            0,
+          );
+          return { ...section, items: updatedItems, subtotal };
+        }
+        return section;
+      }),
+    );
   };
 
-  const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
-  const totalCost = items.reduce(
-    (sum, item) => sum + item.quantity * item.costPrice,
-    0,
-  );
-  const totalProfit = totalAmount - totalCost;
-  const avgProfitRate = totalAmount > 0 ? (totalProfit / totalAmount) * 100 : 0;
+  // 合計金額の計算
+  const calculateTotals = () => {
+    const directCost = sections.reduce(
+      (sum, section) => sum + section.subtotal,
+      0,
+    );
+    const siteManagement = directCost * (expenses.siteManagementRate / 100);
+    const generalManagement =
+      directCost * (expenses.generalManagementRate / 100);
+    const totalBeforeProfit = directCost + siteManagement + generalManagement;
+    const profit = totalBeforeProfit * (expenses.profitRate / 100);
+    const subtotal = totalBeforeProfit + profit - expenses.discountAmount;
+    const tax = subtotal * (expenses.taxRate / 100);
+    const total = subtotal + tax;
 
-  if (isLoading) {
+    return {
+      directCost,
+      siteManagement,
+      generalManagement,
+      profit,
+      subtotal,
+      tax,
+      total,
+    };
+  };
+
+  const totals = calculateTotals();
+
+  if (isLoading || !user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -214,6 +478,7 @@ export default function CreateEstimatePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* ヘッダー */}
       <nav className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-4">
@@ -234,306 +499,412 @@ export default function CreateEstimatePage() {
         </div>
       </nav>
 
-      <div className="container mx-auto px-4 py-8">
+      {/* ステップインジケーター */}
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex items-center justify-between mb-8">
+          {[
+            { num: 1, label: 'テンプレート選択' },
+            { num: 2, label: '基本情報' },
+            { num: 3, label: '見積項目' },
+            { num: 4, label: '諸経費・合計' },
+            { num: 5, label: '確認・発行' },
+          ].map((step) => (
+            <div
+              key={step.num}
+              className={`flex items-center ${step.num < 5 ? 'flex-1' : ''}`}
+            >
+              <div
+                className={`flex items-center justify-center w-10 h-10 rounded-full ${
+                  activeStep >= step.num
+                    ? 'bg-dandori-blue text-white'
+                    : 'bg-gray-200 text-gray-600'
+                }`}
+              >
+                {step.num}
+              </div>
+              <span className="ml-2 text-sm font-medium text-gray-900">
+                {step.label}
+              </span>
+              {step.num < 5 && (
+                <div
+                  className={`flex-1 h-0.5 mx-4 ${
+                    activeStep > step.num ? 'bg-dandori-blue' : 'bg-gray-200'
+                  }`}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* メインコンテンツ */}
         <div className="flex gap-6">
           <div className={showRAG ? 'w-2/3' : 'w-full'}>
-            {/* 基本情報 */}
-            <div className="bg-white rounded-lg shadow mb-6 p-6">
-              <h2 className="text-lg font-semibold mb-4">基本情報</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    顧客名
-                  </label>
-                  <input
-                    type="text"
-                    value={estimateData.customerName}
-                    onChange={(e) =>
-                      setEstimateData({
-                        ...estimateData,
-                        customerName: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
+            {/* ステップ1: テンプレート選択 */}
+            {activeStep === 1 && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h2 className="text-xl font-bold mb-6">
+                  見積もりテンプレートを選択
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  {Object.entries(ESTIMATE_TEMPLATES).map(([key, template]) => (
+                    <button
+                      key={key}
+                      onClick={() =>
+                        handleTemplateSelect(
+                          key as keyof typeof ESTIMATE_TEMPLATES,
+                        )
+                      }
+                      className="group relative bg-white border-2 border-gray-200 rounded-xl p-6 hover:border-dandori-blue hover:shadow-lg transition-all text-left"
+                    >
+                      <div className="text-4xl mb-3">{template.icon}</div>
+                      <h3 className="text-lg font-bold mb-2">
+                        {template.name}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        {template.description}
+                      </p>
+                    </button>
+                  ))}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    案件名
-                  </label>
-                  <input
-                    type="text"
-                    value={estimateData.projectName}
-                    onChange={(e) =>
-                      setEstimateData({
-                        ...estimateData,
-                        projectName: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    工事種別
-                  </label>
-                  <select
-                    value={estimateData.projectType}
-                    onChange={(e) =>
-                      setEstimateData({
-                        ...estimateData,
-                        projectType: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => setActiveStep(2)}
+                    className="text-dandori-blue hover:text-dandori-blue-dark font-medium"
                   >
-                    <option value="new_build">新築</option>
-                    <option value="reform">リフォーム</option>
-                    <option value="commercial">商業内装</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    構造
-                  </label>
-                  <select
-                    value={estimateData.buildingType}
-                    onChange={(e) =>
-                      setEstimateData({
-                        ...estimateData,
-                        buildingType: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  >
-                    <option value="wooden">木造</option>
-                    <option value="steel">鉄骨造</option>
-                    <option value="rc">RC造</option>
-                  </select>
+                    空白から作成 →
+                  </button>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* 明細 */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold">明細</h2>
-                <button
-                  onClick={handleAddItem}
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                >
-                  + 行追加
-                </button>
+            {/* ステップ2: 基本情報 */}
+            {activeStep === 2 && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h2 className="text-xl font-bold mb-6">基本情報</h2>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      顧客名
+                    </label>
+                    <input
+                      type="text"
+                      value={basicInfo.customerName}
+                      onChange={(e) =>
+                        setBasicInfo({
+                          ...basicInfo,
+                          customerName: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      案件名
+                    </label>
+                    <input
+                      type="text"
+                      value={basicInfo.projectName}
+                      onChange={(e) =>
+                        setBasicInfo({
+                          ...basicInfo,
+                          projectName: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      工事種別
+                    </label>
+                    <select
+                      value={basicInfo.projectType}
+                      onChange={(e) =>
+                        setBasicInfo({
+                          ...basicInfo,
+                          projectType: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    >
+                      <option value="reform">リフォーム</option>
+                      <option value="new_build">新築</option>
+                      <option value="commercial">商業施設</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      構造
+                    </label>
+                    <select className="w-full px-3 py-2 border border-gray-300 rounded-md">
+                      <option value="wooden">木造</option>
+                      <option value="steel">鉄骨造</option>
+                      <option value="rc">RC造</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="mt-6 flex justify-between">
+                  <button
+                    onClick={() => setActiveStep(1)}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                  >
+                    ← 前へ
+                  </button>
+                  <button
+                    onClick={() => setActiveStep(3)}
+                    className="px-4 py-2 bg-dandori-blue text-white rounded hover:bg-dandori-blue-dark"
+                  >
+                    次へ →
+                  </button>
+                </div>
               </div>
+            )}
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-2 py-2 text-left">工事項目</th>
-                      <th className="px-2 py-2 text-left">品名</th>
-                      <th className="px-2 py-2 text-left">仕様</th>
-                      <th className="px-2 py-2 text-right">数量</th>
-                      <th className="px-2 py-2 text-left">単位</th>
-                      <th className="px-2 py-2 text-right">単価</th>
-                      <th className="px-2 py-2 text-right">金額</th>
-                      {userRole === 'veteran' && (
-                        <>
-                          <th className="px-2 py-2 text-right">原価</th>
-                          <th className="px-2 py-2 text-right">粗利率</th>
-                          <th className="px-2 py-2 text-left">発注先</th>
-                        </>
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {items.map((item) => (
-                      <tr key={item.id} className="border-b">
-                        <td className="px-2 py-2">
-                          <input
-                            type="text"
-                            value={item.category}
-                            onChange={(e) =>
-                              handleItemChange(
-                                item.id,
-                                'category',
-                                e.target.value,
-                              )
-                            }
-                            className="w-full px-1 py-1 border rounded"
-                          />
-                        </td>
-                        <td className="px-2 py-2">
-                          <input
-                            type="text"
-                            value={item.itemName}
-                            onChange={(e) =>
-                              handleItemChange(
-                                item.id,
-                                'itemName',
-                                e.target.value,
-                              )
-                            }
-                            className="w-full px-1 py-1 border rounded"
-                          />
-                        </td>
-                        <td className="px-2 py-2">
-                          <input
-                            type="text"
-                            value={item.specification}
-                            onChange={(e) =>
-                              handleItemChange(
-                                item.id,
-                                'specification',
-                                e.target.value,
-                              )
-                            }
-                            className="w-full px-1 py-1 border rounded"
-                          />
-                        </td>
-                        <td className="px-2 py-2 text-right">
-                          <input
-                            type="number"
-                            value={item.quantity}
-                            onChange={(e) =>
-                              handleItemChange(
-                                item.id,
-                                'quantity',
-                                Number(e.target.value),
-                              )
-                            }
-                            className="w-20 px-1 py-1 border rounded text-right"
-                          />
-                        </td>
-                        <td className="px-2 py-2">
-                          <input
-                            type="text"
-                            value={item.unit}
-                            onChange={(e) =>
-                              handleItemChange(item.id, 'unit', e.target.value)
-                            }
-                            className="w-16 px-1 py-1 border rounded"
-                          />
-                        </td>
-                        <td className="px-2 py-2 text-right">
-                          <input
-                            type="number"
-                            value={item.unitPrice}
-                            onChange={(e) =>
-                              handleItemChange(
-                                item.id,
-                                'unitPrice',
-                                Number(e.target.value),
-                              )
-                            }
-                            className="w-24 px-1 py-1 border rounded text-right"
-                          />
-                        </td>
-                        <td className="px-2 py-2 text-right font-medium">
-                          ¥{item.amount.toLocaleString()}
-                        </td>
-                        {userRole === 'veteran' && (
-                          <>
-                            <td className="px-2 py-2 text-right">
-                              <input
-                                type="number"
-                                value={item.costPrice}
-                                onChange={(e) =>
-                                  handleItemChange(
-                                    item.id,
-                                    'costPrice',
-                                    Number(e.target.value),
-                                  )
-                                }
-                                className="w-20 px-1 py-1 border rounded text-right"
-                              />
-                            </td>
-                            <td className="px-2 py-2 text-right">
-                              <span
-                                className={
-                                  item.profitRate >= 20
-                                    ? 'text-green-600'
-                                    : 'text-red-600'
-                                }
+            {/* ステップ3: 見積項目 */}
+            {activeStep === 3 && (
+              <div className="bg-white rounded-lg shadow">
+                <div className="p-6 border-b flex justify-between items-center">
+                  <h2 className="text-xl font-bold">明細</h2>
+                  <button
+                    onClick={addSection}
+                    className="px-4 py-2 bg-dandori-blue text-white rounded hover:bg-dandori-blue-dark"
+                  >
+                    + 項目追加
+                  </button>
+                </div>
+                <div className="p-6">
+                  {sections.map((section) => (
+                    <div key={section.id} className="mb-6">
+                      <div className="flex justify-between items-center mb-3">
+                        <input
+                          type="text"
+                          value={section.name}
+                          onChange={(e) => {
+                            const updated = sections.map((s) =>
+                              s.id === section.id
+                                ? { ...s, name: e.target.value }
+                                : s,
+                            );
+                            setSections(updated);
+                          }}
+                          className="text-lg font-bold bg-transparent border-none focus:outline-none"
+                        />
+                        <button
+                          onClick={() => addItem(section.id)}
+                          className="text-sm px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                        >
+                          + 行追加
+                        </button>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-2 py-2 text-left">工事項目</th>
+                              <th className="px-2 py-2 text-left">品名</th>
+                              <th className="px-2 py-2 text-left">仕様</th>
+                              <th className="px-2 py-2 text-right">数量</th>
+                              <th className="px-2 py-2 text-left">単位</th>
+                              <th className="px-2 py-2 text-right">単価</th>
+                              <th className="px-2 py-2 text-right">金額</th>
+                              <th className="px-2 py-2 text-right">原価</th>
+                              <th className="px-2 py-2 text-right">粗利率</th>
+                              <th className="px-2 py-2"></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {section.items.map((item) => (
+                              <tr key={item.id} className="border-b">
+                                <td className="px-2 py-2">
+                                  <input
+                                    type="text"
+                                    value={item.category}
+                                    onChange={(e) =>
+                                      updateItem(
+                                        section.id,
+                                        item.id,
+                                        'category',
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="w-full px-1 py-1 border rounded"
+                                  />
+                                </td>
+                                <td className="px-2 py-2">
+                                  <input
+                                    type="text"
+                                    value={item.itemName}
+                                    onChange={(e) =>
+                                      updateItem(
+                                        section.id,
+                                        item.id,
+                                        'itemName',
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="w-full px-1 py-1 border rounded"
+                                  />
+                                </td>
+                                <td className="px-2 py-2">
+                                  <input
+                                    type="text"
+                                    value={item.specification}
+                                    onChange={(e) =>
+                                      updateItem(
+                                        section.id,
+                                        item.id,
+                                        'specification',
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="w-full px-1 py-1 border rounded"
+                                  />
+                                </td>
+                                <td className="px-2 py-2 text-right">
+                                  <input
+                                    type="number"
+                                    value={item.quantity}
+                                    onChange={(e) =>
+                                      updateItem(
+                                        section.id,
+                                        item.id,
+                                        'quantity',
+                                        Number(e.target.value),
+                                      )
+                                    }
+                                    className="w-20 px-1 py-1 border rounded text-right"
+                                  />
+                                </td>
+                                <td className="px-2 py-2">
+                                  <input
+                                    type="text"
+                                    value={item.unit}
+                                    onChange={(e) =>
+                                      updateItem(
+                                        section.id,
+                                        item.id,
+                                        'unit',
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="w-16 px-1 py-1 border rounded"
+                                  />
+                                </td>
+                                <td className="px-2 py-2 text-right">
+                                  <input
+                                    type="number"
+                                    value={item.unitPrice}
+                                    onChange={(e) =>
+                                      updateItem(
+                                        section.id,
+                                        item.id,
+                                        'unitPrice',
+                                        Number(e.target.value),
+                                      )
+                                    }
+                                    className="w-24 px-1 py-1 border rounded text-right"
+                                  />
+                                </td>
+                                <td className="px-2 py-2 text-right font-medium">
+                                  ¥{item.amount.toLocaleString()}
+                                </td>
+                                <td className="px-2 py-2 text-right">
+                                  <input
+                                    type="number"
+                                    value={item.costPrice}
+                                    onChange={(e) =>
+                                      updateItem(
+                                        section.id,
+                                        item.id,
+                                        'costPrice',
+                                        Number(e.target.value),
+                                      )
+                                    }
+                                    className="w-20 px-1 py-1 border rounded text-right"
+                                  />
+                                </td>
+                                <td className="px-2 py-2 text-right">
+                                  <span
+                                    className={
+                                      item.profitRate >= 20
+                                        ? 'text-green-600'
+                                        : 'text-red-600'
+                                    }
+                                  >
+                                    {item.profitRate.toFixed(1)}%
+                                  </span>
+                                </td>
+                                <td className="px-2 py-2">
+                                  <button
+                                    onClick={() =>
+                                      deleteItem(section.id, item.id)
+                                    }
+                                    className="text-red-500 hover:text-red-700"
+                                  >
+                                    削除
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                          <tfoot className="bg-gray-100">
+                            <tr>
+                              <td
+                                colSpan={6}
+                                className="px-2 py-3 text-right font-semibold"
                               >
-                                {item.profitRate.toFixed(1)}%
-                              </span>
-                            </td>
-                            <td className="px-2 py-2">
-                              <select
-                                value={item.vendor}
-                                onChange={(e) =>
-                                  handleItemChange(
-                                    item.id,
-                                    'vendor',
-                                    e.target.value,
-                                  )
-                                }
-                                className="w-full px-1 py-1 border rounded text-sm"
-                              >
-                                <option value="">選択...</option>
-                                {vendors.map((v) => (
-                                  <option key={v.id} value={v.name}>
-                                    {v.name}
-                                  </option>
-                                ))}
-                              </select>
-                            </td>
-                          </>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot className="bg-gray-100">
-                    <tr>
-                      <td
-                        colSpan={6}
-                        className="px-2 py-3 text-right font-semibold"
+                                小計
+                              </td>
+                              <td className="px-2 py-3 text-right font-bold text-lg">
+                                ¥{section.subtotal.toLocaleString()}
+                              </td>
+                              <td colSpan={3}></td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="mt-6 p-4 bg-gray-100 rounded">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-lg">合計</span>
+                      <span className="font-bold text-2xl text-dandori-blue">
+                        ¥{totals.total.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="mt-2 text-sm text-gray-600">
+                      <div className="flex justify-between">
+                        <span>消費税（{expenses.taxRate}%）</span>
+                        <span>¥{totals.tax.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-6 flex justify-between">
+                    <button
+                      onClick={() => setActiveStep(2)}
+                      className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                    >
+                      ← 前へ
+                    </button>
+                    <div className="flex gap-3">
+                      <button className="px-6 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
+                        下書き保存
+                      </button>
+                      <button
+                        onClick={() => {
+                          alert('見積書を発行しました');
+                          router.push('/estimates');
+                        }}
+                        className="px-6 py-2 bg-dandori-blue text-white rounded hover:bg-dandori-blue-dark"
                       >
-                        合計
-                      </td>
-                      <td className="px-2 py-3 text-right font-bold text-lg">
-                        ¥{totalAmount.toLocaleString()}
-                      </td>
-                      {userRole === 'veteran' && (
-                        <>
-                          <td className="px-2 py-3 text-right font-medium">
-                            ¥{totalCost.toLocaleString()}
-                          </td>
-                          <td className="px-2 py-3 text-right font-medium">
-                            <span
-                              className={
-                                avgProfitRate >= 20
-                                  ? 'text-green-600'
-                                  : 'text-red-600'
-                              }
-                            >
-                              {avgProfitRate.toFixed(1)}%
-                            </span>
-                          </td>
-                          <td></td>
-                        </>
-                      )}
-                    </tr>
-                  </tfoot>
-                </table>
+                        承認申請
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
-
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  onClick={() => router.push('/estimates')}
-                  className="px-6 py-2 border border-gray-300 rounded hover:bg-gray-50"
-                >
-                  キャンセル
-                </button>
-                <button className="px-6 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
-                  下書き保存
-                </button>
-                <button className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                  承認申請
-                </button>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* RAGサイドパネル */}
@@ -541,7 +912,6 @@ export default function CreateEstimatePage() {
             <div className="w-1/3">
               <div className="bg-white rounded-lg shadow p-4 sticky top-4">
                 <h3 className="font-semibold mb-3">🤖 RAGアシスタント</h3>
-
                 <div className="mb-4">
                   <input
                     type="text"
@@ -550,42 +920,20 @@ export default function CreateEstimatePage() {
                     placeholder="例: 築20年 木造 外壁塗装"
                     className="w-full px-3 py-2 border rounded-md text-sm"
                   />
-                  <button
-                    onClick={handleRAGSearch}
-                    className="mt-2 w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700"
-                  >
+                  <button className="mt-2 w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700">
                     類似案件を検索
                   </button>
                 </div>
-
                 <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {ragResults.map((result) => (
-                    <div
-                      key={result.id}
-                      className="border rounded p-3 hover:bg-gray-50"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <p className="font-medium text-sm">
-                            {result.projectName}
-                          </p>
-                          <p className="text-xs text-gray-500">{result.date}</p>
-                        </div>
-                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                          {result.similarity}% 一致
-                        </span>
-                      </div>
-                      <div className="text-sm">
-                        <p>金額: ¥{result.totalAmount.toLocaleString()}</p>
-                        <p>粗利率: {result.profitRate}%</p>
-                      </div>
-                      <button className="mt-2 text-xs text-blue-600 hover:underline">
-                        この見積をコピー →
-                      </button>
-                    </div>
-                  ))}
+                  <div className="border rounded p-3 hover:bg-gray-50">
+                    <p className="font-medium text-sm">
+                      田中様邸 外壁リフォーム
+                    </p>
+                    <p className="text-xs text-gray-500">2023-06-15</p>
+                    <p className="text-sm mt-1">金額: ¥1,850,000</p>
+                    <p className="text-sm">粗利率: 22%</p>
+                  </div>
                 </div>
-
                 <div className="mt-4 p-3 bg-yellow-50 rounded text-sm">
                   <p className="font-medium text-yellow-800 mb-1">
                     ⚠️ 抜け漏れチェック

@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import SalesDashboard from './sales';
 import ManagerDashboard from './manager';
 import ExecutiveDashboard from './executive';
@@ -9,34 +8,7 @@ import MarketingDashboard from './marketing';
 import AccountingDashboard from './accounting';
 
 export default function DashboardPage() {
-  const router = useRouter();
-  const [userRole, setUserRole] = useState<string>('');
-  const [userEmail, setUserEmail] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Check localStorage for login information
-    if (typeof window !== 'undefined') {
-      const role = localStorage.getItem('userRole');
-      const email = localStorage.getItem('userEmail');
-      const name = localStorage.getItem('userName');
-
-      if (!role || !email) {
-        router.push('/login');
-      } else {
-        setUserRole(role);
-        setUserEmail(email);
-        setIsLoading(false);
-      }
-    }
-  }, [router]);
-
-  const handleLogout = () => {
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userName');
-    router.push('/login');
-  };
+  const { user, isLoading, logout } = useAuth();
 
   const getRoleMapping = (role: string) => {
     // Map Japanese role names to dashboard types
@@ -85,7 +57,7 @@ export default function DashboardPage() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || !user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -99,12 +71,12 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <nav
-        className={`bg-gradient-to-r ${getRoleColor(userRole)} text-white shadow-lg`}
+        className={`bg-gradient-to-r ${getRoleColor(user.role)} text-white shadow-lg`}
       >
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-bold">{getRoleTitle(userRole)}</h1>
+              <h1 className="text-2xl font-bold">{getRoleTitle(user.role)}</h1>
               <p className="text-sm opacity-90 mt-1">
                 {new Date().toLocaleDateString('ja-JP', {
                   year: 'numeric',
@@ -115,12 +87,19 @@ export default function DashboardPage() {
               </p>
             </div>
             <div className="flex items-center space-x-4">
+              <a
+                href="/dark/dashboard"
+                className="bg-black text-white px-4 py-2 rounded hover:bg-zinc-900 transition flex items-center"
+              >
+                <span className="mr-2">🌙</span>
+                ダークモード
+              </a>
               <div className="text-right">
                 <p className="text-sm opacity-90">ログイン中</p>
-                <p className="font-medium">{userEmail}</p>
+                <p className="font-medium">{user.email}</p>
               </div>
               <button
-                onClick={handleLogout}
+                onClick={logout}
                 className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded transition"
               >
                 ログアウト
@@ -130,21 +109,21 @@ export default function DashboardPage() {
         </div>
       </nav>
 
-      <div className="container mx-auto px-4 py-8">
-        {getRoleMapping(userRole) === 'sales' && (
-          <SalesDashboard userEmail={userEmail} />
+      <div className="max-w-full-hd mx-auto px-4 lg:px-6 xl:px-8 2xl:px-12 py-8">
+        {getRoleMapping(user.role) === 'sales' && (
+          <SalesDashboard userEmail={user.email} />
         )}
-        {getRoleMapping(userRole) === 'manager' && (
-          <ManagerDashboard userEmail={userEmail} />
+        {getRoleMapping(user.role) === 'manager' && (
+          <ManagerDashboard userEmail={user.email} />
         )}
-        {getRoleMapping(userRole) === 'executive' && (
-          <ExecutiveDashboard userEmail={userEmail} />
+        {getRoleMapping(user.role) === 'executive' && (
+          <ExecutiveDashboard userEmail={user.email} />
         )}
-        {getRoleMapping(userRole) === 'marketing' && (
-          <MarketingDashboard userEmail={userEmail} />
+        {getRoleMapping(user.role) === 'marketing' && (
+          <MarketingDashboard userEmail={user.email} />
         )}
-        {getRoleMapping(userRole) === 'accounting' && (
-          <AccountingDashboard userEmail={userEmail} />
+        {getRoleMapping(user.role) === 'accounting' && (
+          <AccountingDashboard userEmail={user.email} />
         )}
       </div>
     </div>

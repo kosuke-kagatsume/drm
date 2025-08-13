@@ -1,96 +1,208 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Estimate {
   id: string;
   estimateNo: string;
+  customerName: string;
   companyName: string;
   projectName: string;
+  projectType: string;
   totalAmount: number;
-  status: 'draft' | 'pending' | 'approved' | 'rejected';
+  status: 'draft' | 'pending' | 'approved' | 'rejected' | 'expired';
   createdAt: string;
+  validUntil: string;
+  createdBy: string;
+  lastModified: string;
+  version: number;
+  tags: string[];
 }
 
 export default function EstimatesPage() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Check localStorage for login information
-    if (typeof window !== 'undefined') {
-      const role = localStorage.getItem('userRole');
-      const email = localStorage.getItem('userEmail');
-
-      if (!role || !email) {
-        router.push('/login');
-      } else {
-        setIsLoading(false);
-      }
-    }
-  }, [router]);
+  const { user, isLoading } = useAuth();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterType, setFilterType] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'date' | 'amount' | 'customer'>('date');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
 
   const [estimates, setEstimates] = useState<Estimate[]>([
     {
       id: '1',
       estimateNo: 'EST-2024-001',
-      companyName: '株式会社サンプル',
-      projectName: 'Webサイトリニューアル',
-      totalAmount: 1500000,
+      customerName: '田中太郎',
+      companyName: '田中建設株式会社',
+      projectName: '田中様邸新築工事',
+      projectType: '新築住宅',
+      totalAmount: 15500000,
       status: 'pending',
       createdAt: '2024-08-01',
+      validUntil: '2024-08-31',
+      createdBy: '佐藤次郎',
+      lastModified: '2024-08-10',
+      version: 2,
+      tags: ['木造', '2階建て', '緊急'],
     },
     {
       id: '2',
       estimateNo: 'EST-2024-002',
-      companyName: 'テスト商事',
-      projectName: 'システム開発',
+      customerName: '山田花子',
+      companyName: '山田商事株式会社',
+      projectName: '山田ビル外壁改修',
+      projectType: '外壁塗装',
       totalAmount: 3200000,
       status: 'approved',
       createdAt: '2024-08-03',
+      validUntil: '2024-09-03',
+      createdBy: '鈴木一郎',
+      lastModified: '2024-08-05',
+      version: 1,
+      tags: ['塗装', 'ビル'],
     },
     {
       id: '3',
       estimateNo: 'EST-2024-003',
-      companyName: 'デモ工業',
-      projectName: 'アプリ開発',
-      totalAmount: 2100000,
+      customerName: '鈴木明',
+      companyName: '鈴木不動産',
+      projectName: 'マンションリフォーム',
+      projectType: 'リフォーム',
+      totalAmount: 8500000,
       status: 'draft',
       createdAt: '2024-08-05',
+      validUntil: '2024-09-05',
+      createdBy: '佐藤次郎',
+      lastModified: '2024-08-09',
+      version: 3,
+      tags: ['マンション', '水回り'],
+    },
+    {
+      id: '4',
+      estimateNo: 'EST-2024-004',
+      customerName: '高橋一郎',
+      companyName: '',
+      projectName: '高橋様邸増築工事',
+      projectType: '増築',
+      totalAmount: 12000000,
+      status: 'rejected',
+      createdAt: '2024-07-20',
+      validUntil: '2024-08-20',
+      createdBy: '山田太郎',
+      lastModified: '2024-07-25',
+      version: 2,
+      tags: ['増築', '個人宅'],
+    },
+    {
+      id: '5',
+      estimateNo: 'EST-2024-005',
+      customerName: '渡辺美穂',
+      companyName: '渡辺コーポレーション',
+      projectName: '店舗内装工事',
+      projectType: '店舗内装',
+      totalAmount: 5500000,
+      status: 'expired',
+      createdAt: '2024-06-01',
+      validUntil: '2024-07-01',
+      createdBy: '鈴木一郎',
+      lastModified: '2024-06-15',
+      version: 1,
+      tags: ['飲食店', '内装'],
     },
   ]);
 
-  useEffect(() => {
-    const isLoggedIn = sessionStorage.getItem('isLoggedIn');
-    if (!isLoggedIn) {
-      router.push('/login');
-    }
-  }, [router]);
-
   const getStatusBadge = (status: string) => {
-    const colors = {
-      draft: 'bg-gray-100 text-gray-800',
-      pending: 'bg-yellow-100 text-yellow-800',
-      approved: 'bg-green-100 text-green-800',
-      rejected: 'bg-red-100 text-red-800',
+    const statusConfig = {
+      draft: {
+        bg: 'bg-gray-100',
+        text: 'text-gray-800',
+        label: '下書き',
+        icon: '📋',
+      },
+      pending: {
+        bg: 'bg-dandori-yellow/20',
+        text: 'text-dandori-orange',
+        label: '承認待ち',
+        icon: '⏳',
+      },
+      approved: {
+        bg: 'bg-green-100',
+        text: 'text-green-800',
+        label: '承認済み',
+        icon: '✅',
+      },
+      rejected: {
+        bg: 'bg-red-100',
+        text: 'text-red-800',
+        label: '却下',
+        icon: '❌',
+      },
+      expired: {
+        bg: 'bg-gray-200',
+        text: 'text-gray-600',
+        label: '期限切れ',
+        icon: '⏰',
+      },
     };
-    const labels = {
-      draft: '下書き',
-      pending: '承認待ち',
-      approved: '承認済み',
-      rejected: '却下',
-    };
+    const config = statusConfig[status as keyof typeof statusConfig];
     return (
       <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status as keyof typeof colors]}`}
+        className={`px-3 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text} flex items-center gap-1 inline-flex`}
       >
-        {labels[status as keyof typeof labels]}
+        <span>{config.icon}</span>
+        <span>{config.label}</span>
       </span>
     );
   };
 
-  if (isLoading) {
+  // フィルタリングとソート
+  const filteredEstimates = estimates
+    .filter((estimate) => {
+      const matchesSearch =
+        searchTerm === '' ||
+        estimate.customerName
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        estimate.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        estimate.estimateNo.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesStatus =
+        filterStatus === 'all' || estimate.status === filterStatus;
+      const matchesType =
+        filterType === 'all' || estimate.projectType === filterType;
+
+      return matchesSearch && matchesStatus && matchesType;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'amount':
+          return b.totalAmount - a.totalAmount;
+        case 'customer':
+          return a.customerName.localeCompare(b.customerName);
+        case 'date':
+        default:
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+      }
+    });
+
+  // 統計情報
+  const stats = {
+    total: estimates.length,
+    totalAmount: estimates.reduce((sum, e) => sum + e.totalAmount, 0),
+    pending: estimates.filter((e) => e.status === 'pending').length,
+    approved: estimates.filter((e) => e.status === 'approved').length,
+    averageAmount:
+      estimates.length > 0
+        ? estimates.reduce((sum, e) => sum + e.totalAmount, 0) /
+          estimates.length
+        : 0,
+  };
+
+  if (isLoading || !user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -103,94 +215,390 @@ export default function EstimatesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
+      {/* ヘッダー */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center">
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="mr-4 text-gray-500 hover:text-gray-700"
+              >
+                ← 戻る
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">見積管理</h1>
+                <p className="text-sm text-gray-600 mt-1">
+                  見積書の作成・管理・承認
+                </p>
+              </div>
+            </div>
             <button
-              onClick={() => router.push('/dashboard')}
-              className="text-gray-600 hover:text-gray-900"
+              onClick={() => router.push('/estimates/new')}
+              className="px-6 py-2.5 bg-gradient-to-r from-dandori-blue to-dandori-sky text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
             >
-              ← ダッシュボード
+              <span className="text-lg">+</span>
+              新規見積作成
             </button>
-            <h1 className="text-2xl font-bold text-gray-900">見積管理</h1>
           </div>
         </div>
-      </nav>
+      </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow mb-6 p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">見積一覧</h2>
-            <button
-              onClick={() => router.push('/estimates/create')}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-            >
-              + 新規見積作成
-            </button>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* 統計カード */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white rounded-xl shadow-sm p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">総見積数</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.total}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-dandori-blue/10 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">📄</span>
+              </div>
+            </div>
           </div>
+          <div className="bg-white rounded-xl shadow-sm p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">総額</p>
+                <p className="text-2xl font-bold text-dandori-blue">
+                  ¥{stats.totalAmount.toLocaleString()}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">💰</span>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">承認待ち</p>
+                <p className="text-2xl font-bold text-dandori-orange">
+                  {stats.pending}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-dandori-yellow/20 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">⏳</span>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">平均額</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  ¥{Math.round(stats.averageAmount).toLocaleString()}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">📊</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-          <div className="overflow-x-auto">
+        {/* フィルター・検索 */}
+        <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="🔍 顧客名、プロジェクト名、見積番号で検索..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-dandori-blue/20 focus:border-dandori-blue"
+              />
+            </div>
+            <div className="flex gap-2">
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-dandori-blue/20 focus:border-dandori-blue"
+              >
+                <option value="all">全てのステータス</option>
+                <option value="draft">下書き</option>
+                <option value="pending">承認待ち</option>
+                <option value="approved">承認済み</option>
+                <option value="rejected">却下</option>
+                <option value="expired">期限切れ</option>
+              </select>
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-dandori-blue/20 focus:border-dandori-blue"
+              >
+                <option value="all">全ての種類</option>
+                <option value="新築住宅">新築住宅</option>
+                <option value="リフォーム">リフォーム</option>
+                <option value="外壁塗装">外壁塗装</option>
+                <option value="増築">増築</option>
+                <option value="店舗内装">店舗内装</option>
+              </select>
+              <select
+                value={sortBy}
+                onChange={(e) =>
+                  setSortBy(e.target.value as 'date' | 'amount' | 'customer')
+                }
+                className="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-dandori-blue/20 focus:border-dandori-blue"
+              >
+                <option value="date">日付順</option>
+                <option value="amount">金額順</option>
+                <option value="customer">顧客名順</option>
+              </select>
+              <div className="flex border border-gray-200 rounded-lg">
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`px-3 py-2 ${viewMode === 'list' ? 'bg-dandori-blue text-white' : 'text-gray-600'} rounded-l-lg transition-colors`}
+                  title="リスト表示"
+                >
+                  📋
+                </button>
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`px-3 py-2 ${viewMode === 'grid' ? 'bg-dandori-blue text-white' : 'text-gray-600'} rounded-r-lg transition-colors`}
+                  title="グリッド表示"
+                >
+                  🎲
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* リスト表示 */}
+        {viewMode === 'list' && (
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 border-b">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    見積番号
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    見積情報
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    会社名
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    顧客情報
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    案件名
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                     金額
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                     ステータス
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    作成日
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                     操作
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
-                {estimates.map((estimate) => (
-                  <tr key={estimate.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-4 text-sm font-medium text-gray-900">
-                      {estimate.estimateNo}
+              <tbody className="divide-y divide-gray-100">
+                {filteredEstimates.map((estimate) => (
+                  <tr
+                    key={estimate.id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-4 py-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-bold text-gray-900">
+                            {estimate.estimateNo}
+                          </p>
+                          <span className="text-xs bg-dandori-blue/10 text-dandori-blue px-2 py-0.5 rounded">
+                            v{estimate.version}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-900 mt-1">
+                          {estimate.projectName}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-gray-500">
+                            🏢 {estimate.projectType}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            📅 {estimate.createdAt}
+                          </span>
+                        </div>
+                      </div>
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-900">
-                      {estimate.companyName}
+                    <td className="px-4 py-4">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {estimate.customerName}
+                        </p>
+                        {estimate.companyName && (
+                          <p className="text-xs text-gray-600">
+                            {estimate.companyName}
+                          </p>
+                        )}
+                        <div className="flex gap-1 mt-1">
+                          {estimate.tags.map((tag, index) => (
+                            <span
+                              key={index}
+                              className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-900">
-                      {estimate.projectName}
+                    <td className="px-4 py-4">
+                      <p className="text-lg font-bold text-dandori-blue">
+                        ¥{estimate.totalAmount.toLocaleString()}
+                      </p>
+                      <p className="text-xs text-gray-500">税込</p>
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-900">
-                      ¥{estimate.totalAmount.toLocaleString()}
+                    <td className="px-4 py-4">
+                      <div>
+                        {getStatusBadge(estimate.status)}
+                        <p className="text-xs text-gray-500 mt-1">
+                          有効期限: {estimate.validUntil}
+                        </p>
+                      </div>
                     </td>
-                    <td className="px-4 py-4 text-sm">
-                      {getStatusBadge(estimate.status)}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-500">
-                      {estimate.createdAt}
-                    </td>
-                    <td className="px-4 py-4 text-sm">
-                      <button className="text-blue-600 hover:text-blue-900 mr-3">
-                        編集
-                      </button>
-                      <button className="text-red-600 hover:text-red-900">
-                        削除
-                      </button>
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() =>
+                            router.push(`/estimates/${estimate.id}`)
+                          }
+                          className="p-1.5 text-gray-600 hover:text-dandori-blue hover:bg-dandori-blue/10 rounded transition-colors"
+                          title="詳細"
+                        >
+                          🔍
+                        </button>
+                        <button
+                          onClick={() =>
+                            router.push(`/estimates/${estimate.id}/edit`)
+                          }
+                          className="p-1.5 text-gray-600 hover:text-dandori-blue hover:bg-dandori-blue/10 rounded transition-colors"
+                          title="編集"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          className="p-1.5 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
+                          title="複製"
+                        >
+                          📋
+                        </button>
+                        <button
+                          className="p-1.5 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded transition-colors"
+                          title="PDF出力"
+                        >
+                          📄
+                        </button>
+                        <button
+                          className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                          title="削除"
+                        >
+                          🗑
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
+        )}
+
+        {/* グリッド表示 */}
+        {viewMode === 'grid' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredEstimates.map((estimate) => (
+              <div
+                key={estimate.id}
+                className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => router.push(`/estimates/${estimate.id}`)}
+              >
+                <div className="p-4 border-b">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">
+                        {estimate.estimateNo}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        v{estimate.version}
+                      </p>
+                    </div>
+                    {getStatusBadge(estimate.status)}
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-1">
+                    {estimate.projectName}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {estimate.customerName}
+                  </p>
+                  {estimate.companyName && (
+                    <p className="text-xs text-gray-500">
+                      {estimate.companyName}
+                    </p>
+                  )}
+                </div>
+                <div className="p-4">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-sm text-gray-600">見積金額</span>
+                    <span className="text-xl font-bold text-dandori-blue">
+                      ¥{estimate.totalAmount.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-xs text-gray-500">
+                    <div className="flex justify-between">
+                      <span>🏢 {estimate.projectType}</span>
+                      <span>📅 {estimate.createdAt}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>👤 {estimate.createdBy}</span>
+                      <span>⏰ {estimate.validUntil}まで</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-1 mt-3">
+                    {estimate.tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div
+                  className="px-4 pb-4 flex gap-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    onClick={() =>
+                      router.push(`/estimates/${estimate.id}/edit`)
+                    }
+                    className="flex-1 py-1.5 bg-dandori-blue text-white text-sm rounded hover:bg-dandori-blue-dark transition-colors"
+                  >
+                    編集
+                  </button>
+                  <button className="flex-1 py-1.5 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200 transition-colors">
+                    PDF
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* 空状態 */}
+        {filteredEstimates.length === 0 && (
+          <div className="bg-white rounded-xl shadow-sm p-12 text-center">
+            <div className="text-6xl mb-4">📂</div>
+            <p className="text-gray-600 mb-4">該当する見積書がありません</p>
+            <button
+              onClick={() => router.push('/estimates/new')}
+              className="px-4 py-2 bg-dandori-blue text-white rounded-lg hover:bg-dandori-blue-dark"
+            >
+              新規見積を作成
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

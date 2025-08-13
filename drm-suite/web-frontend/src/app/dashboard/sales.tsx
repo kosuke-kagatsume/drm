@@ -198,6 +198,106 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
               </div>
             </div>
           </div>
+
+          {/* 統合財務分析ダッシュボード */}
+          <div className="bg-white rounded-2xl shadow-lg mt-6 overflow-hidden">
+            <div className="px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+              <h3 className="font-semibold">📊 営業財務分析</h3>
+            </div>
+            <div className="p-6">
+              {/* 営業成果指標 */}
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <h5 className="font-bold text-green-800 mb-2">💰 収益指標</h5>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>営業利益</span>
+                      <span className="font-bold">¥4.2M</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>粗利率</span>
+                      <span className="font-bold">28.5%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>受注単価</span>
+                      <span className="font-bold">¥2.1M</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h5 className="font-bold text-blue-800 mb-2">📈 営業効率</h5>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>成約率</span>
+                      <span className="font-bold text-green-600">35%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>リードタイム</span>
+                      <span className="font-bold">12日</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>顧客単価</span>
+                      <span className="font-bold">¥1.8M</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 目標達成状況 */}
+              <div className="bg-yellow-50 p-4 rounded-lg mb-4">
+                <h5 className="font-bold text-yellow-800 mb-2">🎯 目標進捗</h5>
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>月次売上目標</span>
+                      <span>¥14.7M / ¥21M</span>
+                    </div>
+                    <div className="w-full bg-yellow-200 rounded-full h-2">
+                      <div
+                        className="bg-yellow-600 h-2 rounded-full"
+                        style={{ width: '70%' }}
+                      ></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>契約件数目標</span>
+                      <span>7件 / 10件</span>
+                    </div>
+                    <div className="w-full bg-yellow-200 rounded-full h-2">
+                      <div
+                        className="bg-green-500 h-2 rounded-full"
+                        style={{ width: '70%' }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* クイックアクセス */}
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => router.push('/expenses')}
+                  className="p-3 bg-red-50 rounded-lg hover:bg-red-100 transition text-center"
+                >
+                  <div className="text-xl mb-1">💳</div>
+                  <div className="text-xs font-medium">経費申請</div>
+                </button>
+                <button
+                  onClick={() => router.push('/inventory')}
+                  className="p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition text-center"
+                >
+                  <div className="text-xl mb-1">📦</div>
+                  <div className="text-xs font-medium">在庫確認</div>
+                </button>
+                <button className="p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition text-center">
+                  <div className="text-xl mb-1">📊</div>
+                  <div className="text-xs font-medium">売上分析</div>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* RAGアシスタント */}
@@ -255,35 +355,77 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
         </div>
       </div>
 
-      {/* クイックアクション */}
+      {/* 営業活動センター */}
+      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl shadow-xl p-6 mb-6">
+        <h2 className="text-2xl font-bold mb-4 flex items-center">
+          <span className="text-3xl mr-3">🎯</span>
+          営業活動センター
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <button
+            onClick={() => router.push('/customers')}
+            className="bg-white/20 backdrop-blur-sm p-4 rounded-xl hover:bg-white/30 transform hover:scale-105 transition-all duration-200 border border-white/30"
+          >
+            <span className="text-3xl">👥</span>
+            <p className="mt-2 font-bold">顧客管理</p>
+            <p className="text-xs text-white/80">CRM</p>
+          </button>
+          <button
+            onClick={() => router.push('/estimates/create')}
+            className="bg-white/20 backdrop-blur-sm p-4 rounded-xl hover:bg-white/30 transform hover:scale-105 transition-all duration-200 border border-white/30"
+          >
+            <span className="text-3xl">📝</span>
+            <p className="mt-2 font-bold">新規見積</p>
+            <p className="text-xs text-white/80">作成</p>
+          </button>
+          <button
+            onClick={() => router.push('/estimates')}
+            className="bg-white/20 backdrop-blur-sm p-4 rounded-xl hover:bg-white/30 transform hover:scale-105 transition-all duration-200 border border-white/30"
+          >
+            <span className="text-3xl">📊</span>
+            <p className="mt-2 font-bold">見積一覧</p>
+            <p className="text-xs text-white/80">管理</p>
+          </button>
+          <button
+            onClick={() => router.push('/map')}
+            className="bg-white/20 backdrop-blur-sm p-4 rounded-xl hover:bg-white/30 transform hover:scale-105 transition-all duration-200 border border-white/30"
+          >
+            <span className="text-3xl">🗺️</span>
+            <p className="mt-2 font-bold">地図分析</p>
+            <p className="text-xs text-white/80">エリア</p>
+          </button>
+        </div>
+      </div>
+
+      {/* その他のツール */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <button
-          onClick={() => router.push('/estimates/create')}
-          className="bg-blue-500 text-white p-4 rounded-lg hover:bg-blue-600 transition"
+          onClick={() => router.push('/contracts')}
+          className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"
         >
-          <span className="text-2xl">📝</span>
-          <p className="mt-2 font-medium">新規見積</p>
-        </button>
-        <button
-          onClick={() => router.push('/estimates')}
-          className="bg-green-500 text-white p-4 rounded-lg hover:bg-green-600 transition"
-        >
-          <span className="text-2xl">📊</span>
-          <p className="mt-2 font-medium">見積一覧</p>
+          <span className="text-2xl">📄</span>
+          <p className="mt-2 font-medium">契約管理</p>
         </button>
         <button
           onClick={() => router.push('/vendors')}
-          className="bg-purple-500 text-white p-4 rounded-lg hover:bg-purple-600 transition"
+          className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-4 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"
         >
           <span className="text-2xl">👷</span>
           <p className="mt-2 font-medium">協力会社</p>
         </button>
         <button
-          onClick={() => router.push('/map')}
-          className="bg-orange-500 text-white p-4 rounded-lg hover:bg-orange-600 transition"
+          onClick={() => router.push('/invoices')}
+          className="bg-gradient-to-br from-green-500 to-green-600 text-white p-4 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"
         >
-          <span className="text-2xl">🗺️</span>
-          <p className="mt-2 font-medium">地図分析</p>
+          <span className="text-2xl">💰</span>
+          <p className="mt-2 font-medium">請求書</p>
+        </button>
+        <button
+          onClick={() => router.push('/expenses')}
+          className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-4 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+        >
+          <span className="text-2xl">💳</span>
+          <p className="mt-2 font-medium">経費精算</p>
         </button>
       </div>
     </div>

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Vendor {
   id: string;
@@ -24,21 +25,7 @@ interface Vendor {
 
 export default function VendorsPage() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Check localStorage for login information
-    if (typeof window !== 'undefined') {
-      const role = localStorage.getItem('userRole');
-      const email = localStorage.getItem('userEmail');
-
-      if (!role || !email) {
-        router.push('/login');
-      } else {
-        setIsLoading(false);
-      }
-    }
-  }, [router]);
+  const { user, isLoading } = useAuth();
 
   const [vendors, setVendors] = useState<Vendor[]>([
     {
@@ -101,13 +88,6 @@ export default function VendorsPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    const isLoggedIn = sessionStorage.getItem('isLoggedIn');
-    if (!isLoggedIn) {
-      router.push('/login');
-    }
-  }, [router]);
-
   const getAvailabilityBadge = (availability: string) => {
     const colors = {
       immediate: 'bg-green-100 text-green-800',
@@ -168,7 +148,7 @@ export default function VendorsPage() {
     '外構',
   ];
 
-  if (isLoading) {
+  if (isLoading || !user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
