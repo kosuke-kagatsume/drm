@@ -457,9 +457,79 @@ export default function MarketingDashboard({
       document.body.removeChild(link);
 
       alert('キャンペーンレポートをダウンロードしました！');
+    } else if (type === 'marketing') {
+      // マーケティング全体レポートのエクスポート
+      const marketingData = {
+        webMetrics,
+        leadSources,
+        campaigns: filteredCampaigns,
+        period: selectedPeriod,
+        generatedAt: new Date().toISOString(),
+      };
+
+      const jsonStr = JSON.stringify(marketingData, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute(
+        'download',
+        `marketing-report-${selectedPeriod}-${new Date().toISOString().split('T')[0]}.json`,
+      );
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      alert('マーケティングレポートをダウンロードしました！');
+    } else if (type === 'roi-analysis') {
+      // ROI分析レポートのエクスポート
+      const roiData = campaigns.map((c) => ({
+        name: c.name,
+        type: c.type,
+        budget: c.budget,
+        spent: c.spent,
+        roi: c.roi,
+        efficiency: ((c.leads / c.spent) * 1000).toFixed(2),
+      }));
+
+      const csvHeaders = [
+        'キャンペーン名',
+        'タイプ',
+        '予算',
+        '消化額',
+        'ROI(%)',
+        '効率性(リード/千円)',
+      ];
+      const csvData = roiData.map((d) => [
+        d.name,
+        d.type,
+        d.budget,
+        d.spent,
+        d.roi,
+        d.efficiency,
+      ]);
+      const csvContent = [csvHeaders, ...csvData]
+        .map((row) => row.join(','))
+        .join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute(
+        'download',
+        `roi-analysis-${new Date().toISOString().split('T')[0]}.csv`,
+      );
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      alert('ROI分析レポートをダウンロードしました！');
     } else {
       // その他のレポート
-      alert(`${type}レポートをエクスポートしています...`);
+      alert(`${type}レポートをエクスポート機能を準備中です...`);
     }
   };
 
@@ -492,7 +562,7 @@ export default function MarketingDashboard({
               📋 キャンペーン一覧
             </button>
             <button
-              onClick={() => router.push('/campaigns/new')}
+              onClick={() => setShowCampaignForm(true)}
               className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
             >
               ➕ 新規キャンペーン

@@ -347,7 +347,10 @@ export default function ExecutiveDashboard({
                   <div className="text-xs font-medium">経費分析</div>
                 </button>
                 <button
-                  onClick={() => router.push('/inventory')}
+                  onClick={() => {
+                    alert('在庫管理画面へ移動します');
+                    router.push('/inventory');
+                  }}
                   className="p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition text-center"
                 >
                   <div className="text-xl mb-1">📦</div>
@@ -393,7 +396,10 @@ export default function ExecutiveDashboard({
                   </div>
                 </div>
                 <button
-                  onClick={() => router.push('/map')}
+                  onClick={() => {
+                    alert('地図分析画面を表示します');
+                    router.push('/map');
+                  }}
                   className="w-full bg-gradient-dandori text-white py-3 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-medium"
                 >
                   地図分析ダッシュボードを開く →
@@ -423,7 +429,10 @@ export default function ExecutiveDashboard({
                 </div>
               </div>
               <button
-                onClick={() => router.push('/customers')}
+                onClick={() => {
+                  alert('顧客管理画面へ移動します');
+                  router.push('/customers');
+                }}
                 className="w-full bg-white text-purple-600 py-3 rounded-xl font-bold hover:shadow-lg transform hover:scale-105 transition-all duration-200"
               >
                 顧客管理センターへ →
@@ -439,7 +448,7 @@ export default function ExecutiveDashboard({
             <div className="p-4">
               <div className="space-y-3">
                 <button
-                  onClick={() => router.push('/finance/analysis')}
+                  onClick={() => setActiveModal('financial-analysis')}
                   className="w-full text-left bg-gradient-to-r from-purple-50 to-indigo-50 p-3 rounded-lg hover:from-purple-100 hover:to-indigo-100 transition-all duration-200 border border-purple-200"
                 >
                   <div className="flex justify-between items-center">
@@ -453,7 +462,7 @@ export default function ExecutiveDashboard({
                   </div>
                 </button>
                 <button
-                  onClick={() => router.push('/strategy/analysis')}
+                  onClick={() => setActiveModal('strategy-analysis')}
                   className="w-full text-left bg-gradient-to-r from-indigo-50 to-blue-50 p-3 rounded-lg hover:from-indigo-100 hover:to-blue-100 transition-all duration-200 border border-indigo-200"
                 >
                   <div className="flex justify-between items-center">
@@ -465,7 +474,10 @@ export default function ExecutiveDashboard({
                   </div>
                 </button>
                 <button
-                  onClick={() => router.push('/contracts')}
+                  onClick={() => {
+                    alert('契約管理画面へ移動します');
+                    router.push('/contracts');
+                  }}
                   className="w-full text-left bg-gradient-to-r from-dandori-blue/5 to-dandori-sky/5 p-3 rounded-lg hover:from-dandori-blue/10 hover:to-dandori-sky/10 transition-all duration-200"
                 >
                   <div className="flex justify-between items-center">
@@ -477,7 +489,10 @@ export default function ExecutiveDashboard({
                   </div>
                 </button>
                 <button
-                  onClick={() => router.push('/payments')}
+                  onClick={() => {
+                    alert('入金管理画面へ移動します');
+                    router.push('/payments');
+                  }}
                   className="w-full text-left bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-lg hover:from-green-100 hover:to-emerald-100 transition-all duration-200"
                 >
                   <div className="flex justify-between items-center">

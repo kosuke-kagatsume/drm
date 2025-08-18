@@ -222,7 +222,10 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
                           承認
                         </button>
                         <button
-                          onClick={() => router.push(`/estimates/${item.id}`)}
+                          onClick={() => {
+                            alert(`見積 ${item.id} の詳細画面へ移動します`);
+                            router.push(`/estimates/${item.id}`);
+                          }}
                           className="flex-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors duration-200"
                         >
                           詳細確認

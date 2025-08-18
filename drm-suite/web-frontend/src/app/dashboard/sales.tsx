@@ -626,21 +626,30 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
           <p className="mt-2 font-medium">契約管理</p>
         </button>
         <button
-          onClick={() => router.push('/vendors')}
+          onClick={() => {
+            alert('協力会社管理画面へ移動します');
+            router.push('/vendors');
+          }}
           className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-4 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"
         >
           <span className="text-2xl">👷</span>
           <p className="mt-2 font-medium">協力会社</p>
         </button>
         <button
-          onClick={() => router.push('/invoices')}
+          onClick={() => {
+            alert('請求書管理画面へ移動します');
+            router.push('/invoices');
+          }}
           className="bg-gradient-to-br from-green-500 to-green-600 text-white p-4 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"
         >
           <span className="text-2xl">💰</span>
           <p className="mt-2 font-medium">請求書</p>
         </button>
         <button
-          onClick={() => router.push('/expenses')}
+          onClick={() => {
+            alert('経費精算画面へ移動します');
+            router.push('/expenses');
+          }}
           className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-4 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"
         >
           <span className="text-2xl">💳</span>

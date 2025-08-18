@@ -388,7 +388,102 @@ export default function AccountingDashboard({
   };
 
   const handleExport = (type: string) => {
-    alert(`${type}レポートをエクスポートしています...`);
+    if (type === 'financial-summary') {
+      // 財務サマリーレポートの生成
+      const summaryData = {
+        reportType: 'financial-summary',
+        generatedAt: new Date().toISOString(),
+        period: '2024年1月〜12月',
+        revenue: 128500000,
+        expenses: 95300000,
+        netProfit: 33200000,
+        profitMargin: 25.8,
+        cashFlow: cashFlowData,
+        budgetComparison: budgetData,
+        topCustomers: [
+          { name: '山田建設', revenue: 25800000, percentage: 20.1 },
+          { name: '田中不動産', revenue: 18900000, percentage: 14.7 },
+          { name: '佐藤工務店', revenue: 15600000, percentage: 12.1 },
+        ],
+      };
+
+      const jsonStr = JSON.stringify(summaryData, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute(
+        'download',
+        `financial-summary-${new Date().toISOString().split('T')[0]}.json`,
+      );
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      alert('財務サマリーレポートをダウンロードしました！');
+    } else if (type === 'monthly-report') {
+      // 月次レポートの生成
+      const monthlyData = {
+        reportType: 'monthly-report',
+        month: new Date().toLocaleDateString('ja-JP', {
+          year: 'numeric',
+          month: 'long',
+        }),
+        revenue: 12850000,
+        expenses: 9530000,
+        netProfit: 3320000,
+        invoices: invoices.filter((inv) => inv.status === 'paid'),
+        expenses: expenses,
+        cashPosition: 45600000,
+      };
+
+      const jsonStr = JSON.stringify(monthlyData, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute(
+        'download',
+        `monthly-report-${new Date().toISOString().split('T')[0]}.json`,
+      );
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      alert('月次レポートをダウンロードしました！');
+    } else if (
+      type === '損益計算書' ||
+      type === '貸借対照表' ||
+      type === 'キャッシュフロー計算書'
+    ) {
+      // 各種財務諸表のダウンロード
+      const reportData = {
+        reportType: type,
+        period: '2024年度',
+        generatedAt: new Date().toISOString(),
+        data: '財務諸表の詳細データ（実装準備中）',
+      };
+
+      const jsonStr = JSON.stringify(reportData, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute(
+        'download',
+        `${type}-${new Date().toISOString().split('T')[0]}.json`,
+      );
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      alert(`${type}をダウンロードしました！`);
+    } else {
+      alert(`${type}レポートをエクスポート機能を準備中です...`);
+    }
   };
 
   const handleMetricClick = (metric: string) => {
