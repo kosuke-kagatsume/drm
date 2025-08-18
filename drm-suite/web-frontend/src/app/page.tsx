@@ -1,4 +1,17 @@
+'use client';
+
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+
 export default function Index() {
+  const router = useRouter();
+
+  // プリフェッチでログインページを事前読み込み
+  useEffect(() => {
+    router.prefetch('/login');
+  }, [router]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-16">
@@ -42,12 +55,12 @@ export default function Index() {
               <p>© 2024 DRM Suite - Enterprise CRM Solution</p>
             </div>
             <div className="mt-4">
-              <a
+              <Link
                 href="/login"
                 className="inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition font-medium"
               >
                 ログインして始める
-              </a>
+              </Link>
             </div>
           </div>
         </div>

@@ -107,6 +107,76 @@ class EstimateService {
     total: number;
     hasMore: boolean;
   }> {
+    // Return mock data if API is not configured
+    if (!process.env.NEXT_PUBLIC_ESTIMATE_API_URL) {
+      return Promise.resolve({
+        estimates: [
+          {
+            id: '1',
+            estimateNumber: 'EST-2024-001',
+            customerId: '1',
+            customerName: '田中様邸',
+            projectName: '田中様邸 外壁塗装工事',
+            projectType: '外壁塗装',
+            status: 'pending' as EstimateStatus,
+            totalAmount: 2500000,
+            validUntil: new Date(
+              Date.now() + 7 * 24 * 60 * 60 * 1000,
+            ).toISOString(),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            sections: [],
+            expenses: {
+              siteManagementRate: 10,
+              generalManagementRate: 8,
+              profitRate: 12,
+              discountAmount: 0,
+              taxRate: 10,
+              subtotal: 2000000,
+              siteManagementCost: 200000,
+              generalManagementCost: 160000,
+              profit: 240000,
+              totalBeforeTax: 2500000,
+              tax: 250000,
+              totalAmount: 2750000,
+            },
+          },
+          {
+            id: '2',
+            estimateNumber: 'EST-2024-002',
+            customerId: '2',
+            customerName: '佐藤ビル',
+            projectName: '佐藤ビル改修工事',
+            projectType: 'ビル改修',
+            status: 'draft' as EstimateStatus,
+            totalAmount: 8000000,
+            validUntil: new Date(
+              Date.now() + 14 * 24 * 60 * 60 * 1000,
+            ).toISOString(),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            sections: [],
+            expenses: {
+              siteManagementRate: 10,
+              generalManagementRate: 8,
+              profitRate: 12,
+              discountAmount: 0,
+              taxRate: 10,
+              subtotal: 6400000,
+              siteManagementCost: 640000,
+              generalManagementCost: 512000,
+              profit: 768000,
+              totalBeforeTax: 8000000,
+              tax: 800000,
+              totalAmount: 8800000,
+            },
+          },
+        ],
+        total: 2,
+        hasMore: false,
+      });
+    }
+
     const params = new URLSearchParams();
 
     if (filter?.status) params.append('status', filter.status);

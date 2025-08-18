@@ -27,10 +27,40 @@ export function usePendingApprovals(options: UsePendingApprovalsOptions = {}) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchApprovals = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
 
+    // Use mock data immediately if API endpoint is not configured
+    if (!process.env.NEXT_PUBLIC_ESTIMATE_SERVICE_URL) {
+      setTimeout(() => {
+        setApprovals([
+          {
+            id: '1',
+            type: 'estimate',
+            customer: '田中様邸',
+            amount: 2500000,
+            profitMargin: 22,
+            salesPerson: '山田太郎',
+            urgent: false,
+            createdAt: new Date().toISOString(),
+          },
+          {
+            id: '2',
+            type: 'estimate',
+            customer: '佐藤ビル改修',
+            amount: 8000000,
+            profitMargin: 18,
+            salesPerson: '佐藤花子',
+            urgent: true,
+            createdAt: new Date().toISOString(),
+          },
+        ]);
+        setLoading(false);
+      }, 100);
+      return;
+    }
+
+    try {
       // Fetch pending estimates that need approval
       const params = new URLSearchParams();
       if (options.companyId) params.append('companyId', options.companyId);
@@ -38,7 +68,7 @@ export function usePendingApprovals(options: UsePendingApprovalsOptions = {}) {
       params.append('status', 'pending');
 
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_ESTIMATE_SERVICE_URL || 'http://localhost:3002'}/api/estimates?${params.toString()}`,
+        `${process.env.NEXT_PUBLIC_ESTIMATE_SERVICE_URL}/api/estimates?${params.toString()}`,
       );
 
       const estimates = response.data.estimates || [];

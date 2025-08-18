@@ -33,10 +33,51 @@ export function useTeamPerformance(options: UseTeamPerformanceOptions = {}) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchPerformance = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
 
+    // Use mock data immediately if API endpoints are not configured
+    if (
+      !process.env.NEXT_PUBLIC_CUSTOMER_SERVICE_URL &&
+      !process.env.NEXT_PUBLIC_ESTIMATE_SERVICE_URL
+    ) {
+      setTimeout(() => {
+        setPerformance({
+          members: [
+            {
+              id: '1',
+              name: '営業太郎',
+              email: 'sales@test.com',
+              role: 'sales',
+              contracts: 8,
+              revenue: 15000000,
+              profitMargin: 24,
+              pendingEstimates: 2,
+              status: 'good',
+            },
+            {
+              id: '2',
+              name: '佐藤花子',
+              email: 'sato@test.com',
+              role: 'sales',
+              contracts: 5,
+              revenue: 9000000,
+              profitMargin: 18,
+              pendingEstimates: 3,
+              status: 'warning',
+            },
+          ],
+          totalRevenue: 24000000,
+          averageProfit: 21,
+          totalContracts: 13,
+          topPerformer: null,
+        });
+        setLoading(false);
+      }, 100);
+      return;
+    }
+
+    try {
       // Fetch all users and their performance data
       const params = new URLSearchParams();
       if (options.companyId) params.append('companyId', options.companyId);

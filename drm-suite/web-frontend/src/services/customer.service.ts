@@ -78,6 +78,36 @@ class CustomerService {
     total: number;
     hasMore: boolean;
   }> {
+    // Return mock data if API is not configured
+    if (!process.env.NEXT_PUBLIC_CUSTOMER_API_URL) {
+      return Promise.resolve({
+        customers: [
+          {
+            id: '1',
+            name: '田中太郎',
+            email: 'tanaka@example.com',
+            phone: '090-1234-5678',
+            status: 'customer' as CustomerStatus,
+            assignee: filter?.assignee || 'sales@test.com',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+          {
+            id: '2',
+            name: '佐藤花子',
+            email: 'sato@example.com',
+            phone: '090-2345-6789',
+            status: 'lead' as CustomerStatus,
+            assignee: filter?.assignee || 'sales@test.com',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+        ],
+        total: 2,
+        hasMore: false,
+      });
+    }
+
     const params = new URLSearchParams();
 
     if (filter?.status) params.append('status', filter.status);

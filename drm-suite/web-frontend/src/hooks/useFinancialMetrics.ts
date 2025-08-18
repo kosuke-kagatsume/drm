@@ -36,10 +36,39 @@ export function useFinancialMetrics(options: UseFinancialMetricsOptions = {}) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchMetrics = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
 
+    // Use mock data immediately if API endpoints are not configured
+    if (!process.env.NEXT_PUBLIC_ESTIMATE_SERVICE_URL) {
+      setTimeout(() => {
+        setMetrics({
+          revenue: {
+            monthly: 8500000,
+            quarterly: 24000000,
+            yearly: 85000000,
+          },
+          profit: {
+            amount: 2550000,
+            margin: 30,
+          },
+          efficiency: {
+            avgDealSize: 2500000,
+            salesCycle: 14,
+            conversionRate: 35,
+          },
+          projections: {
+            monthlyTarget: 10000000,
+            quarterlyTarget: 30000000,
+            currentProgress: 85,
+          },
+        });
+        setLoading(false);
+      }, 100);
+      return;
+    }
+
+    try {
       // Fetch estimates for financial calculations
       const params = new URLSearchParams();
       if (options.companyId) params.append('companyId', options.companyId);

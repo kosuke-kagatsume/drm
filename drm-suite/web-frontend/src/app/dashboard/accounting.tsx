@@ -2408,43 +2408,122 @@ export default function AccountingDashboard({
               )}
 
               {activeModal === 'expense-management' && (
-                <div className="text-center">
-                  <div className="text-6xl mb-4">💳</div>
-                  <h4 className="text-xl font-bold text-gray-900 mb-4">
-                    経費管理システム
-                  </h4>
-                  <p className="text-gray-600 mb-6">
-                    経費申請から承認、レポート作成まで一元管理
-                  </p>
-
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <button
-                      onClick={() => {
-                        setActiveModal(null);
-                        router.push('/expenses');
-                      }}
-                      className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition"
-                    >
-                      <div className="text-2xl mb-2">📝</div>
-                      <div className="font-medium">経費申請・管理</div>
-                      <div className="text-xs text-gray-500">
-                        申請、承認、一覧
+                <div className="text-left max-w-4xl mx-auto">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <h4 className="font-bold text-blue-800 mb-3">
+                        📊 今月の経費状況
+                      </h4>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-sm">承認済み経費</span>
+                          <span className="font-bold">¥1,245,000</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm">承認待ち</span>
+                          <span className="font-bold text-yellow-600">
+                            ¥380,000
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm">却下</span>
+                          <span className="font-bold text-red-600">
+                            ¥45,000
+                          </span>
+                        </div>
                       </div>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setActiveModal(null);
-                        router.push('/expenses/dashboard');
-                      }}
-                      className="p-4 bg-green-50 rounded-lg hover:bg-green-100 transition"
-                    >
-                      <div className="text-2xl mb-2">📊</div>
-                      <div className="font-medium">経費ダッシュボード</div>
-                      <div className="text-xs text-gray-500">
-                        分析、レポート
+                    </div>
+                    <div className="bg-green-50 p-4 rounded-lg">
+                      <h4 className="font-bold text-green-800 mb-3">
+                        💰 予算消化率
+                      </h4>
+                      <div className="space-y-3">
+                        <div>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span>材料費</span>
+                            <span>78%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-blue-500 h-2 rounded-full"
+                              style={{ width: '78%' }}
+                            ></div>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span>人件費</span>
+                            <span>92%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-yellow-500 h-2 rounded-full"
+                              style={{ width: '92%' }}
+                            ></div>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span>営業費</span>
+                            <span>45%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-green-500 h-2 rounded-full"
+                              style={{ width: '45%' }}
+                            ></div>
+                          </div>
+                        </div>
                       </div>
-                    </button>
+                    </div>
+                  </div>
+
+                  <div className="bg-white border rounded-lg p-4 mb-4">
+                    <h4 className="font-bold mb-3">最近の経費申請</h4>
+                    <div className="space-y-2">
+                      {expenses.slice(0, 5).map((expense) => (
+                        <div
+                          key={expense.id}
+                          className="flex items-center justify-between p-2 hover:bg-gray-50 rounded"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <span
+                              className={`px-2 py-1 rounded text-xs ${getCategoryColor(expense.category)}`}
+                            >
+                              {getCategoryName(expense.category)}
+                            </span>
+                            <div>
+                              <p className="font-medium">
+                                {expense.description}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {expense.submittedBy} • {expense.date}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold">
+                              {formatCurrency(expense.amount)}
+                            </p>
+                            <span
+                              className={`text-xs px-2 py-1 rounded ${
+                                expense.status === 'approved'
+                                  ? 'bg-green-100 text-green-800'
+                                  : expense.status === 'pending'
+                                    ? 'bg-yellow-100 text-yellow-800'
+                                    : 'bg-red-100 text-red-800'
+                              }`}
+                            >
+                              {expense.status === 'approved'
+                                ? '承認済み'
+                                : expense.status === 'pending'
+                                  ? '承認待ち'
+                                  : '却下'}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   <button
@@ -2452,10 +2531,472 @@ export default function AccountingDashboard({
                       setActiveModal(null);
                       router.push('/expenses');
                     }}
-                    className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition font-medium"
+                    className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-medium"
                   >
-                    経費管理システムを開く
+                    経費管理システムを開く →
                   </button>
+                </div>
+              )}
+
+              {activeModal === 'payment-recording' && (
+                <div className="text-left max-w-4xl mx-auto">
+                  <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                    <div className="flex items-center">
+                      <span className="text-2xl mr-3">⚠️</span>
+                      <div>
+                        <h4 className="font-bold text-yellow-800">
+                          本日の入金確認: 3件
+                        </h4>
+                        <p className="text-sm text-yellow-700">
+                          未確認の入金があります
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 mb-6">
+                    <h4 className="font-bold">最近の入金</h4>
+                    {recentPayments.map((payment) => (
+                      <div
+                        key={payment.id}
+                        className="bg-white border rounded-lg p-4 hover:shadow-md transition"
+                      >
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <p className="font-bold text-lg">
+                              {payment.customer}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              請求書: {payment.invoice}
+                            </p>
+                          </div>
+                          <span
+                            className={`px-3 py-1 rounded text-sm ${getStatusColor(payment.status)}`}
+                          >
+                            {getStatusLabel(payment.status)}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-4 text-sm">
+                          <div>
+                            <p className="text-gray-500">入金額</p>
+                            <p className="font-bold text-lg">
+                              {formatCurrency(payment.amount)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500">入金日時</p>
+                            <p className="font-medium">
+                              {payment.receivedDate}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500">入金方法</p>
+                            <p className="font-medium">{payment.method}</p>
+                          </div>
+                        </div>
+                        {payment.status === 'pending' && (
+                          <div className="flex space-x-2 mt-3">
+                            <button className="flex-1 bg-green-600 text-white py-2 rounded hover:bg-green-700">
+                              ✓ 確認
+                            </button>
+                            <button className="flex-1 bg-gray-600 text-white py-2 rounded hover:bg-gray-700">
+                              詳細確認
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <button className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-medium">
+                    新規入金を記録 →
+                  </button>
+                </div>
+              )}
+
+              {activeModal === 'financial-reports' && (
+                <div className="text-left max-w-4xl mx-auto">
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg">
+                      <h4 className="font-bold text-blue-800 mb-3">
+                        📈 損益計算書
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span>売上高</span>
+                          <span className="font-bold">¥15,200,000</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>売上原価</span>
+                          <span className="font-bold text-red-600">
+                            -¥8,700,000
+                          </span>
+                        </div>
+                        <div className="border-t pt-2 flex justify-between">
+                          <span>売上総利益</span>
+                          <span className="font-bold text-green-600">
+                            ¥6,500,000
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>販管費</span>
+                          <span className="font-bold text-red-600">
+                            -¥3,200,000
+                          </span>
+                        </div>
+                        <div className="border-t pt-2 flex justify-between">
+                          <span className="font-bold">営業利益</span>
+                          <span className="font-bold text-green-600">
+                            ¥3,300,000
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg">
+                      <h4 className="font-bold text-green-800 mb-3">
+                        💰 貸借対照表サマリー
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span>流動資産</span>
+                          <span className="font-bold">¥28,500,000</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>固定資産</span>
+                          <span className="font-bold">¥12,300,000</span>
+                        </div>
+                        <div className="border-t pt-2 flex justify-between">
+                          <span>資産合計</span>
+                          <span className="font-bold">¥40,800,000</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>負債合計</span>
+                          <span className="font-bold text-red-600">
+                            ¥15,200,000
+                          </span>
+                        </div>
+                        <div className="border-t pt-2 flex justify-between">
+                          <span className="font-bold">純資産</span>
+                          <span className="font-bold text-green-600">
+                            ¥25,600,000
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white border rounded-lg p-4 mb-4">
+                    <h4 className="font-bold mb-3">利用可能なレポート</h4>
+                    <div className="space-y-2">
+                      {financialReports.map((report) => (
+                        <div
+                          key={report.id}
+                          className="flex items-center justify-between p-3 hover:bg-gray-50 rounded"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <span className="text-2xl">
+                              {report.type === 'profit-loss'
+                                ? '📊'
+                                : report.type === 'balance-sheet'
+                                  ? '⚖️'
+                                  : report.type === 'cash-flow'
+                                    ? '💵'
+                                    : '📋'}
+                            </span>
+                            <div>
+                              <p className="font-medium">{report.name}</p>
+                              <p className="text-xs text-gray-500">
+                                期間: {report.period}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <span
+                              className={`px-2 py-1 rounded text-xs ${
+                                report.status === 'ready'
+                                  ? 'bg-green-100 text-green-800'
+                                  : report.status === 'generating'
+                                    ? 'bg-yellow-100 text-yellow-800'
+                                    : 'bg-gray-100 text-gray-800'
+                              }`}
+                            >
+                              {report.status === 'ready'
+                                ? '準備完了'
+                                : report.status === 'generating'
+                                  ? '生成中'
+                                  : '予定'}
+                            </span>
+                            {report.status === 'ready' && (
+                              <button className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
+                                ダウンロード
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex space-x-2">
+                    <button className="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 font-medium">
+                      新規レポート生成 →
+                    </button>
+                    <button className="flex-1 bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 font-medium">
+                      スケジュール設定 →
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {activeModal === 'budget-analysis' && (
+                <div className="text-left max-w-4xl mx-auto">
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg mb-6">
+                    <h4 className="font-bold text-purple-800 mb-3">
+                      📊 予算執行状況サマリー
+                    </h4>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600">年間予算</p>
+                        <p className="text-xl font-bold">¥120,000,000</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600">執行済み</p>
+                        <p className="text-xl font-bold text-blue-600">
+                          ¥78,500,000
+                        </p>
+                        <p className="text-xs text-gray-500">65.4%</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600">残予算</p>
+                        <p className="text-xl font-bold text-green-600">
+                          ¥41,500,000
+                        </p>
+                        <p className="text-xs text-gray-500">34.6%</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    {budgetComparison.map((item) => (
+                      <div
+                        key={item.category}
+                        className="bg-white border rounded-lg p-4"
+                      >
+                        <div className="flex justify-between items-center mb-2">
+                          <h5 className="font-bold">{item.category}</h5>
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-bold ${
+                              item.variancePercent > 0
+                                ? 'bg-red-100 text-red-800'
+                                : item.variancePercent < -10
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-green-100 text-green-800'
+                            }`}
+                          >
+                            {item.variancePercent > 0
+                              ? '予算超過'
+                              : item.variancePercent < -10
+                                ? '未消化'
+                                : '正常'}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-4 gap-2 text-sm">
+                          <div>
+                            <p className="text-gray-500">予算</p>
+                            <p className="font-bold">
+                              {formatCurrency(item.budgeted)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500">実績</p>
+                            <p className="font-bold">
+                              {formatCurrency(item.actual)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500">差異</p>
+                            <p
+                              className={`font-bold ${item.variance < 0 ? 'text-green-600' : 'text-red-600'}`}
+                            >
+                              {formatCurrency(item.variance)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500">差異率</p>
+                            <p
+                              className={`font-bold ${item.variancePercent < 0 ? 'text-green-600' : 'text-red-600'}`}
+                            >
+                              {item.variancePercent.toFixed(1)}%
+                            </p>
+                          </div>
+                        </div>
+                        <div className="mt-2">
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full ${
+                                (item.actual / item.budgeted) * 100 > 100
+                                  ? 'bg-red-500'
+                                  : (item.actual / item.budgeted) * 100 > 80
+                                    ? 'bg-yellow-500'
+                                    : 'bg-green-500'
+                              }`}
+                              style={{
+                                width: `${Math.min(100, (item.actual / item.budgeted) * 100)}%`,
+                              }}
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {activeModal === 'ar-aging' && (
+                <div className="text-left max-w-4xl mx-auto">
+                  <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+                    <div className="flex items-center">
+                      <span className="text-2xl mr-3">⚠️</span>
+                      <div>
+                        <h4 className="font-bold text-red-800">
+                          売掛金回収注意
+                        </h4>
+                        <p className="text-sm text-red-700">
+                          60日以上の未回収: ¥800,000
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white border rounded-lg overflow-hidden">
+                    <table className="w-full">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="text-left px-4 py-3 font-medium">
+                            顧客名
+                          </th>
+                          <th className="text-right px-4 py-3 font-medium">
+                            現在
+                          </th>
+                          <th className="text-right px-4 py-3 font-medium">
+                            30日
+                          </th>
+                          <th className="text-right px-4 py-3 font-medium">
+                            60日
+                          </th>
+                          <th className="text-right px-4 py-3 font-medium">
+                            90日
+                          </th>
+                          <th className="text-right px-4 py-3 font-medium">
+                            90日超
+                          </th>
+                          <th className="text-right px-4 py-3 font-medium">
+                            合計
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {arAging.map((item, idx) => (
+                          <tr key={idx} className="border-t hover:bg-gray-50">
+                            <td className="px-4 py-3 font-medium">
+                              {item.customer}
+                            </td>
+                            <td className="text-right px-4 py-3">
+                              {item.current > 0
+                                ? formatCurrency(item.current)
+                                : '-'}
+                            </td>
+                            <td className="text-right px-4 py-3 text-yellow-600">
+                              {item.days30 > 0
+                                ? formatCurrency(item.days30)
+                                : '-'}
+                            </td>
+                            <td className="text-right px-4 py-3 text-orange-600">
+                              {item.days60 > 0
+                                ? formatCurrency(item.days60)
+                                : '-'}
+                            </td>
+                            <td className="text-right px-4 py-3 text-red-600">
+                              {item.days90 > 0
+                                ? formatCurrency(item.days90)
+                                : '-'}
+                            </td>
+                            <td className="text-right px-4 py-3 text-red-800">
+                              {item.over90 > 0
+                                ? formatCurrency(item.over90)
+                                : '-'}
+                            </td>
+                            <td className="text-right px-4 py-3 font-bold">
+                              {formatCurrency(item.total)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot className="bg-gray-100">
+                        <tr>
+                          <td className="px-4 py-3 font-bold">合計</td>
+                          <td className="text-right px-4 py-3 font-bold">
+                            {formatCurrency(
+                              arAging.reduce(
+                                (sum, item) => sum + item.current,
+                                0,
+                              ),
+                            )}
+                          </td>
+                          <td className="text-right px-4 py-3 font-bold text-yellow-600">
+                            {formatCurrency(
+                              arAging.reduce(
+                                (sum, item) => sum + item.days30,
+                                0,
+                              ),
+                            )}
+                          </td>
+                          <td className="text-right px-4 py-3 font-bold text-orange-600">
+                            {formatCurrency(
+                              arAging.reduce(
+                                (sum, item) => sum + item.days60,
+                                0,
+                              ),
+                            )}
+                          </td>
+                          <td className="text-right px-4 py-3 font-bold text-red-600">
+                            {formatCurrency(
+                              arAging.reduce(
+                                (sum, item) => sum + item.days90,
+                                0,
+                              ),
+                            )}
+                          </td>
+                          <td className="text-right px-4 py-3 font-bold text-red-800">
+                            {formatCurrency(
+                              arAging.reduce(
+                                (sum, item) => sum + item.over90,
+                                0,
+                              ),
+                            )}
+                          </td>
+                          <td className="text-right px-4 py-3 font-bold">
+                            {formatCurrency(
+                              arAging.reduce(
+                                (sum, item) => sum + item.total,
+                                0,
+                              ),
+                            )}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+
+                  <div className="flex space-x-2 mt-4">
+                    <button className="flex-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 font-medium">
+                      督促メール送信 →
+                    </button>
+                    <button className="flex-1 bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 font-medium">
+                      回収計画作成 →
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -2463,6 +3004,10 @@ export default function AccountingDashboard({
                 'financial-ai-insights',
                 'comprehensive-kpi-dashboard',
                 'expense-management',
+                'payment-recording',
+                'financial-reports',
+                'budget-analysis',
+                'ar-aging',
               ].includes(activeModal) && (
                 <div className="text-gray-500">
                   <div className="text-6xl mb-4">📊</div>

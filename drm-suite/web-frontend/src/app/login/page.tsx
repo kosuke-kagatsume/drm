@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface QuickLoginAccount {
   name: string;
@@ -17,13 +18,16 @@ interface QuickLoginAccount {
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [selectedAccount, setSelectedAccount] =
     useState<QuickLoginAccount | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    // ダッシュボードページをプリフェッチして高速化
+    router.prefetch('/dashboard');
+  }, [router]);
 
   const quickAccounts: QuickLoginAccount[] = [
     {
@@ -128,16 +132,10 @@ export default function LoginPage() {
 
   const handleQuickLogin = (account: QuickLoginAccount) => {
     setSelectedAccount(account);
-    // セッション保存
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('userRole', account.role);
-      localStorage.setItem('userEmail', account.email);
-      localStorage.setItem('userName', account.name);
-      // ダッシュボードへ遷移
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 500);
-    }
+    // AuthContextのlogin関数を使用してセッション保存
+    login(account.email, account.name, account.role);
+    // Next.jsのクライアントサイドナビゲーションでダッシュボードへ遷移
+    router.push('/dashboard');
   };
 
   if (!mounted) {

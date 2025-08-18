@@ -14,6 +14,11 @@ interface ManagerDashboardProps {
 
 export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
   const router = useRouter();
+  const [showTeamModal, setShowTeamModal] = useState(false);
+  const [showApprovalModal, setShowApprovalModal] = useState(false);
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
+  const [selectedApproval, setSelectedApproval] = useState<any>(null);
   const [branchKPI, setBranchKPI] = useState({
     grossProfit: 0,
     targetProfit: 25,
@@ -81,6 +86,18 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
       }
     }
   };
+
+  // Show loading state if data is still loading
+  if (performanceLoading || approvalsLoading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dandori-blue mx-auto"></div>
+          <p className="mt-4 text-gray-600">データを読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -196,7 +213,10 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
                       </div>
                       <div className="flex gap-2">
                         <button
-                          onClick={() => handleApprove(item.id)}
+                          onClick={() => {
+                            setSelectedApproval(item);
+                            setShowApprovalModal(true);
+                          }}
                           className="flex-1 px-3 py-1.5 bg-gradient-dandori text-white rounded-lg text-sm hover:shadow-md transform hover:scale-105 transition-all duration-200"
                         >
                           承認
@@ -217,8 +237,14 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
 
           {/* チームパフォーマンス */}
           <div className="bg-white rounded-2xl shadow-lg mt-6 hover:shadow-xl transition-shadow duration-300">
-            <div className="px-6 py-4 border-b border-gray-100">
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
               <h2 className="text-lg font-semibold">👥 チームパフォーマンス</h2>
+              <button
+                onClick={() => setShowTeamModal(true)}
+                className="text-sm text-blue-600 hover:text-blue-800"
+              >
+                詳細を見る
+              </button>
             </div>
             <div className="p-6">
               {performanceLoading ? (
@@ -478,7 +504,10 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
                   <div className="text-xl mb-1">📦</div>
                   <div className="text-xs font-medium">在庫管理</div>
                 </button>
-                <button className="p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition text-center">
+                <button
+                  onClick={() => setShowAnalyticsModal(true)}
+                  className="p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition text-center"
+                >
                   <div className="text-xl mb-1">📊</div>
                   <div className="text-xs font-medium">詳細分析</div>
                 </button>
@@ -584,7 +613,10 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
                   rows={3}
                   placeholder="例: 今月の目標達成のための施策は？"
                 />
-                <button className="mt-2 w-full bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm">
+                <button
+                  onClick={() => setShowAIModal(true)}
+                  className="mt-2 w-full bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm"
+                >
                   AIに相談
                 </button>
               </div>
@@ -592,6 +624,424 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
           </div>
         </div>
       </div>
+
+      {/* チーム詳細モーダル */}
+      {showTeamModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">👥 チーム詳細パフォーマンス</h3>
+              <button
+                onClick={() => setShowTeamModal(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* 営業成績ランキング */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium mb-3">🏆 営業成績ランキング</h4>
+                <div className="space-y-2">
+                  {[
+                    {
+                      rank: 1,
+                      name: '田中太郎',
+                      sales: '¥12M',
+                      contracts: 8,
+                      rate: '32%',
+                    },
+                    {
+                      rank: 2,
+                      name: '山田次郎',
+                      sales: '¥10M',
+                      contracts: 6,
+                      rate: '28%',
+                    },
+                    {
+                      rank: 3,
+                      name: '佐藤三郎',
+                      sales: '¥8M',
+                      contracts: 5,
+                      rate: '25%',
+                    },
+                  ].map((member) => (
+                    <div
+                      key={member.rank}
+                      className="flex items-center justify-between p-3 bg-white rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`text-2xl ${member.rank === 1 ? '🥇' : member.rank === 2 ? '🥈' : '🥉'}`}
+                        ></span>
+                        <div>
+                          <p className="font-medium">{member.name}</p>
+                          <p className="text-sm text-gray-600">
+                            成約率: {member.rate}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold">{member.sales}</p>
+                        <p className="text-sm text-gray-600">
+                          {member.contracts}件
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* スキルマトリクス */}
+              <div>
+                <h4 className="font-medium mb-3">📊 スキルマトリクス</h4>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="border p-2 text-left">メンバー</th>
+                        <th className="border p-2 text-center">営業力</th>
+                        <th className="border p-2 text-center">技術力</th>
+                        <th className="border p-2 text-center">顧客対応</th>
+                        <th className="border p-2 text-center">チームワーク</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {staffPerformance.map((staff) => (
+                        <tr key={staff.name}>
+                          <td className="border p-2">{staff.name}</td>
+                          <td className="border p-2 text-center">⭐⭐⭐⭐⭐</td>
+                          <td className="border p-2 text-center">⭐⭐⭐⭐</td>
+                          <td className="border p-2 text-center">⭐⭐⭐⭐⭐</td>
+                          <td className="border p-2 text-center">⭐⭐⭐⭐</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                  個別面談設定
+                </button>
+                <button
+                  onClick={() => setShowTeamModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  閉じる
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 承認詳細モーダル */}
+      {showApprovalModal && selectedApproval && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-2xl w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">✅ 承認詳細</h3>
+              <button
+                onClick={() => setShowApprovalModal(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">顧客名</p>
+                    <p className="font-medium">{selectedApproval.customer}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">金額</p>
+                    <p className="font-bold text-lg">
+                      ¥{(selectedApproval.amount / 1000000).toFixed(1)}M
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">担当者</p>
+                    <p className="font-medium">
+                      {selectedApproval.salesPerson}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">粗利率</p>
+                    <p
+                      className={`font-bold ${selectedApproval.profitMargin >= 20 ? 'text-green-600' : 'text-orange-600'}`}
+                    >
+                      {selectedApproval.profitMargin.toFixed(1)}%
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  承認条件
+                </label>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" defaultChecked />
+                    <span className="text-sm">価格設定が適切である</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" defaultChecked />
+                    <span className="text-sm">リスク評価が完了している</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" />
+                    <span className="text-sm">特別割引の承認が必要</span>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  コメント
+                </label>
+                <textarea
+                  className="w-full px-3 py-2 border rounded-lg"
+                  rows={3}
+                  placeholder="承認に関するコメントを入力"
+                ></textarea>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    handleApprove(selectedApproval.id);
+                    setShowApprovalModal(false);
+                  }}
+                  className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                >
+                  承認する
+                </button>
+                <button
+                  onClick={() => {
+                    handleReject(selectedApproval.id);
+                    setShowApprovalModal(false);
+                  }}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                >
+                  却下
+                </button>
+                <button
+                  onClick={() => setShowApprovalModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  保留
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AIアシスタントモーダル */}
+      {showAIModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">🤖 マネジメントAI回答</h3>
+              <button
+                onClick={() => setShowAIModal(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-purple-50 p-4 rounded-lg">
+                <p className="text-sm text-purple-600 font-medium mb-1">
+                  質問:
+                </p>
+                <p className="text-gray-800">今月の目標達成のための施策は？</p>
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-600 font-medium mb-2">
+                  AIアシスタントの提案:
+                </p>
+                <div className="space-y-3 text-gray-800">
+                  <div className="bg-white p-3 rounded border">
+                    <h4 className="font-bold mb-2">📈 現状分析</h4>
+                    <ul className="space-y-1 text-sm">
+                      <li>• 現在の達成率: 72%（目標まで28%）</li>
+                      <li>• 残り営業日数: 8日</li>
+                      <li>• 必要日次売上: ¥3.5M/日</li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-white p-3 rounded border">
+                    <h4 className="font-bold mb-2">💡 推奨施策</h4>
+                    <ol className="space-y-2 text-sm">
+                      <li>
+                        1. <strong>高確度案件の集中フォロー</strong>
+                        <p className="text-xs text-gray-600 ml-3">
+                          田中様邸（¥5M）、山田ビル（¥8M）を優先
+                        </p>
+                      </li>
+                      <li>
+                        2. <strong>チーム営業の強化</strong>
+                        <p className="text-xs text-gray-600 ml-3">
+                          トップ営業が新人をサポート
+                        </p>
+                      </li>
+                      <li>
+                        3. <strong>期間限定キャンペーン</strong>
+                        <p className="text-xs text-gray-600 ml-3">
+                          月末契約で工事費5%OFF
+                        </p>
+                      </li>
+                    </ol>
+                  </div>
+
+                  <div className="bg-white p-3 rounded border">
+                    <h4 className="font-bold mb-2">⚠️ リスク要因</h4>
+                    <ul className="space-y-1 text-sm">
+                      <li>• 鈴木様案件の競合リスク</li>
+                      <li>• 資材調達の遅延可能性</li>
+                      <li>• スタッフの残業時間上限</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button className="flex-1 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600">
+                  詳細レポート生成
+                </button>
+                <button
+                  onClick={() => setShowAIModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  閉じる
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 詳細分析モーダル */}
+      {showAnalyticsModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">📊 支店詳細分析</h3>
+              <button
+                onClick={() => setShowAnalyticsModal(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* 月次推移グラフ */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium mb-3">売上・利益推移</h4>
+                <div className="h-48 flex items-end justify-between gap-2">
+                  {[65, 72, 68, 85, 78, 92, 88].map((value, idx) => (
+                    <div
+                      key={idx}
+                      className="flex-1 flex flex-col items-center"
+                    >
+                      <div
+                        className="w-full bg-blue-500 rounded-t"
+                        style={{ height: `${value * 1.5}px` }}
+                      />
+                      <span className="text-xs mt-1">{idx + 1}月</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* カテゴリ別売上 */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h4 className="font-medium mb-3">カテゴリ別売上</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm">外壁塗装</span>
+                      <span className="font-bold">¥25M (35%)</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">屋根工事</span>
+                      <span className="font-bold">¥18M (25%)</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">リフォーム</span>
+                      <span className="font-bold">¥20M (28%)</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">その他</span>
+                      <span className="font-bold">¥8M (12%)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <h4 className="font-medium mb-3">顧客属性</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm">新規顧客</span>
+                      <span className="font-bold">45%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">既存顧客</span>
+                      <span className="font-bold">35%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">紹介</span>
+                      <span className="font-bold">20%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 予測分析 */}
+              <div className="bg-yellow-50 p-4 rounded-lg">
+                <h4 className="font-medium mb-3">📈 来月予測</h4>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-blue-600">¥82M</p>
+                    <p className="text-sm text-gray-600">予測売上</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-green-600">26.5%</p>
+                    <p className="text-sm text-gray-600">予測粗利率</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-purple-600">52件</p>
+                    <p className="text-sm text-gray-600">予測契約数</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                  レポート出力
+                </button>
+                <button
+                  onClick={() => setShowAnalyticsModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  閉じる
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

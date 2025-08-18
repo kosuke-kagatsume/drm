@@ -96,6 +96,10 @@ export default function MarketingDashboard({
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [showCampaignForm, setShowCampaignForm] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
+  const [showLeadModal, setShowLeadModal] = useState(false);
+  const [showSocialModal, setShowSocialModal] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [showABModal, setShowABModal] = useState(false);
 
   const campaigns: Campaign[] = [
     {
@@ -912,7 +916,10 @@ export default function MarketingDashboard({
                   <div className="text-xl mb-1">📊</div>
                   <div className="text-xs font-medium">ROI分析</div>
                 </button>
-                <button className="p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition text-center">
+                <button
+                  onClick={() => setActiveModal('budget-allocation')}
+                  className="p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition text-center"
+                >
                   <div className="text-xl mb-1">💡</div>
                   <div className="text-xs font-medium">予算配分</div>
                 </button>
@@ -1033,7 +1040,7 @@ export default function MarketingDashboard({
                 </div>
               ))}
               <button
-                onClick={() => setActiveModal('email-templates')}
+                onClick={() => setShowEmailModal(true)}
                 className="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 text-sm"
               >
                 📧 テンプレート管理
@@ -1099,7 +1106,7 @@ export default function MarketingDashboard({
                 </div>
               ))}
               <button
-                onClick={() => router.push('/marketing/social-scheduler')}
+                onClick={() => setShowSocialModal(true)}
                 className="w-full bg-pink-600 text-white py-2 rounded hover:bg-pink-700 text-sm"
               >
                 📅 投稿スケジュール
@@ -1120,7 +1127,7 @@ export default function MarketingDashboard({
                 🗺️ 地図分析を開く
               </button>
               <button
-                onClick={() => router.push('/marketing/lead-form-builder')}
+                onClick={() => setShowLeadModal(true)}
                 className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700"
               >
                 📝 リード獲得フォーム作成
@@ -1224,7 +1231,7 @@ export default function MarketingDashboard({
                 🧪 A/Bテスト結果
               </h2>
               <button
-                onClick={() => setActiveModal('ab-tests')}
+                onClick={() => setShowABModal(true)}
                 className="text-sm text-yellow-600 hover:text-yellow-800"
               >
                 全て見る →
@@ -1492,7 +1499,9 @@ export default function MarketingDashboard({
                               ? 'リード獲得フォーム作成'
                               : activeModal === 'analytics'
                                 ? '詳細アナリティクス'
-                                : 'データ詳細'}
+                                : activeModal === 'budget-allocation'
+                                  ? '予算配分最適化'
+                                  : 'データ詳細'}
               </h3>
               <button
                 onClick={() => setActiveModal(null)}
@@ -1501,11 +1510,923 @@ export default function MarketingDashboard({
                 ✕
               </button>
             </div>
-            <div className="text-center py-8 text-gray-500">
-              <p>{activeModal}の詳細データがここに表示されます。</p>
-              <p className="text-sm mt-2">
-                実際の実装では、グラフやテーブルなどの詳細な分析データが表示されます。
-              </p>
+            {/* モーダル内容を種類によって切り替え */}
+            {activeModal === 'visitors' && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <p className="text-sm text-gray-600">新規訪問者</p>
+                    <p className="text-2xl font-bold">8,245</p>
+                    <p className="text-xs text-green-600">+12.3%</p>
+                  </div>
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <p className="text-sm text-gray-600">リピーター</p>
+                    <p className="text-2xl font-bold">4,205</p>
+                    <p className="text-xs text-green-600">+8.5%</p>
+                  </div>
+                  <div className="bg-purple-50 p-4 rounded-lg">
+                    <p className="text-sm text-gray-600">平均滞在時間</p>
+                    <p className="text-2xl font-bold">3:24</p>
+                    <p className="text-xs text-green-600">+0:15</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-3">訪問者推移（過去7日間）</h4>
+                  <div className="h-48 bg-gray-50 rounded-lg flex items-end justify-between p-4 gap-2">
+                    {[65, 72, 68, 85, 78, 92, 88].map((value, idx) => (
+                      <div
+                        key={idx}
+                        className="flex-1 flex flex-col items-center"
+                      >
+                        <div
+                          className="w-full bg-blue-500 rounded-t"
+                          style={{ height: `${value * 1.5}px` }}
+                        />
+                        <span className="text-xs mt-1">
+                          {['月', '火', '水', '木', '金', '土', '日'][idx]}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-3">トラフィックソース</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                      <span>オーガニック検索</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-32 bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-blue-500 h-2 rounded-full"
+                            style={{ width: '45%' }}
+                          />
+                        </div>
+                        <span className="text-sm font-bold">45%</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                      <span>Google広告</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-32 bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-green-500 h-2 rounded-full"
+                            style={{ width: '30%' }}
+                          />
+                        </div>
+                        <span className="text-sm font-bold">30%</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                      <span>SNS</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-32 bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-purple-500 h-2 rounded-full"
+                            style={{ width: '15%' }}
+                          />
+                        </div>
+                        <span className="text-sm font-bold">15%</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                      <span>ダイレクト</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-32 bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-orange-500 h-2 rounded-full"
+                            style={{ width: '10%' }}
+                          />
+                        </div>
+                        <span className="text-sm font-bold">10%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeModal === 'conversion' && (
+              <div className="space-y-4">
+                <div className="bg-yellow-50 p-4 rounded-lg">
+                  <h4 className="font-medium mb-3">コンバージョンファネル</h4>
+                  <div className="space-y-3">
+                    <div className="relative">
+                      <div
+                        className="bg-blue-500 text-white p-3 rounded"
+                        style={{ width: '100%' }}
+                      >
+                        <div className="flex justify-between">
+                          <span>サイト訪問</span>
+                          <span className="font-bold">12,450</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <div
+                        className="bg-blue-400 text-white p-3 rounded"
+                        style={{ width: '60%' }}
+                      >
+                        <div className="flex justify-between">
+                          <span>フォーム表示</span>
+                          <span className="font-bold">7,470</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <div
+                        className="bg-blue-300 text-white p-3 rounded"
+                        style={{ width: '35%' }}
+                      >
+                        <div className="flex justify-between">
+                          <span>フォーム入力開始</span>
+                          <span className="font-bold">4,358</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <div
+                        className="bg-green-500 text-white p-3 rounded"
+                        style={{ width: '15%' }}
+                      >
+                        <div className="flex justify-between">
+                          <span>コンバージョン</span>
+                          <span className="font-bold">349</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-medium mb-2">デバイス別CV率</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm">デスクトップ</span>
+                        <span className="font-bold text-green-600">3.2%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">モバイル</span>
+                        <span className="font-bold text-blue-600">2.5%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">タブレット</span>
+                        <span className="font-bold text-purple-600">2.8%</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-2">ページ別CV率</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm">外壁塗装LP</span>
+                        <span className="font-bold text-green-600">3.6%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">屋根修理LP</span>
+                        <span className="font-bold text-blue-600">3.1%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">リフォームLP</span>
+                        <span className="font-bold text-purple-600">2.4%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeModal === 'budget-allocation' && (
+              <div className="space-y-4">
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <h4 className="font-medium mb-3">予算配分最適化提案</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm">Google広告（現在: 50%）</span>
+                        <span className="text-sm font-bold text-green-600">
+                          推奨: 60%
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        ROI: 320% → 予測: 380%
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm">SNS広告（現在: 30%）</span>
+                        <span className="text-sm font-bold text-orange-600">
+                          推奨: 20%
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        ROI: 180% → 予測: 200%
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm">SEO対策（現在: 20%）</span>
+                        <span className="text-sm font-bold text-blue-600">
+                          推奨: 20%
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        ROI: 580% → 予測: 600%
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-3">予算シミュレーション</h4>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-600">現在の予算配分</p>
+                        <p className="text-xl font-bold">¥850,000/月</p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          予測リード: 378件
+                        </p>
+                        <p className="text-sm text-gray-600">予測ROI: 320%</p>
+                      </div>
+                      <div className="border-l pl-4">
+                        <p className="text-sm text-gray-600">最適化後</p>
+                        <p className="text-xl font-bold text-green-600">
+                          ¥850,000/月
+                        </p>
+                        <p className="text-sm text-green-600 mt-1">
+                          予測リード: 425件
+                        </p>
+                        <p className="text-sm text-green-600">予測ROI: 385%</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <button className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                  最適化案を適用
+                </button>
+              </div>
+            )}
+
+            {activeModal && activeModal.startsWith('landing-') && (
+              <div className="space-y-4">
+                <div className="bg-indigo-50 p-4 rounded-lg">
+                  <h4 className="font-medium mb-3">
+                    ランディングページ詳細分析
+                  </h4>
+                  <div className="grid grid-cols-4 gap-4">
+                    <div>
+                      <p className="text-xs text-gray-600">訪問者</p>
+                      <p className="text-lg font-bold">2,450</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600">コンバージョン</p>
+                      <p className="text-lg font-bold text-green-600">89</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600">CV率</p>
+                      <p className="text-lg font-bold text-blue-600">3.6%</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600">直帰率</p>
+                      <p className="text-lg font-bold text-orange-600">38.2%</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-2">ヒートマップ分析</h4>
+                  <div className="bg-gradient-to-b from-red-500 via-yellow-500 to-green-500 h-48 rounded-lg opacity-30 flex items-center justify-center">
+                    <p className="text-gray-700 font-medium">
+                      クリックヒートマップ
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-2">改善提案</h4>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-600">✓</span>
+                      <span>CTAボタンをファーストビューに移動</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-600">✓</span>
+                      <span>フォーム項目を3つに削減</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-600">✓</span>
+                      <span>実績・信頼性要素を追加</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {activeModal && activeModal.startsWith('journey-') && (
+              <div className="space-y-4">
+                <div className="bg-teal-50 p-4 rounded-lg">
+                  <h4 className="font-medium mb-3">カスタマージャーニー詳細</h4>
+                  <div className="space-y-3">
+                    {customerJourney.map((stage, idx) => (
+                      <div key={idx} className="flex items-center gap-3">
+                        <div className="w-20 text-sm font-medium">
+                          {stage.stage}
+                        </div>
+                        <div className="flex-1">
+                          <div className="bg-gray-200 rounded-full h-8 relative">
+                            <div
+                              className="bg-teal-500 h-8 rounded-full flex items-center justify-end pr-2"
+                              style={{
+                                width: `${(stage.count / customerJourney[0].count) * 100}%`,
+                              }}
+                            >
+                              <span className="text-white text-xs font-bold">
+                                {stage.count}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-sm">
+                          <span className="font-bold">
+                            {stage.conversionRate}%
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-medium mb-2">離脱ポイント分析</h4>
+                    <ul className="space-y-1 text-sm">
+                      <li>• 認知→興味: 81.5%離脱</li>
+                      <li>• 興味→検討: 64.8%離脱</li>
+                      <li>• 検討→購入意向: 57.5%離脱</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-2">改善施策</h4>
+                    <ul className="space-y-1 text-sm">
+                      <li>• リターゲティング広告強化</li>
+                      <li>• メールナーチャリング</li>
+                      <li>• コンテンツ最適化</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* リード獲得フォーム作成モーダル */}
+      {showLeadModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">📝 リード獲得フォーム作成</h3>
+              <button
+                onClick={() => setShowLeadModal(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  フォーム名
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border rounded-lg"
+                  placeholder="春のキャンペーンフォーム"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  フォームタイプ
+                </label>
+                <select className="w-full px-3 py-2 border rounded-lg">
+                  <option>見積もり依頼</option>
+                  <option>資料請求</option>
+                  <option>無料相談</option>
+                  <option>ニュースレター登録</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  フィールド設定
+                </label>
+                <div className="space-y-2 p-3 bg-gray-50 rounded-lg">
+                  {[
+                    '名前',
+                    'メールアドレス',
+                    '電話番号',
+                    '住所',
+                    '問い合わせ内容',
+                  ].map((field) => (
+                    <label key={field} className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        defaultChecked={
+                          field === '名前' || field === 'メールアドレス'
+                        }
+                      />
+                      <span className="text-sm">{field}</span>
+                      {(field === '名前' || field === 'メールアドレス') && (
+                        <span className="text-xs text-red-500">必須</span>
+                      )}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  CTAボタンテキスト
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border rounded-lg"
+                  placeholder="無料見積もりを依頼する"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  サンキューページURL
+                </label>
+                <input
+                  type="url"
+                  className="w-full px-3 py-2 border rounded-lg"
+                  placeholder="https://example.com/thank-you"
+                />
+              </div>
+
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-medium mb-2">プレビュー</h4>
+                <div className="bg-white p-4 rounded border">
+                  <h5 className="font-bold mb-3">無料見積もりフォーム</h5>
+                  <div className="space-y-3">
+                    <input
+                      type="text"
+                      placeholder="お名前 *"
+                      className="w-full px-3 py-2 border rounded"
+                    />
+                    <input
+                      type="email"
+                      placeholder="メールアドレス *"
+                      className="w-full px-3 py-2 border rounded"
+                    />
+                    <button className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+                      無料見積もりを依頼する
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                  フォームを作成
+                </button>
+                <button
+                  onClick={() => setShowLeadModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  キャンセル
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SNS投稿スケジューラーモーダル */}
+      {showSocialModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-3xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">📱 SNS投稿スケジューラー</h3>
+              <button
+                onClick={() => setShowSocialModal(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  プラットフォーム選択
+                </label>
+                <div className="flex gap-2">
+                  {[
+                    { name: 'Facebook', icon: '📘', color: 'bg-blue-100' },
+                    { name: 'Instagram', icon: '📷', color: 'bg-pink-100' },
+                    { name: 'Twitter', icon: '🐦', color: 'bg-sky-100' },
+                    { name: 'LinkedIn', icon: '💼', color: 'bg-indigo-100' },
+                  ].map((platform) => (
+                    <label
+                      key={platform.name}
+                      className={`flex items-center gap-2 p-3 rounded-lg cursor-pointer hover:opacity-80 ${platform.color}`}
+                    >
+                      <input type="checkbox" />
+                      <span className="text-lg">{platform.icon}</span>
+                      <span className="text-sm font-medium">
+                        {platform.name}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  投稿内容
+                </label>
+                <textarea
+                  className="w-full px-3 py-2 border rounded-lg"
+                  rows={4}
+                  placeholder="今日は素晴らしい施工事例をご紹介します！#リフォーム #外壁塗装"
+                ></textarea>
+                <div className="flex justify-between mt-1">
+                  <span className="text-xs text-gray-500">280文字まで</span>
+                  <div className="flex gap-2">
+                    <button className="text-xs text-blue-600 hover:text-blue-800">
+                      ハッシュタグ提案
+                    </button>
+                    <button className="text-xs text-purple-600 hover:text-purple-800">
+                      AI文章生成
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  画像/動画
+                </label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition cursor-pointer">
+                  <div className="text-3xl mb-2">📸</div>
+                  <p className="text-sm text-gray-600">
+                    クリックまたはドラッグ&ドロップ
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    投稿日時
+                  </label>
+                  <input
+                    type="datetime-local"
+                    className="w-full px-3 py-2 border rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    投稿タイプ
+                  </label>
+                  <select className="w-full px-3 py-2 border rounded-lg">
+                    <option>即時投稿</option>
+                    <option>予約投稿</option>
+                    <option>下書き保存</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="bg-yellow-50 p-4 rounded-lg">
+                <h4 className="font-medium mb-2">📊 最適投稿時間の提案</h4>
+                <div className="grid grid-cols-3 gap-2 text-sm">
+                  <div className="bg-white p-2 rounded text-center">
+                    <p className="font-bold text-green-600">12:00</p>
+                    <p className="text-xs text-gray-600">エンゲージメント高</p>
+                  </div>
+                  <div className="bg-white p-2 rounded text-center">
+                    <p className="font-bold text-blue-600">18:00</p>
+                    <p className="text-xs text-gray-600">リーチ最大</p>
+                  </div>
+                  <div className="bg-white p-2 rounded text-center">
+                    <p className="font-bold text-purple-600">20:00</p>
+                    <p className="text-xs text-gray-600">シェア率高</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button className="flex-1 px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600">
+                  投稿をスケジュール
+                </button>
+                <button
+                  onClick={() => setShowSocialModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  閉じる
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* メールテンプレート管理モーダル */}
+      {showEmailModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-3xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">📧 メールテンプレート管理</h3>
+              <button
+                onClick={() => setShowEmailModal(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex gap-2">
+                <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                  新規テンプレート作成
+                </button>
+                <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                  インポート
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {emailTemplates.map((template) => (
+                  <div
+                    key={template.id}
+                    className="border rounded-lg p-4 hover:shadow-md transition"
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-bold">{template.name}</h4>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {template.subject}
+                        </p>
+                      </div>
+                      <span
+                        className={`px-2 py-1 rounded text-xs ${
+                          template.type === 'promotion'
+                            ? 'bg-red-100 text-red-700'
+                            : template.type === 'follow-up'
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'bg-gray-100 text-gray-700'
+                        }`}
+                      >
+                        {template.type === 'promotion'
+                          ? 'プロモーション'
+                          : template.type === 'follow-up'
+                            ? 'フォローアップ'
+                            : 'ニュースレター'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-4 gap-4 mb-3 text-sm">
+                      <div>
+                        <p className="text-gray-600">開封率</p>
+                        <p className="font-bold text-green-600">
+                          {template.openRate}%
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">クリック率</p>
+                        <p className="font-bold text-blue-600">
+                          {template.clickRate}%
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">配信数</p>
+                        <p className="font-bold">1,245</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">最終使用</p>
+                        <p className="font-bold text-xs">{template.lastUsed}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button className="flex-1 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600">
+                        プレビュー
+                      </button>
+                      <button className="flex-1 px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600">
+                        配信
+                      </button>
+                      <button className="flex-1 px-3 py-1 border border-gray-300 text-sm rounded hover:bg-gray-50">
+                        編集
+                      </button>
+                      <button className="px-3 py-1 text-red-600 hover:text-red-800 text-sm">
+                        削除
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-medium mb-2">📊 パフォーマンスサマリー</h4>
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <p className="text-gray-600">平均開封率</p>
+                    <p className="font-bold text-lg">28.9%</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600">平均クリック率</p>
+                    <p className="font-bold text-lg">5.3%</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600">配信成功率</p>
+                    <p className="font-bold text-lg">98.7%</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowEmailModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  閉じる
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* A/Bテスト管理モーダル */}
+      {showABModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">🧪 A/Bテスト管理</h3>
+              <button
+                onClick={() => setShowABModal(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex gap-2">
+                <button className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
+                  新規テスト作成
+                </button>
+                <select className="px-3 py-2 border rounded-lg">
+                  <option>全てのテスト</option>
+                  <option>実行中</option>
+                  <option>完了</option>
+                  <option>準備中</option>
+                </select>
+              </div>
+
+              <div className="space-y-4">
+                {abTests.map((test) => (
+                  <div
+                    key={test.id}
+                    className="border rounded-lg p-4 hover:shadow-md transition"
+                  >
+                    <div className="flex justify-between items-center mb-3">
+                      <h4 className="font-bold">{test.name}</h4>
+                      <span
+                        className={`px-2 py-1 rounded text-xs ${
+                          test.status === 'completed'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-blue-100 text-blue-700'
+                        }`}
+                      >
+                        {test.status === 'completed' ? '完了' : '実行中'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mb-3">
+                      <div className="bg-gray-50 p-3 rounded">
+                        <div className="flex justify-between items-center mb-2">
+                          <h5 className="font-medium text-sm">
+                            バリアントA: {test.variantA.name}
+                          </h5>
+                          {test.winner === 'A' && (
+                            <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                              勝者
+                            </span>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <p className="text-gray-600">CV率</p>
+                            <p className="font-bold text-blue-600">
+                              {test.variantA.conversion}%
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600">訪問者</p>
+                            <p className="font-bold">
+                              {test.variantA.visitors.toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-gray-50 p-3 rounded">
+                        <div className="flex justify-between items-center mb-2">
+                          <h5 className="font-medium text-sm">
+                            バリアントB: {test.variantB.name}
+                          </h5>
+                          {test.winner === 'B' && (
+                            <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                              勝者
+                            </span>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <p className="text-gray-600">CV率</p>
+                            <p className="font-bold text-purple-600">
+                              {test.variantB.conversion}%
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600">訪問者</p>
+                            <p className="font-bold">
+                              {test.variantB.visitors.toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-yellow-50 p-3 rounded mb-3">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="text-sm text-gray-600">統計的有意性</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="w-32 bg-gray-200 rounded-full h-2">
+                              <div
+                                className={`h-2 rounded-full ${test.confidenceLevel >= 95 ? 'bg-green-500' : 'bg-yellow-500'}`}
+                                style={{ width: `${test.confidenceLevel}%` }}
+                              />
+                            </div>
+                            <span className="text-sm font-bold">
+                              {test.confidenceLevel}%
+                            </span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-gray-600">改善率</p>
+                          <p className="font-bold text-green-600">
+                            +
+                            {(
+                              ((test.variantB.conversion -
+                                test.variantA.conversion) /
+                                test.variantA.conversion) *
+                              100
+                            ).toFixed(1)}
+                            %
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button className="flex-1 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600">
+                        詳細レポート
+                      </button>
+                      {test.status === 'running' && (
+                        <button className="px-3 py-1 bg-orange-500 text-white text-sm rounded hover:bg-orange-600">
+                          テスト停止
+                        </button>
+                      )}
+                      {test.status === 'completed' && (
+                        <button className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600">
+                          勝者を適用
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowABModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  閉じる
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -13,6 +13,7 @@ import {
 export default function ExpensesPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
+  const [showDWRedirect, setShowDWRedirect] = useState(false);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +27,7 @@ export default function ExpensesPage() {
   });
 
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showDWInfo, setShowDWInfo] = useState(true);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [approvalAction, setApprovalAction] = useState<
@@ -210,6 +212,107 @@ export default function ExpensesPage() {
       </nav>
 
       <div className="container mx-auto px-4 py-8">
+        {/* 経費管理システムの役割分担通知 */}
+        {showDWInfo && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 p-6 mb-6 rounded-lg">
+            <div className="flex justify-between items-start">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <span className="text-2xl">🔗</span>
+                </div>
+                <div className="ml-3 flex-1">
+                  <h3 className="text-lg font-bold text-blue-800 mb-3">
+                    経費管理システムの連携について
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* DRM */}
+                    <div className="bg-white p-4 rounded-lg border border-blue-200">
+                      <div className="flex items-center mb-2">
+                        <span className="text-xl mr-2">📊</span>
+                        <h4 className="font-bold text-blue-900">DRM Suite</h4>
+                      </div>
+                      <p className="text-sm text-gray-700">
+                        現場原価の管理・計算
+                      </p>
+                      <ul className="text-xs text-gray-600 mt-2 space-y-1">
+                        <li>• 見積作成時の原価計算</li>
+                        <li>• 工事原価の分析</li>
+                        <li>• 利益率管理</li>
+                      </ul>
+                    </div>
+
+                    {/* ダンドリワーク */}
+                    <div className="bg-white p-4 rounded-lg border border-indigo-200">
+                      <div className="flex items-center mb-2">
+                        <span className="text-xl mr-2">🏗️</span>
+                        <h4 className="font-bold text-indigo-900">
+                          ダンドリワーク
+                        </h4>
+                      </div>
+                      <p className="text-sm text-gray-700">
+                        現場原価になる経費申請
+                      </p>
+                      <ul className="text-xs text-gray-600 mt-2 space-y-1">
+                        <li>• 材料費申請</li>
+                        <li>• 外注費申請</li>
+                        <li>• 現場経費申請</li>
+                      </ul>
+                      <button
+                        onClick={() =>
+                          window.open(
+                            'https://dandori-work.com/expenses',
+                            '_blank',
+                          )
+                        }
+                        className="mt-3 bg-indigo-600 text-white px-3 py-1 rounded text-xs hover:bg-indigo-700 w-full"
+                      >
+                        申請する →
+                      </button>
+                    </div>
+
+                    {/* Dandori Portal */}
+                    <div className="bg-white p-4 rounded-lg border border-purple-200">
+                      <div className="flex items-center mb-2">
+                        <span className="text-xl mr-2">💼</span>
+                        <h4 className="font-bold text-purple-900">
+                          Dandori Portal
+                        </h4>
+                      </div>
+                      <p className="text-sm text-gray-700">一般経費の申請</p>
+                      <ul className="text-xs text-gray-600 mt-2 space-y-1">
+                        <li>• 交通費申請</li>
+                        <li>• 会議費申請</li>
+                        <li>• その他一般経費</li>
+                      </ul>
+                      <button
+                        onClick={() =>
+                          window.open(
+                            'https://portal.dandori.com/expenses',
+                            '_blank',
+                          )
+                        }
+                        className="mt-3 bg-purple-600 text-white px-3 py-1 rounded text-xs hover:bg-purple-700 w-full"
+                      >
+                        申請する →
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      onClick={() => setShowDWInfo(false)}
+                      className="text-blue-600 hover:text-blue-800 text-sm"
+                    >
+                      閉じる
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           <div className="bg-white p-6 rounded-lg shadow">

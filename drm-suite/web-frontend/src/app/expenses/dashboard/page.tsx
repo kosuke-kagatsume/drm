@@ -22,10 +22,9 @@ export default function ExpenseDashboardPage() {
   const [companyId] = useState('default-company');
 
   useEffect(() => {
-    if (user?.id) {
-      fetchDashboardData();
-    }
-  }, [user, selectedPeriod]);
+    // ユーザー認証を待たずにモックデータを表示
+    fetchDashboardData();
+  }, [selectedPeriod]);
 
   const fetchDashboardData = async () => {
     try {
@@ -57,20 +56,104 @@ export default function ExpenseDashboardPage() {
           endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
       }
 
-      const [reportResponse, budgetsResponse, analyticsResponse] =
-        await Promise.all([
-          expenseService.getExpenseReport(
-            companyId,
-            startDate.toISOString().split('T')[0],
-            endDate.toISOString().split('T')[0],
-          ),
-          expenseService.getBudgets(companyId, now.getFullYear().toString()),
-          expenseService.getExpenseAnalytics(companyId, selectedPeriod),
-        ]);
+      // モックデータを使用
+      const mockReport: ExpenseReport = {
+        summary: {
+          totalAmount: 2850000,
+          totalExpenses: 45,
+          approvedAmount: 2100000,
+          pendingAmount: 550000,
+          byStatus: {
+            approved: 30,
+            pending: 10,
+            rejected: 5,
+          },
+          byCategory: {
+            材料費: 850000,
+            人件費: 1200000,
+            交通費: 250000,
+            広告費: 350000,
+            その他: 200000,
+          },
+        },
+        period: {
+          start: startDate.toISOString(),
+          end: endDate.toISOString(),
+        },
+        expenses: [],
+      };
 
-      setReport(reportResponse);
-      setBudgets(budgetsResponse);
-      setAnalytics(analyticsResponse);
+      const mockBudgets: Budget[] = [
+        {
+          id: '1',
+          companyId: companyId,
+          category: {
+            id: '1',
+            name: '材料費',
+            companyId: companyId,
+            code: 'MAT',
+            isActive: true,
+            createdAt: '',
+            updatedAt: '',
+          },
+          amount: 1000000,
+          year: now.getFullYear().toString(),
+          createdAt: '',
+          updatedAt: '',
+        },
+        {
+          id: '2',
+          companyId: companyId,
+          category: {
+            id: '2',
+            name: '人件費',
+            companyId: companyId,
+            code: 'LAB',
+            isActive: true,
+            createdAt: '',
+            updatedAt: '',
+          },
+          amount: 1500000,
+          year: now.getFullYear().toString(),
+          createdAt: '',
+          updatedAt: '',
+        },
+        {
+          id: '3',
+          companyId: companyId,
+          category: {
+            id: '3',
+            name: '交通費',
+            companyId: companyId,
+            code: 'TRA',
+            isActive: true,
+            createdAt: '',
+            updatedAt: '',
+          },
+          amount: 300000,
+          year: now.getFullYear().toString(),
+          createdAt: '',
+          updatedAt: '',
+        },
+      ];
+
+      const mockAnalytics = {
+        trends: {
+          monthly: [2100000, 2450000, 2850000],
+          quarterly: [6800000, 7200000, 7850000],
+        },
+        topCategories: [
+          { name: '人件費', amount: 1200000 },
+          { name: '材料費', amount: 850000 },
+          { name: '広告費', amount: 350000 },
+        ],
+        costEfficiency: 82.5,
+      };
+
+      setReport(mockReport);
+      setBudgets(mockBudgets);
+      setAnalytics(mockAnalytics);
+      setError(null);
     } catch (err) {
       setError('ダッシュボードデータの取得に失敗しました');
       console.error(err);
@@ -102,7 +185,7 @@ export default function ExpenseDashboardPage() {
     return Math.min(progress, 100);
   };
 
-  if (isLoading || !user || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 interface ExecutiveDashboardProps {
   userEmail: string;
@@ -10,6 +11,7 @@ export default function ExecutiveDashboard({
   userEmail,
 }: ExecutiveDashboardProps) {
   const router = useRouter();
+  const [activeModal, setActiveModal] = useState<string | null>(null);
 
   const companyKPI = {
     totalRevenue: 125000000,
@@ -351,11 +353,17 @@ export default function ExecutiveDashboard({
                   <div className="text-xl mb-1">📦</div>
                   <div className="text-xs font-medium">在庫分析</div>
                 </button>
-                <button className="p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition text-center">
+                <button
+                  onClick={() => setActiveModal('financial-analysis')}
+                  className="p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition text-center"
+                >
                   <div className="text-xl mb-1">📊</div>
                   <div className="text-xs font-medium">財務分析</div>
                 </button>
-                <button className="p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition text-center">
+                <button
+                  onClick={() => setActiveModal('strategy-analysis')}
+                  className="p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition text-center"
+                >
                   <div className="text-xl mb-1">🎯</div>
                   <div className="text-xs font-medium">戦略分析</div>
                 </button>
@@ -507,7 +515,10 @@ export default function ExecutiveDashboard({
                   <p>• 回収遅延案件の共通パターン抽出</p>
                   <p>• 来月の資金繰り予測</p>
                 </div>
-                <button className="mt-3 w-full bg-gradient-dandori text-white py-2 rounded-lg text-sm hover:shadow-lg transform hover:scale-105 transition-all duration-200">
+                <button
+                  onClick={() => setActiveModal('analysis-report')}
+                  className="mt-3 w-full bg-gradient-dandori text-white py-2 rounded-lg text-sm hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                >
                   分析レポート生成
                 </button>
               </div>
@@ -521,7 +532,10 @@ export default function ExecutiveDashboard({
                   rows={3}
                   placeholder="例: 粗利率を25%に改善するための施策は？"
                 />
-                <button className="mt-2 w-full bg-gradient-warm text-white py-2 rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200 text-sm">
+                <button
+                  onClick={() => setActiveModal('ai-consultation')}
+                  className="mt-2 w-full bg-gradient-warm text-white py-2 rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200 text-sm"
+                >
                   AIに相談
                 </button>
               </div>
@@ -531,13 +545,22 @@ export default function ExecutiveDashboard({
                   クイック分析
                 </h4>
                 <div className="space-y-2">
-                  <button className="w-full text-left text-sm bg-gray-50 p-2 rounded-lg hover:bg-dandori-blue/5 hover:text-dandori-blue transition-colors duration-200">
+                  <button
+                    onClick={() => setActiveModal('year-comparison')}
+                    className="w-full text-left text-sm bg-gray-50 p-2 rounded-lg hover:bg-dandori-blue/5 hover:text-dandori-blue transition-colors duration-200"
+                  >
                     前年同期比較
                   </button>
-                  <button className="w-full text-left text-sm bg-gray-50 p-2 rounded-lg hover:bg-dandori-blue/5 hover:text-dandori-blue transition-colors duration-200">
+                  <button
+                    onClick={() => setActiveModal('competitor-benchmark')}
+                    className="w-full text-left text-sm bg-gray-50 p-2 rounded-lg hover:bg-dandori-blue/5 hover:text-dandori-blue transition-colors duration-200"
+                  >
                     競合ベンチマーク
                   </button>
-                  <button className="w-full text-left text-sm bg-gray-50 p-2 rounded-lg hover:bg-dandori-blue/5 hover:text-dandori-blue transition-colors duration-200">
+                  <button
+                    onClick={() => setActiveModal('scenario-analysis')}
+                    className="w-full text-left text-sm bg-gray-50 p-2 rounded-lg hover:bg-dandori-blue/5 hover:text-dandori-blue transition-colors duration-200"
+                  >
                     シナリオ分析
                   </button>
                 </div>
@@ -546,6 +569,723 @@ export default function ExecutiveDashboard({
           </div>
         </div>
       </div>
+
+      {/* Modal */}
+      {activeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h3 className="text-xl font-bold">
+                {activeModal === 'financial-analysis'
+                  ? '財務分析レポート'
+                  : activeModal === 'strategy-analysis'
+                    ? '戦略分析ダッシュボード'
+                    : activeModal === 'analysis-report'
+                      ? 'AI分析レポート生成'
+                      : activeModal === 'ai-consultation'
+                        ? 'AI経営コンサルタント'
+                        : activeModal === 'year-comparison'
+                          ? '前年同期比較分析'
+                          : activeModal === 'competitor-benchmark'
+                            ? '競合ベンチマーク分析'
+                            : activeModal === 'scenario-analysis'
+                              ? 'シナリオ分析'
+                              : 'データ詳細'}
+              </h3>
+              <button
+                onClick={() => setActiveModal(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6">
+              {activeModal === 'financial-analysis' && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-4 rounded-lg">
+                      <h4 className="font-bold text-purple-800 mb-3">
+                        💰 財務健全性スコア
+                      </h4>
+                      <div className="text-center">
+                        <div className="text-5xl font-bold text-purple-600 mb-2">
+                          A+
+                        </div>
+                        <div className="text-sm text-purple-700">
+                          総合評価: 92/100
+                        </div>
+                      </div>
+                      <div className="mt-4 space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>流動比率</span>
+                          <span className="font-bold text-green-600">
+                            2.8 (優良)
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span>自己資本比率</span>
+                          <span className="font-bold text-green-600">
+                            68% (安定)
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span>有利子負債比率</span>
+                          <span className="font-bold text-blue-600">
+                            15% (低リスク)
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg">
+                      <h4 className="font-bold text-green-800 mb-3">
+                        📈 成長性指標
+                      </h4>
+                      <div className="space-y-3">
+                        <div>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span>売上成長率</span>
+                            <span className="text-green-600">+18.5%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-green-500 h-2 rounded-full"
+                              style={{ width: '85%' }}
+                            ></div>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span>利益成長率</span>
+                            <span className="text-green-600">+22.3%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-green-500 h-2 rounded-full"
+                              style={{ width: '92%' }}
+                            ></div>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span>ROE</span>
+                            <span className="text-blue-600">15.8%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-blue-500 h-2 rounded-full"
+                              style={{ width: '79%' }}
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white border rounded-lg p-4">
+                    <h4 className="font-bold mb-3">📊 四半期トレンド分析</h4>
+                    <div className="grid grid-cols-4 gap-4">
+                      {['Q1', 'Q2', 'Q3', 'Q4(予測)'].map((quarter, idx) => (
+                        <div key={quarter} className="text-center">
+                          <p className="text-sm text-gray-600 mb-1">
+                            {quarter}
+                          </p>
+                          <p className="text-xl font-bold">¥{28 + idx * 3}M</p>
+                          <p
+                            className={`text-xs ${idx < 3 ? 'text-green-600' : 'text-blue-600'}`}
+                          >
+                            {idx < 3 ? `+${12 + idx * 2}%` : '予測 +15%'}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 font-medium">
+                    詳細レポートをダウンロード →
+                  </button>
+                </div>
+              )}
+
+              {activeModal === 'strategy-analysis' && (
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-lg">
+                    <h4 className="font-bold text-blue-800 mb-3">
+                      🎯 戦略目標達成状況
+                    </h4>
+                    <div className="space-y-3">
+                      <div>
+                        <div className="flex justify-between mb-1">
+                          <span className="text-sm">新規顧客獲得</span>
+                          <span className="text-sm font-bold">85/100社</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div
+                            className="bg-blue-500 h-3 rounded-full"
+                            style={{ width: '85%' }}
+                          ></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between mb-1">
+                          <span className="text-sm">市場シェア拡大</span>
+                          <span className="text-sm font-bold">
+                            12.3% → 14.8%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div
+                            className="bg-green-500 h-3 rounded-full"
+                            style={{ width: '74%' }}
+                          ></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between mb-1">
+                          <span className="text-sm">デジタル化推進</span>
+                          <span className="text-sm font-bold">62%完了</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div
+                            className="bg-yellow-500 h-3 rounded-full"
+                            style={{ width: '62%' }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-white border rounded-lg p-4">
+                      <h5 className="font-bold mb-3 text-green-700">
+                        ✅ 強み (Strengths)
+                      </h5>
+                      <ul className="text-sm space-y-1">
+                        <li>• 高い顧客満足度 (4.8/5.0)</li>
+                        <li>• 強固な財務基盤</li>
+                        <li>• 熟練した技術チーム</li>
+                        <li>• 地域ネットワーク</li>
+                      </ul>
+                    </div>
+                    <div className="bg-white border rounded-lg p-4">
+                      <h5 className="font-bold mb-3 text-yellow-700">
+                        ⚠️ 弱み (Weaknesses)
+                      </h5>
+                      <ul className="text-sm space-y-1">
+                        <li>• デジタル化の遅れ</li>
+                        <li>• 若手人材の不足</li>
+                        <li>• 新規市場開拓力</li>
+                        <li>• マーケティング力</li>
+                      </ul>
+                    </div>
+                    <div className="bg-white border rounded-lg p-4">
+                      <h5 className="font-bold mb-3 text-blue-700">
+                        🎯 機会 (Opportunities)
+                      </h5>
+                      <ul className="text-sm space-y-1">
+                        <li>• リフォーム市場拡大</li>
+                        <li>• SDGs関連需要</li>
+                        <li>• 補助金・助成金活用</li>
+                        <li>• 異業種連携</li>
+                      </ul>
+                    </div>
+                    <div className="bg-white border rounded-lg p-4">
+                      <h5 className="font-bold mb-3 text-red-700">
+                        🚨 脅威 (Threats)
+                      </h5>
+                      <ul className="text-sm space-y-1">
+                        <li>• 材料費高騰</li>
+                        <li>• 人手不足深刻化</li>
+                        <li>• 大手参入増加</li>
+                        <li>• 需要の季節変動</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="flex space-x-2">
+                    <button className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-medium">
+                      戦略計画書を作成 →
+                    </button>
+                    <button className="flex-1 bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 font-medium">
+                      アクションプラン策定 →
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {activeModal === 'ai-consultation' && (
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg">
+                    <h4 className="font-bold text-purple-800 mb-3">
+                      🤖 AI経営アドバイザー
+                    </h4>
+                    <p className="text-sm text-purple-700">
+                      最新のデータ分析に基づいた経営改善提案をご提供します
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="bg-white border-l-4 border-blue-500 p-4 rounded">
+                      <h5 className="font-bold text-blue-800 mb-2">
+                        💡 優先度：高
+                      </h5>
+                      <p className="font-medium mb-2">千葉支店の収益性改善</p>
+                      <p className="text-sm text-gray-600 mb-3">
+                        粗利率が3ヶ月連続で低下しています。原因分析の結果、以下の施策を推奨します：
+                      </p>
+                      <ul className="text-sm space-y-1">
+                        <li>• 原価管理システムの見直し</li>
+                        <li>• 仕入先の再交渉（目標: 5%削減）</li>
+                        <li>• 付加価値サービスの導入</li>
+                      </ul>
+                      <div className="mt-3 p-2 bg-blue-50 rounded">
+                        <p className="text-xs text-blue-700">
+                          予想効果: 粗利率 +2.3% (年間+¥8.5M)
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="bg-white border-l-4 border-yellow-500 p-4 rounded">
+                      <h5 className="font-bold text-yellow-800 mb-2">
+                        ⚡ 優先度：中
+                      </h5>
+                      <p className="font-medium mb-2">キャッシュフロー最適化</p>
+                      <p className="text-sm text-gray-600 mb-3">
+                        売掛金回収サイクルを改善することで、資金繰りを向上させることができます：
+                      </p>
+                      <ul className="text-sm space-y-1">
+                        <li>• 早期支払い割引の導入（2%/10日）</li>
+                        <li>• 自動督促システムの導入</li>
+                        <li>• 与信管理の強化</li>
+                      </ul>
+                      <div className="mt-3 p-2 bg-yellow-50 rounded">
+                        <p className="text-xs text-yellow-700">
+                          予想効果: 回収日数 -5日 (資金+¥12M)
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="bg-white border-l-4 border-green-500 p-4 rounded">
+                      <h5 className="font-bold text-green-800 mb-2">
+                        🌱 優先度：長期
+                      </h5>
+                      <p className="font-medium mb-2">新規事業機会</p>
+                      <p className="text-sm text-gray-600 mb-3">
+                        市場分析により、以下の成長機会を特定しました：
+                      </p>
+                      <ul className="text-sm space-y-1">
+                        <li>• エコリフォーム市場への参入</li>
+                        <li>• サブスクリプション型メンテナンスサービス</li>
+                        <li>• BtoB向けコンサルティング事業</li>
+                      </ul>
+                      <div className="mt-3 p-2 bg-green-50 rounded">
+                        <p className="text-xs text-green-700">
+                          予想市場規模: ¥500M (シェア10%獲得で+¥50M)
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 font-medium">
+                    詳細な実行計画を生成 →
+                  </button>
+                </div>
+              )}
+
+              {activeModal === 'year-comparison' && (
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-lg">
+                    <h4 className="font-bold text-indigo-800 mb-3">
+                      📊 前年同期比較分析
+                    </h4>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <h5 className="font-bold mb-3">2023年 Q4</h5>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span>売上高</span>
+                          <span className="font-bold">¥105M</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>営業利益</span>
+                          <span className="font-bold">¥21M</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>粗利率</span>
+                          <span className="font-bold">22.5%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>顧客数</span>
+                          <span className="font-bold">285社</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="font-bold mb-3">2024年 Q4</h5>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span>売上高</span>
+                          <span className="font-bold text-green-600">
+                            ¥125M (+19%)
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>営業利益</span>
+                          <span className="font-bold text-green-600">
+                            ¥30M (+43%)
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>粗利率</span>
+                          <span className="font-bold text-green-600">
+                            24.2% (+1.7pt)
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>顧客数</span>
+                          <span className="font-bold text-green-600">
+                            342社 (+20%)
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white border rounded-lg p-4">
+                    <h5 className="font-bold mb-3">📈 改善要因分析</h5>
+                    <ul className="text-sm space-y-2">
+                      <li className="flex items-start">
+                        <span className="text-green-600 mr-2">✓</span>
+                        <span>
+                          新規顧客獲得キャンペーンによる売上増加 (+¥12M)
+                        </span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-green-600 mr-2">✓</span>
+                        <span>原価削減プロジェクトの成功 (材料費-8%)</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-green-600 mr-2">✓</span>
+                        <span>生産性向上による労務費削減 (-¥3M)</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-yellow-600 mr-2">△</span>
+                        <span>マーケティング費用増加 (+¥2M)</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {activeModal === 'competitor-benchmark' && (
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-r from-orange-50 to-red-50 p-4 rounded-lg">
+                    <h4 className="font-bold text-orange-800 mb-3">
+                      🏆 競合ベンチマーク分析
+                    </h4>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50">
+                          <th className="text-left p-3 border">指標</th>
+                          <th className="text-center p-3 border">自社</th>
+                          <th className="text-center p-3 border">A社</th>
+                          <th className="text-center p-3 border">B社</th>
+                          <th className="text-center p-3 border">業界平均</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td className="p-3 border font-medium">市場シェア</td>
+                          <td className="text-center p-3 border font-bold text-green-600">
+                            14.8%
+                          </td>
+                          <td className="text-center p-3 border">18.2%</td>
+                          <td className="text-center p-3 border">12.5%</td>
+                          <td className="text-center p-3 border">8.3%</td>
+                        </tr>
+                        <tr className="bg-gray-50">
+                          <td className="p-3 border font-medium">売上成長率</td>
+                          <td className="text-center p-3 border font-bold text-green-600">
+                            +19%
+                          </td>
+                          <td className="text-center p-3 border">+12%</td>
+                          <td className="text-center p-3 border">+15%</td>
+                          <td className="text-center p-3 border">+8%</td>
+                        </tr>
+                        <tr>
+                          <td className="p-3 border font-medium">粗利率</td>
+                          <td className="text-center p-3 border font-bold text-yellow-600">
+                            24.2%
+                          </td>
+                          <td className="text-center p-3 border">26.5%</td>
+                          <td className="text-center p-3 border">22.8%</td>
+                          <td className="text-center p-3 border">21.5%</td>
+                        </tr>
+                        <tr className="bg-gray-50">
+                          <td className="p-3 border font-medium">顧客満足度</td>
+                          <td className="text-center p-3 border font-bold text-green-600">
+                            4.8/5
+                          </td>
+                          <td className="text-center p-3 border">4.5/5</td>
+                          <td className="text-center p-3 border">4.6/5</td>
+                          <td className="text-center p-3 border">4.2/5</td>
+                        </tr>
+                        <tr>
+                          <td className="p-3 border font-medium">
+                            デジタル化率
+                          </td>
+                          <td className="text-center p-3 border font-bold text-red-600">
+                            62%
+                          </td>
+                          <td className="text-center p-3 border">85%</td>
+                          <td className="text-center p-3 border">78%</td>
+                          <td className="text-center p-3 border">55%</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="bg-white border rounded-lg p-4">
+                    <h5 className="font-bold mb-3">💡 競争優位性の構築提案</h5>
+                    <ul className="text-sm space-y-2">
+                      <li>• デジタル化投資を加速し、A社との差を縮める</li>
+                      <li>• 顧客満足度の高さを活かしたリファラル戦略</li>
+                      <li>• 粗利率改善のためのバリューチェーン最適化</li>
+                      <li>• ニッチ市場でのリーダーシップ確立</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {activeModal === 'scenario-analysis' && (
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-r from-cyan-50 to-blue-50 p-4 rounded-lg">
+                    <h4 className="font-bold text-cyan-800 mb-3">
+                      🔮 シナリオ分析
+                    </h4>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <h5 className="font-bold text-green-800 mb-2">
+                        楽観シナリオ
+                      </h5>
+                      <p className="text-xs text-green-600 mb-3">
+                        発生確率: 25%
+                      </p>
+                      <div className="space-y-2 text-sm">
+                        <p className="font-medium">前提条件:</p>
+                        <ul className="text-xs space-y-1">
+                          <li>• 市場成長 +15%</li>
+                          <li>• 新規事業成功</li>
+                          <li>• 材料費安定</li>
+                        </ul>
+                        <div className="mt-3 pt-3 border-t border-green-200">
+                          <p className="font-bold text-green-700">
+                            売上: ¥168M
+                          </p>
+                          <p className="font-bold text-green-700">利益: ¥42M</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h5 className="font-bold text-blue-800 mb-2">
+                        基本シナリオ
+                      </h5>
+                      <p className="text-xs text-blue-600 mb-3">
+                        発生確率: 60%
+                      </p>
+                      <div className="space-y-2 text-sm">
+                        <p className="font-medium">前提条件:</p>
+                        <ul className="text-xs space-y-1">
+                          <li>• 市場成長 +5%</li>
+                          <li>• 現状維持</li>
+                          <li>• 材料費微増</li>
+                        </ul>
+                        <div className="mt-3 pt-3 border-t border-blue-200">
+                          <p className="font-bold text-blue-700">売上: ¥145M</p>
+                          <p className="font-bold text-blue-700">利益: ¥35M</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                      <h5 className="font-bold text-red-800 mb-2">
+                        悲観シナリオ
+                      </h5>
+                      <p className="text-xs text-red-600 mb-3">発生確率: 15%</p>
+                      <div className="space-y-2 text-sm">
+                        <p className="font-medium">前提条件:</p>
+                        <ul className="text-xs space-y-1">
+                          <li>• 市場縮小 -5%</li>
+                          <li>• 競争激化</li>
+                          <li>• 材料費高騰</li>
+                        </ul>
+                        <div className="mt-3 pt-3 border-t border-red-200">
+                          <p className="font-bold text-red-700">売上: ¥118M</p>
+                          <p className="font-bold text-red-700">利益: ¥22M</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white border rounded-lg p-4">
+                    <h5 className="font-bold mb-3">🛡️ リスク対策計画</h5>
+                    <ul className="text-sm space-y-2">
+                      <li className="flex items-start">
+                        <span className="text-blue-600 mr-2">•</span>
+                        <span>コスト削減プログラムの準備（目標: -15%）</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-blue-600 mr-2">•</span>
+                        <span>代替仕入先の確保とサプライチェーン多様化</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-blue-600 mr-2">•</span>
+                        <span>手元流動性の確保（3ヶ月分の運転資金）</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-blue-600 mr-2">•</span>
+                        <span>新規市場開拓による収益源の分散</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <button className="w-full bg-cyan-600 text-white py-3 rounded-lg hover:bg-cyan-700 font-medium">
+                    詳細シミュレーションを実行 →
+                  </button>
+                </div>
+              )}
+
+              {activeModal === 'analysis-report' && (
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 rounded-lg">
+                    <h4 className="font-bold text-indigo-800 mb-3">
+                      📝 AI分析レポート生成
+                    </h4>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="bg-white border rounded-lg p-4">
+                      <h5 className="font-bold mb-3">
+                        📊 利用可能なレポートテンプレート
+                      </h5>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button className="p-3 border rounded-lg hover:bg-gray-50 text-left">
+                          <div className="font-medium">月次経営レポート</div>
+                          <div className="text-xs text-gray-500">
+                            全社KPI、財務、営業分析
+                          </div>
+                        </button>
+                        <button className="p-3 border rounded-lg hover:bg-gray-50 text-left">
+                          <div className="font-medium">拠点別分析レポート</div>
+                          <div className="text-xs text-gray-500">
+                            各拠点のパフォーマンス比較
+                          </div>
+                        </button>
+                        <button className="p-3 border rounded-lg hover:bg-gray-50 text-left">
+                          <div className="font-medium">市場動向レポート</div>
+                          <div className="text-xs text-gray-500">
+                            競合分析、トレンド予測
+                          </div>
+                        </button>
+                        <button className="p-3 border rounded-lg hover:bg-gray-50 text-left">
+                          <div className="font-medium">リスク評価レポート</div>
+                          <div className="text-xs text-gray-500">
+                            潜在リスクと対策提案
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="bg-white border rounded-lg p-4">
+                      <h5 className="font-bold mb-3">
+                        ⚙️ カスタムレポート設定
+                      </h5>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-sm font-medium mb-1">
+                            分析期間
+                          </label>
+                          <select className="w-full p-2 border rounded">
+                            <option>直近1ヶ月</option>
+                            <option>直近3ヶ月</option>
+                            <option>直近6ヶ月</option>
+                            <option>年初来</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">
+                            重点分析項目
+                          </label>
+                          <div className="space-y-2">
+                            <label className="flex items-center">
+                              <input
+                                type="checkbox"
+                                className="mr-2"
+                                defaultChecked
+                              />
+                              <span className="text-sm">財務分析</span>
+                            </label>
+                            <label className="flex items-center">
+                              <input
+                                type="checkbox"
+                                className="mr-2"
+                                defaultChecked
+                              />
+                              <span className="text-sm">顧客分析</span>
+                            </label>
+                            <label className="flex items-center">
+                              <input type="checkbox" className="mr-2" />
+                              <span className="text-sm">競合分析</span>
+                            </label>
+                            <label className="flex items-center">
+                              <input type="checkbox" className="mr-2" />
+                              <span className="text-sm">市場予測</span>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex space-x-2">
+                    <button className="flex-1 bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 font-medium">
+                      レポート生成開始 →
+                    </button>
+                    <button className="flex-1 bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 font-medium">
+                      定期配信設定 →
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {![
+                'financial-analysis',
+                'strategy-analysis',
+                'ai-consultation',
+                'year-comparison',
+                'competitor-benchmark',
+                'scenario-analysis',
+                'analysis-report',
+              ].includes(activeModal) && (
+                <div className="text-center text-gray-500">
+                  <div className="text-6xl mb-4">📊</div>
+                  <p className="text-lg">{activeModal}の詳細</p>
+                  <p className="text-sm mt-2">このセクションは現在開発中です</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

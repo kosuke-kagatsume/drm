@@ -23,6 +23,11 @@ interface SalesDashboardProps {
 export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
   const router = useRouter();
   const [todayTodos, setTodayTodos] = useState<TodoItem[]>([]);
+  const [showEstimateModal, setShowEstimateModal] = useState(false);
+  const [showCustomerModal, setShowCustomerModal] = useState(false);
+  const [showContractModal, setShowContractModal] = useState(false);
+  const [showMapModal, setShowMapModal] = useState(false);
+  const [showRAGModal, setShowRAGModal] = useState(false);
   const [stats, setStats] = useState({
     monthlyRevenue: 0,
     newLeads: 0,
@@ -146,6 +151,18 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
     });
   }, [customers, estimates]);
 
+  // Show loading state if data is still loading
+  if (customersLoading || estimatesLoading || metricsLoading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dandori-blue mx-auto"></div>
+          <p className="mt-4 text-gray-600">データを読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Mock data as fallback
   const mockTodos: TodoItem[] = [
     {
@@ -218,7 +235,7 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
             <div className="mt-2 text-sm text-red-700">
               <p>田中様邸の見積提出期限が4時間後です。</p>
               <button
-                onClick={() => router.push('/estimates/create')}
+                onClick={() => setShowEstimateModal(true)}
                 className="mt-2 bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
               >
                 見積作成へ →
@@ -533,7 +550,10 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
                     rows={3}
                     placeholder="例: 築20年木造の外壁塗装の相場は？"
                   />
-                  <button className="mt-2 w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700">
+                  <button
+                    onClick={() => setShowRAGModal(true)}
+                    className="mt-2 w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700"
+                  >
                     RAGに聞く
                   </button>
                 </div>
@@ -562,7 +582,7 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <button
-            onClick={() => router.push('/customers')}
+            onClick={() => setShowCustomerModal(true)}
             className="bg-white/20 backdrop-blur-sm p-4 rounded-xl hover:bg-white/30 transform hover:scale-105 transition-all duration-200 border border-white/30"
           >
             <span className="text-3xl">👥</span>
@@ -570,7 +590,7 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
             <p className="text-xs text-white/80">CRM</p>
           </button>
           <button
-            onClick={() => router.push('/estimates/create')}
+            onClick={() => setShowEstimateModal(true)}
             className="bg-white/20 backdrop-blur-sm p-4 rounded-xl hover:bg-white/30 transform hover:scale-105 transition-all duration-200 border border-white/30"
           >
             <span className="text-3xl">📝</span>
@@ -586,7 +606,7 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
             <p className="text-xs text-white/80">管理</p>
           </button>
           <button
-            onClick={() => router.push('/map')}
+            onClick={() => setShowMapModal(true)}
             className="bg-white/20 backdrop-blur-sm p-4 rounded-xl hover:bg-white/30 transform hover:scale-105 transition-all duration-200 border border-white/30"
           >
             <span className="text-3xl">🗺️</span>
@@ -599,7 +619,7 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
       {/* その他のツール */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <button
-          onClick={() => router.push('/contracts')}
+          onClick={() => setShowContractModal(true)}
           className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"
         >
           <span className="text-2xl">📄</span>
@@ -627,6 +647,445 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
           <p className="mt-2 font-medium">経費精算</p>
         </button>
       </div>
+
+      {/* 見積作成選択モーダル */}
+      {showEstimateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-4 overflow-hidden">
+            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold">見積作成方法を選択</h2>
+                <button
+                  onClick={() => setShowEstimateModal(false)}
+                  className="text-white/80 hover:text-white text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* クイック作成 */}
+                <button
+                  onClick={() => {
+                    setShowEstimateModal(false);
+                    router.push('/estimates/create');
+                  }}
+                  className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl p-6 hover:border-blue-400 hover:shadow-lg transition-all duration-300 text-left"
+                >
+                  <div className="text-3xl mb-3">⚡</div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                    クイック作成
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-3">
+                    素早く簡単に見積を作成
+                  </p>
+                  <div className="text-xs text-gray-500 space-y-1">
+                    <div>✓ 5分で作成完了</div>
+                    <div>✓ テンプレート利用可</div>
+                    <div>✓ 基本機能搭載</div>
+                  </div>
+                </button>
+
+                {/* プロフェッショナル */}
+                <button
+                  onClick={() => {
+                    setShowEstimateModal(false);
+                    router.push('/estimates/create/enhanced');
+                  }}
+                  className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-6 hover:border-purple-400 hover:shadow-lg transition-all duration-300 text-left"
+                >
+                  <div className="text-3xl mb-3">🚀</div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                    プロフェッショナル
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-3">詳細な見積を作成</p>
+                  <div className="text-xs text-purple-600 space-y-1">
+                    <div>★ AI支援機能</div>
+                    <div>★ 原価・利益分析</div>
+                    <div>★ 3階層分類対応</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 顧客管理モーダル */}
+      {showCustomerModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">👥 顧客管理（CRM）</h3>
+              <button
+                onClick={() => setShowCustomerModal(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* 顧客検索 */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="顧客名、会社名、電話番号で検索"
+                    className="flex-1 px-3 py-2 border rounded-lg"
+                  />
+                  <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                    検索
+                  </button>
+                  <button className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                    新規登録
+                  </button>
+                </div>
+              </div>
+
+              {/* 顧客リスト */}
+              <div className="space-y-3">
+                <h4 className="font-medium">最近の顧客</h4>
+                {[
+                  {
+                    name: '田中建設',
+                    status: 'hot',
+                    lastContact: '本日',
+                    nextAction: '見積提出',
+                  },
+                  {
+                    name: '山田工務店',
+                    status: 'warm',
+                    lastContact: '3日前',
+                    nextAction: '訪問予定',
+                  },
+                  {
+                    name: '佐藤リフォーム',
+                    status: 'cold',
+                    lastContact: '1週間前',
+                    nextAction: 'フォローアップ',
+                  },
+                ].map((customer, idx) => (
+                  <div
+                    key={idx}
+                    className="border rounded-lg p-4 hover:shadow-md transition"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h5 className="font-bold">{customer.name}</h5>
+                        <p className="text-sm text-gray-600">
+                          最終接触: {customer.lastContact}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          次のアクション: {customer.nextAction}
+                        </p>
+                      </div>
+                      <span
+                        className={`px-2 py-1 text-xs rounded-full ${
+                          customer.status === 'hot'
+                            ? 'bg-red-100 text-red-700'
+                            : customer.status === 'warm'
+                              ? 'bg-orange-100 text-orange-700'
+                              : 'bg-blue-100 text-blue-700'
+                        }`}
+                      >
+                        {customer.status === 'hot'
+                          ? '🔥 Hot'
+                          : customer.status === 'warm'
+                            ? '☀️ Warm'
+                            : '❄️ Cold'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowCustomerModal(false);
+                    router.push('/customers');
+                  }}
+                  className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                >
+                  詳細画面へ
+                </button>
+                <button
+                  onClick={() => setShowCustomerModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  閉じる
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 契約管理モーダル */}
+      {showContractModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-2xl w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">📄 契約管理</h3>
+              <button
+                onClick={() => setShowContractModal(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* 契約ステータス */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-yellow-50 p-3 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-yellow-600">3</div>
+                  <div className="text-sm text-gray-600">契約準備中</div>
+                </div>
+                <div className="bg-green-50 p-3 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-green-600">5</div>
+                  <div className="text-sm text-gray-600">今月成約</div>
+                </div>
+                <div className="bg-blue-50 p-3 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-blue-600">12</div>
+                  <div className="text-sm text-gray-600">進行中</div>
+                </div>
+              </div>
+
+              {/* 契約リスト */}
+              <div className="space-y-2">
+                <h4 className="font-medium">最近の契約</h4>
+                {[
+                  {
+                    customer: '田中様邸',
+                    amount: '¥2,500,000',
+                    status: '書類準備中',
+                    date: '2024-08-20',
+                  },
+                  {
+                    customer: '山田様邸',
+                    amount: '¥1,800,000',
+                    status: '署名待ち',
+                    date: '2024-08-18',
+                  },
+                  {
+                    customer: '佐藤様邸',
+                    amount: '¥3,200,000',
+                    status: '締結済み',
+                    date: '2024-08-15',
+                  },
+                ].map((contract, idx) => (
+                  <div
+                    key={idx}
+                    className="border rounded-lg p-3 hover:bg-gray-50"
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium">{contract.customer}</p>
+                        <p className="text-sm text-gray-600">{contract.date}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold">{contract.amount}</p>
+                        <p className="text-xs text-gray-500">
+                          {contract.status}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-3">
+                <button className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                  新規契約作成
+                </button>
+                <button
+                  onClick={() => setShowContractModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  閉じる
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 地図分析モーダル */}
+      {showMapModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-4xl w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">🗺️ エリア地図分析</h3>
+              <button
+                onClick={() => setShowMapModal(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* 地図プレースホルダー */}
+              <div className="bg-gray-100 h-64 rounded-lg flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-4xl mb-2">🗺️</div>
+                  <p className="text-gray-600">営業エリアマップ</p>
+                  <p className="text-sm text-gray-500">
+                    顧客分布・案件密度を表示
+                  </p>
+                </div>
+              </div>
+
+              {/* エリア統計 */}
+              <div className="grid grid-cols-4 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">45</div>
+                  <div className="text-xs text-gray-600">世田谷区</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">32</div>
+                  <div className="text-xs text-gray-600">目黒区</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-600">28</div>
+                  <div className="text-xs text-gray-600">渋谷区</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-orange-600">21</div>
+                  <div className="text-xs text-gray-600">杉並区</div>
+                </div>
+              </div>
+
+              {/* フィルター */}
+              <div className="flex gap-2">
+                <button className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+                  見込み客
+                </button>
+                <button className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
+                  既存顧客
+                </button>
+                <button className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">
+                  施工中
+                </button>
+                <button className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">
+                  完了案件
+                </button>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowMapModal(false);
+                    router.push('/map');
+                  }}
+                  className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                >
+                  詳細地図を開く
+                </button>
+                <button
+                  onClick={() => setShowMapModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  閉じる
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* RAGアシスタントモーダル */}
+      {showRAGModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">🤖 RAGアシスタント回答</h3>
+              <button
+                onClick={() => setShowRAGModal(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* 質問 */}
+              <div className="bg-purple-50 p-4 rounded-lg">
+                <p className="text-sm text-purple-600 font-medium mb-1">
+                  質問:
+                </p>
+                <p className="text-gray-800">築20年木造の外壁塗装の相場は？</p>
+              </div>
+
+              {/* 回答 */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-600 font-medium mb-2">
+                  RAGアシスタントの回答:
+                </p>
+                <div className="space-y-3 text-gray-800">
+                  <p>
+                    築20年の木造住宅の外壁塗装について、過去の実績データから以下の情報をご提供します：
+                  </p>
+
+                  <div className="bg-white p-3 rounded border">
+                    <h4 className="font-bold mb-2">📊 価格相場</h4>
+                    <ul className="space-y-1 text-sm">
+                      <li>• 30坪（100㎡）: 80万円〜120万円</li>
+                      <li>• 40坪（132㎡）: 100万円〜150万円</li>
+                      <li>• 50坪（165㎡）: 120万円〜180万円</li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-white p-3 rounded border">
+                    <h4 className="font-bold mb-2">🎨 塗料グレード別価格</h4>
+                    <ul className="space-y-1 text-sm">
+                      <li>• シリコン塗料: 2,300〜3,000円/㎡</li>
+                      <li>• フッ素塗料: 3,800〜4,800円/㎡</li>
+                      <li>• 無機塗料: 4,500〜5,500円/㎡</li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-white p-3 rounded border">
+                    <h4 className="font-bold mb-2">📝 類似案件実績</h4>
+                    <ul className="space-y-1 text-sm">
+                      <li>• 田中様邸（築22年、35坪）: 105万円</li>
+                      <li>• 山田様邸（築18年、40坪）: 128万円</li>
+                      <li>• 佐藤様邸（築20年、38坪）: 115万円</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* 関連情報 */}
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <p className="text-sm font-medium text-blue-800 mb-2">
+                  💡 追加のアドバイス:
+                </p>
+                <p className="text-sm text-gray-700">
+                  築20年の場合、シーリング打ち替えや下地補修が必要なケースが多いため、
+                  現地調査時に詳細確認することをお勧めします。
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button className="flex-1 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600">
+                  関連質問をする
+                </button>
+                <button
+                  onClick={() => setShowRAGModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  閉じる
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
