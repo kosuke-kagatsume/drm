@@ -3,191 +3,33 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { getConstructionMasters } from '@/data/construction-masters';
 import {
-  Database,
-  ChevronLeft,
+  Package,
+  Wrench,
+  Users,
+  Building2,
   Plus,
   Search,
-  Edit2,
-  Trash2,
+  Filter,
   Download,
   Upload,
-  Package,
-  Tag,
-  Calculator,
-  Wrench,
-  Home,
-  Users,
-  FileText,
-  Save,
+  Edit,
+  Trash2,
+  ChevronRight,
+  Check,
   X,
 } from 'lucide-react';
-
-interface MasterItem {
-  id: string;
-  code: string;
-  name: string;
-  category: string;
-  unit: string;
-  basePrice: number;
-  taxRate: number;
-  description?: string;
-  isActive: boolean;
-  updatedAt: string;
-}
-
-interface MasterCategory {
-  id: string;
-  name: string;
-  description: string;
-  icon: any;
-  color: string;
-  count: number;
-  path: string;
-}
 
 export default function MastersManagement() {
   const router = useRouter();
   const { user, isLoading, isSuperAdmin } = useAuth();
-  const [selectedCategory, setSelectedCategory] = useState<string>('products');
+  const [activeTab, setActiveTab] = useState('products');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [masters, setMasters] = useState<any>({});
+  const [editingItem, setEditingItem] = useState<any>(null);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingItem, setEditingItem] = useState<MasterItem | null>(null);
-
-  // マスタカテゴリー
-  const masterCategories: MasterCategory[] = [
-    {
-      id: 'products',
-      name: '商品マスタ',
-      description: '建材・資材の商品情報',
-      icon: Package,
-      color: 'from-blue-500 to-cyan-500',
-      count: 1250,
-      path: '/admin/masters/products',
-    },
-    {
-      id: 'items',
-      name: '項目マスタ',
-      description: '見積項目のテンプレート',
-      icon: Tag,
-      color: 'from-green-500 to-emerald-500',
-      count: 350,
-      path: '/admin/masters/items',
-    },
-    {
-      id: 'prices',
-      name: '単価マスタ',
-      description: '標準単価と割引率',
-      icon: Calculator,
-      color: 'from-purple-500 to-pink-500',
-      count: 850,
-      path: '/admin/masters/prices',
-    },
-    {
-      id: 'construction',
-      name: '工事種別マスタ',
-      description: '工事の種類と分類',
-      icon: Wrench,
-      color: 'from-orange-500 to-red-500',
-      count: 45,
-      path: '/admin/masters/construction',
-    },
-    {
-      id: 'rooms',
-      name: '部屋種別マスタ',
-      description: '部屋の種類と仕様',
-      icon: Home,
-      color: 'from-indigo-500 to-purple-500',
-      count: 28,
-      path: '/admin/masters/rooms',
-    },
-    {
-      id: 'partners',
-      name: '協力会社マスタ',
-      description: '協力会社と職人情報',
-      icon: Users,
-      color: 'from-teal-500 to-green-500',
-      count: 156,
-      path: '/admin/masters/partners',
-    },
-  ];
-
-  // モックデータ：商品マスタ
-  const [masterItems] = useState<MasterItem[]>([
-    {
-      id: '1',
-      code: 'MAT-001',
-      name: 'クロス（ビニール）標準',
-      category: '内装材',
-      unit: '㎡',
-      basePrice: 1200,
-      taxRate: 10,
-      description: '一般的なビニールクロス',
-      isActive: true,
-      updatedAt: '2024-03-15',
-    },
-    {
-      id: '2',
-      code: 'MAT-002',
-      name: 'フローリング材（標準）',
-      category: '床材',
-      unit: '㎡',
-      basePrice: 3500,
-      taxRate: 10,
-      description: '標準グレードのフローリング材',
-      isActive: true,
-      updatedAt: '2024-03-14',
-    },
-    {
-      id: '3',
-      code: 'MAT-003',
-      name: '石膏ボード 12.5mm',
-      category: '下地材',
-      unit: '枚',
-      basePrice: 450,
-      taxRate: 10,
-      description: '標準的な石膏ボード',
-      isActive: true,
-      updatedAt: '2024-03-13',
-    },
-    {
-      id: '4',
-      code: 'EQP-001',
-      name: 'システムキッチン I型 2550',
-      category: '設備',
-      unit: '台',
-      basePrice: 450000,
-      taxRate: 10,
-      description: 'I型システムキッチン 標準仕様',
-      isActive: true,
-      updatedAt: '2024-03-12',
-    },
-    {
-      id: '5',
-      code: 'EQP-002',
-      name: 'ユニットバス 1616',
-      category: '設備',
-      unit: '台',
-      basePrice: 680000,
-      taxRate: 10,
-      description: '1616サイズ 標準仕様',
-      isActive: true,
-      updatedAt: '2024-03-11',
-    },
-    {
-      id: '6',
-      code: 'LAB-001',
-      name: '大工工事（標準）',
-      category: '労務',
-      unit: '人日',
-      basePrice: 25000,
-      taxRate: 10,
-      description: '大工工事標準単価',
-      isActive: true,
-      updatedAt: '2024-03-10',
-    },
-  ]);
 
   useEffect(() => {
     if (!isLoading && !isSuperAdmin()) {
@@ -195,29 +37,13 @@ export default function MastersManagement() {
     }
   }, [user, isLoading, isSuperAdmin, router]);
 
-  const filteredItems = masterItems.filter((item) => {
-    const matchesSearch =
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
-  });
+  useEffect(() => {
+    // マスタデータを読み込み
+    const data = getConstructionMasters();
+    setMasters(data);
+  }, []);
 
-  const handleDeleteItem = (itemId: string) => {
-    if (confirm('このアイテムを削除してもよろしいですか？')) {
-      console.log('Delete item:', itemId);
-    }
-  };
-
-  const handleImport = () => {
-    console.log('Import master data');
-  };
-
-  const handleExport = () => {
-    console.log('Export master data');
-  };
-
-  if (isLoading) {
+  if (isLoading || !isSuperAdmin()) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -228,497 +54,546 @@ export default function MastersManagement() {
     );
   }
 
-  if (!isSuperAdmin()) {
-    return null;
-  }
+  const tabs = [
+    {
+      id: 'products',
+      name: '商品マスタ',
+      icon: Package,
+      count: masters.products?.length || 0,
+    },
+    {
+      id: 'items',
+      name: '作業項目マスタ',
+      icon: Wrench,
+      count: masters.items?.length || 0,
+    },
+    {
+      id: 'customers',
+      name: '顧客マスタ',
+      icon: Users,
+      count: masters.customers?.length || 0,
+    },
+    {
+      id: 'suppliers',
+      name: '協力会社マスタ',
+      icon: Building2,
+      count: masters.suppliers?.length || 0,
+    },
+  ];
+
+  const getFilteredData = () => {
+    let data = [];
+    switch (activeTab) {
+      case 'products':
+        data = masters.products || [];
+        break;
+      case 'items':
+        data = masters.items || [];
+        break;
+      case 'customers':
+        data = masters.customers || [];
+        break;
+      case 'suppliers':
+        data = masters.suppliers || [];
+        break;
+    }
+
+    // カテゴリフィルタ
+    if (
+      selectedCategory !== 'all' &&
+      (activeTab === 'products' || activeTab === 'items')
+    ) {
+      data = data.filter((item: any) => item.categoryId === selectedCategory);
+    }
+
+    // 検索フィルタ
+    if (searchTerm) {
+      data = data.filter(
+        (item: any) =>
+          item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.code?.toLowerCase().includes(searchTerm.toLowerCase()),
+      );
+    }
+
+    return data;
+  };
+
+  const renderProductRow = (product: any) => (
+    <tr key={product.id} className="hover:bg-gray-50 transition-colors">
+      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+        {product.code}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {product.name}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {
+          masters.categories?.find((c: any) => c.id === product.categoryId)
+            ?.name
+        }
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {product.unit}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        ¥{product.standardPrice.toLocaleString()}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        ¥{product.costPrice.toLocaleString()}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {Math.round(
+          ((product.standardPrice - product.costPrice) /
+            product.standardPrice) *
+            100,
+        )}
+        %
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        {product.isActive ? (
+          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+            有効
+          </span>
+        ) : (
+          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+            無効
+          </span>
+        )}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+        <button className="text-blue-600 hover:text-blue-900 mr-4">
+          <Edit className="h-4 w-4" />
+        </button>
+        <button className="text-red-600 hover:text-red-900">
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </td>
+    </tr>
+  );
+
+  const renderItemRow = (item: any) => (
+    <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+        {item.code}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {item.name}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {masters.categories?.find((c: any) => c.id === item.categoryId)?.name}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {item.unit}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        ¥{item.standardPrice.toLocaleString()}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        ¥{item.costPrice.toLocaleString()}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {item.requiredDays}日
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {item.requiredWorkers}人
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+        <button className="text-blue-600 hover:text-blue-900 mr-4">
+          <Edit className="h-4 w-4" />
+        </button>
+        <button className="text-red-600 hover:text-red-900">
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </td>
+    </tr>
+  );
+
+  const renderCustomerRow = (customer: any) => (
+    <tr key={customer.id} className="hover:bg-gray-50 transition-colors">
+      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+        {customer.code}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {customer.name}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {customer.type === 'individual' ? '個人' : '法人'}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {customer.tel}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {customer.email}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {customer.prefecture}
+        {customer.city}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        ¥{(customer.creditLimit || 0).toLocaleString()}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        {customer.isActive ? (
+          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+            有効
+          </span>
+        ) : (
+          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+            無効
+          </span>
+        )}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+        <button className="text-blue-600 hover:text-blue-900 mr-4">
+          <Edit className="h-4 w-4" />
+        </button>
+        <button className="text-red-600 hover:text-red-900">
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </td>
+    </tr>
+  );
+
+  const renderSupplierRow = (supplier: any) => (
+    <tr key={supplier.id} className="hover:bg-gray-50 transition-colors">
+      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+        {supplier.code}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {supplier.name}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {supplier.type === 'painter' && '塗装'}
+        {supplier.type === 'material' && '建材'}
+        {supplier.type === 'plumber' && '設備'}
+        {supplier.type === 'electrician' && '電気'}
+        {supplier.type === 'general' && '総合'}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {supplier.specialties?.join(', ')}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {supplier.tel}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {supplier.evaluation?.技術力 && `${supplier.evaluation.技術力}/5`}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {supplier.paymentTerms}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        {supplier.isActive ? (
+          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+            有効
+          </span>
+        ) : (
+          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+            無効
+          </span>
+        )}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+        <button className="text-blue-600 hover:text-blue-900 mr-4">
+          <Edit className="h-4 w-4" />
+        </button>
+        <button className="text-red-600 hover:text-red-900">
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </td>
+    </tr>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* ヘッダー */}
-      <nav className="bg-gradient-to-r from-red-600 to-pink-600 text-white shadow-lg">
+      <div className="bg-gradient-to-r from-red-600 to-pink-600 text-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
               <button
                 onClick={() => router.push('/admin')}
-                className="hover:bg-white/20 p-2 rounded transition"
+                className="mr-4 hover:opacity-80 transition"
               >
-                <ChevronLeft className="h-5 w-5" />
+                ←
               </button>
-              <div>
-                <h1 className="text-2xl font-bold flex items-center gap-2">
-                  <Database className="h-7 w-7" />
-                  マスタ管理
-                </h1>
-                <p className="text-sm opacity-90 mt-1">
-                  商品・項目・単価マスタの管理
-                </p>
-              </div>
+              <h1 className="text-2xl font-bold">マスタ管理</h1>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleImport}
-                className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg flex items-center gap-2 transition"
-              >
+            <div className="flex gap-4">
+              <button className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition flex items-center gap-2">
                 <Upload className="h-4 w-4" />
                 インポート
               </button>
-              <button
-                onClick={handleExport}
-                className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg flex items-center gap-2 transition"
-              >
+              <button className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition flex items-center gap-2">
                 <Download className="h-4 w-4" />
                 エクスポート
               </button>
             </div>
           </div>
         </div>
-      </nav>
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* マスタカテゴリー一覧 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {masterCategories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => {
-                if (category.path) {
-                  router.push(category.path);
-                } else {
-                  setSelectedCategory(category.id);
-                }
-              }}
-              className={`bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-200 p-6 text-left ${
-                selectedCategory === category.id ? 'ring-2 ring-red-500' : ''
-              }`}
-            >
-              <div
-                className={`inline-flex p-3 rounded-lg bg-gradient-to-r ${category.color} mb-4`}
-              >
-                <category.icon className="h-6 w-6 text-white" />
-              </div>
-              <h3 className="font-bold text-gray-900 mb-1 flex items-center justify-between">
-                {category.name}
-                <span className="text-2xl font-bold text-gray-400">
-                  {category.count}
-                </span>
-              </h3>
-              <p className="text-sm text-gray-600">{category.description}</p>
-            </button>
-          ))}
+        {/* タブ */}
+        <div className="bg-white rounded-lg shadow mb-6">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`${
+                      activeTab === tab.id
+                        ? 'border-red-500 text-red-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm flex items-center gap-2 transition`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {tab.name}
+                    <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
+                      {tab.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
         </div>
 
-        {/* 選択されたマスタの詳細 */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">
-              {masterCategories.find((c) => c.id === selectedCategory)?.name}
-            </h2>
+        {/* フィルター */}
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <div className="flex gap-4 items-center">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="検索..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              />
+            </div>
+            {(activeTab === 'products' || activeTab === 'items') && (
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
+              >
+                <option value="all">全カテゴリ</option>
+                {masters.categories?.map((cat: any) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            )}
             <button
               onClick={() => setShowAddModal(true)}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition"
+              className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition flex items-center gap-2"
             >
-              <Plus className="h-5 w-5" />
+              <Plus className="h-4 w-4" />
               新規追加
             </button>
           </div>
+        </div>
 
-          {/* 検索バー */}
-          <div className="mb-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="商品名、コード、カテゴリーで検索..."
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* データテーブル */}
+        {/* データテーブル */}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    コード
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    名称
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    カテゴリー
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    単位
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    基準単価
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    税率
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ステータス
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    アクション
-                  </th>
+                  {activeTab === 'products' && (
+                    <>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        商品コード
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        商品名
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        カテゴリ
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        単位
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        標準単価
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        原価
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        利益率
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        状態
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        操作
+                      </th>
+                    </>
+                  )}
+                  {activeTab === 'items' && (
+                    <>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        項目コード
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        項目名
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        カテゴリ
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        単位
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        標準単価
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        原価
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        工期
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        人工
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        操作
+                      </th>
+                    </>
+                  )}
+                  {activeTab === 'customers' && (
+                    <>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        顧客コード
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        顧客名
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        種別
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        電話番号
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        メール
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        住所
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        与信限度額
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        状態
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        操作
+                      </th>
+                    </>
+                  )}
+                  {activeTab === 'suppliers' && (
+                    <>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        業者コード
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        業者名
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        種別
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        専門分野
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        電話番号
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        評価
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        支払条件
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        状態
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        操作
+                      </th>
+                    </>
+                  )}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredItems.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {item.code}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {item.name}
-                        </div>
-                        {item.description && (
-                          <div className="text-sm text-gray-500">
-                            {item.description}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
-                        {item.category}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {item.unit}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ¥{item.basePrice.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {item.taxRate}%
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {item.isActive ? (
-                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                          有効
-                        </span>
-                      ) : (
-                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
-                          無効
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => {
-                            setEditingItem(item);
-                            setShowEditModal(true);
-                          }}
-                          className="text-blue-600 hover:text-blue-800 transition"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteItem(item.id)}
-                          className="text-red-600 hover:text-red-800 transition"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {getFilteredData().map((item: any) => {
+                  if (activeTab === 'products') return renderProductRow(item);
+                  if (activeTab === 'items') return renderItemRow(item);
+                  if (activeTab === 'customers') return renderCustomerRow(item);
+                  if (activeTab === 'suppliers') return renderSupplierRow(item);
+                  return null;
+                })}
               </tbody>
             </table>
           </div>
         </div>
+
+        {/* 統計情報 */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-sm font-medium text-gray-500 mb-2">総商品数</h3>
+            <p className="text-3xl font-bold text-gray-900">
+              {masters.products?.length || 0}
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              有効:{' '}
+              {masters.products?.filter((p: any) => p.isActive).length || 0}
+            </p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-sm font-medium text-gray-500 mb-2">
+              総作業項目数
+            </h3>
+            <p className="text-3xl font-bold text-gray-900">
+              {masters.items?.length || 0}
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              カテゴリ: {masters.categories?.length || 0}
+            </p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-sm font-medium text-gray-500 mb-2">顧客数</h3>
+            <p className="text-3xl font-bold text-gray-900">
+              {masters.customers?.length || 0}
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              個人:{' '}
+              {masters.customers?.filter((c: any) => c.type === 'individual')
+                .length || 0}{' '}
+              / 法人:{' '}
+              {masters.customers?.filter((c: any) => c.type === 'corporate')
+                .length || 0}
+            </p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-sm font-medium text-gray-500 mb-2">
+              協力会社数
+            </h3>
+            <p className="text-3xl font-bold text-gray-900">
+              {masters.suppliers?.length || 0}
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              有効:{' '}
+              {masters.suppliers?.filter((s: any) => s.isActive).length || 0}
+            </p>
+          </div>
+        </div>
       </div>
-
-      {/* 新規追加モーダル */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="bg-gradient-to-r from-red-600 to-pink-600 text-white p-6 rounded-t-2xl">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold">新規マスタ追加</h2>
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  className="text-white/80 hover:text-white text-2xl"
-                >
-                  <X className="h-6 w-6" />
-                </button>
-              </div>
-            </div>
-            <div className="p-6">
-              <form className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      商品コード
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      placeholder="MAT-XXX"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      商品名
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      placeholder="商品名を入力"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      カテゴリー
-                    </label>
-                    <select className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
-                      <option value="">選択してください</option>
-                      <option value="内装材">内装材</option>
-                      <option value="床材">床材</option>
-                      <option value="下地材">下地材</option>
-                      <option value="設備">設備</option>
-                      <option value="労務">労務</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      単位
-                    </label>
-                    <select className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
-                      <option value="">選択してください</option>
-                      <option value="㎡">㎡</option>
-                      <option value="m">m</option>
-                      <option value="枚">枚</option>
-                      <option value="台">台</option>
-                      <option value="式">式</option>
-                      <option value="人日">人日</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      基準単価（税抜）
-                    </label>
-                    <input
-                      type="number"
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      税率
-                    </label>
-                    <select className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
-                      <option value="10">10%</option>
-                      <option value="8">8%（軽減税率）</option>
-                      <option value="0">0%（非課税）</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    説明
-                  </label>
-                  <textarea
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    rows={3}
-                    placeholder="商品の説明を入力"
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="isActive"
-                    className="rounded"
-                    defaultChecked
-                  />
-                  <label htmlFor="isActive" className="text-sm text-gray-700">
-                    有効にする
-                  </label>
-                </div>
-                <div className="flex justify-end gap-2 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2 border rounded-lg hover:bg-gray-50"
-                  >
-                    キャンセル
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2"
-                  >
-                    <Save className="h-4 w-4" />
-                    保存
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 編集モーダル */}
-      {showEditModal && editingItem && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white p-6 rounded-t-2xl">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold">マスタ編集</h2>
-                <button
-                  onClick={() => {
-                    setShowEditModal(false);
-                    setEditingItem(null);
-                  }}
-                  className="text-white/80 hover:text-white text-2xl"
-                >
-                  <X className="h-6 w-6" />
-                </button>
-              </div>
-            </div>
-            <div className="p-6">
-              <form className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      商品コード
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      defaultValue={editingItem.code}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      商品名
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      defaultValue={editingItem.name}
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      カテゴリー
-                    </label>
-                    <select
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      defaultValue={editingItem.category}
-                    >
-                      <option value="内装材">内装材</option>
-                      <option value="床材">床材</option>
-                      <option value="下地材">下地材</option>
-                      <option value="設備">設備</option>
-                      <option value="労務">労務</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      単位
-                    </label>
-                    <select
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      defaultValue={editingItem.unit}
-                    >
-                      <option value="㎡">㎡</option>
-                      <option value="m">m</option>
-                      <option value="枚">枚</option>
-                      <option value="台">台</option>
-                      <option value="式">式</option>
-                      <option value="人日">人日</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      基準単価（税抜）
-                    </label>
-                    <input
-                      type="number"
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      defaultValue={editingItem.basePrice}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      税率
-                    </label>
-                    <select
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      defaultValue={editingItem.taxRate}
-                    >
-                      <option value="10">10%</option>
-                      <option value="8">8%（軽減税率）</option>
-                      <option value="0">0%（非課税）</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    説明
-                  </label>
-                  <textarea
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    rows={3}
-                    defaultValue={editingItem.description}
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="isActiveEdit"
-                    className="rounded"
-                    defaultChecked={editingItem.isActive}
-                  />
-                  <label
-                    htmlFor="isActiveEdit"
-                    className="text-sm text-gray-700"
-                  >
-                    有効にする
-                  </label>
-                </div>
-                <div className="flex justify-end gap-2 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowEditModal(false);
-                      setEditingItem(null);
-                    }}
-                    className="px-4 py-2 border rounded-lg hover:bg-gray-50"
-                  >
-                    キャンセル
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
-                  >
-                    <Save className="h-4 w-4" />
-                    変更を保存
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

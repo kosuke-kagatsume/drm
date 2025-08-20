@@ -200,3 +200,122 @@ export interface CSVExportOptions {
   includeHeader: boolean;
   dateFormat: string;
 }
+
+// 追加の型定義（construction-masters.ts用）
+export interface Product {
+  id: string;
+  code: string;
+  name: string;
+  categoryId: string;
+  subCategoryId?: string;
+  unit: string;
+  standardPrice: number;
+  costPrice: number;
+  description?: string;
+  specifications?: Record<string, string>;
+  isActive: boolean;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  code: string;
+  displayOrder: number;
+}
+
+export interface SubCategory {
+  id: string;
+  categoryId: string;
+  name: string;
+  code: string;
+}
+
+export interface Item {
+  id: string;
+  code: string;
+  name: string;
+  categoryId: string;
+  unit: string;
+  standardPrice: number;
+  costPrice: number;
+  description?: string;
+  requiredDays?: number;
+  requiredWorkers?: number;
+}
+
+export interface Customer {
+  id: string;
+  code: string;
+  name: string;
+  nameKana?: string;
+  type: 'individual' | 'corporate';
+  postalCode?: string;
+  prefecture?: string;
+  city?: string;
+  address?: string;
+  building?: string;
+  tel?: string;
+  fax?: string;
+  mobile?: string;
+  email?: string;
+  representative?: string;
+  department?: string;
+  contactPerson?: string;
+  propertyInfo?: {
+    建物種別?: string;
+    築年数?: string;
+    延床面積?: string;
+    構造?: string;
+    物件数?: string;
+    戸数?: string;
+  };
+  contractHistory?: Array<{
+    date: string;
+    content: string;
+    amount: number;
+  }>;
+  memo?: string;
+  creditLimit?: number;
+  paymentTerms?: string;
+  isActive: boolean;
+}
+
+export interface Supplier {
+  id: string;
+  code: string;
+  name: string;
+  nameKana?: string;
+  type: 'painter' | 'material' | 'plumber' | 'electrician' | 'general';
+  specialties: string[];
+  postalCode?: string;
+  prefecture?: string;
+  city?: string;
+  address?: string;
+  building?: string;
+  tel?: string;
+  fax?: string;
+  mobile?: string;
+  email?: string;
+  representative?: string;
+  employees?: number;
+  established?: string;
+  capital?: number;
+  licenses?: string[];
+  insurance?: Record<string, string>;
+  evaluation?: {
+    技術力?: number;
+    品質?: number;
+    価格?: number;
+    納期?: number;
+    対応?: number;
+  };
+  unitPrices?: Array<{
+    item: string;
+    unit: string;
+    price: number;
+  }>;
+  paymentTerms?: string;
+  discountRate?: number;
+  memo?: string;
+  isActive: boolean;
+}
