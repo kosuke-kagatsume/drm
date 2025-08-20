@@ -1,13 +1,34 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  Users,
+  Building2,
+  Settings,
+  Database,
+  Shield,
+  Activity,
+  TrendingUp,
+  AlertCircle,
+  ChevronRight,
+  UserPlus,
+  Key,
+  FileText,
+  Package,
+} from 'lucide-react';
 
-export default function AdminPage() {
+export default function AdminDashboard() {
   const router = useRouter();
-  const { user, isLoading, isSuperAdmin } = useAuth();
-  const [activeTab, setActiveTab] = useState('overview');
+  const { user, isLoading, isSuperAdmin, logout } = useAuth();
+
+  useEffect(() => {
+    // スーパー管理者でない場合はダッシュボードへリダイレクト
+    if (!isLoading && !isSuperAdmin()) {
+      router.push('/dashboard');
+    }
+  }, [user, isLoading, isSuperAdmin, router]);
 
   if (isLoading) {
     return (
@@ -20,242 +41,211 @@ export default function AdminPage() {
     );
   }
 
-  if (!user || !isSuperAdmin()) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4">🚫</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            アクセス拒否
-          </h1>
-          <p className="text-gray-600 mb-6">
-            このページにアクセスする権限がありません。
-          </p>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-          >
-            ダッシュボードに戻る
-          </button>
-        </div>
-      </div>
-    );
+  if (!isSuperAdmin()) {
+    return null;
   }
 
-  const tabs = [
-    { id: 'overview', name: '概要', icon: '📊' },
-    { id: 'users', name: 'ユーザー管理', icon: '👥' },
-    { id: 'masters', name: 'マスタ管理', icon: '⚙️' },
-    { id: 'permissions', name: '権限管理', icon: '🔐' },
-    { id: 'organization', name: '組織管理', icon: '🏢' },
-    { id: 'approval-flows', name: '承認フロー設定', icon: '✅' },
-  ];
+  // モックデータ
+  const tenantStats = {
+    totalUsers: 42,
+    activeUsers: 38,
+    departments: 5,
+    dataUsage: '2.3GB',
+    planType: 'Professional',
+    contractEnd: '2025-12-31',
+  };
 
-  const stats = [
+  const quickActions = [
     {
-      label: 'アクティブユーザー',
-      value: '12',
-      icon: '👤',
-      color: 'bg-blue-500',
+      title: 'ユーザー管理',
+      description: 'ユーザーの追加・編集・権限設定',
+      icon: Users,
+      color: 'from-blue-500 to-cyan-500',
+      href: '/admin/users',
+      count: tenantStats.totalUsers,
     },
-    { label: '今月の見積', value: '47', icon: '📝', color: 'bg-green-500' },
-    { label: '承認待ち', value: '3', icon: '⏳', color: 'bg-orange-500' },
-    { label: 'システムアラート', value: '0', icon: '🚨', color: 'bg-gray-500' },
+    {
+      title: '組織構造',
+      description: '部署・階層の管理',
+      icon: Building2,
+      color: 'from-purple-500 to-pink-500',
+      href: '/admin/organization',
+      count: tenantStats.departments,
+    },
+    {
+      title: '権限設定',
+      description: '役職・権限マトリックス',
+      icon: Shield,
+      color: 'from-green-500 to-emerald-500',
+      href: '/admin/permissions',
+    },
+    {
+      title: 'マスタ管理',
+      description: '商品・項目マスタ設定',
+      icon: Database,
+      color: 'from-orange-500 to-red-500',
+      href: '/admin/masters',
+    },
   ];
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* ヘッダー */}
-      <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
+      <nav className="bg-gradient-to-r from-red-600 to-pink-600 text-white shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-bold flex items-center gap-2">
+                <Shield className="h-7 w-7" />
+                スーパー管理者コンソール
+              </h1>
+              <p className="text-sm opacity-90 mt-1">
+                テナント: デモ建設株式会社 (ID: {user?.tenantId?.slice(0, 8)}
+                ...)
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
               <button
                 onClick={() => router.push('/dashboard')}
-                className="mr-4 text-white/80 hover:text-white"
+                className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded transition"
               >
-                ← 戻る
+                通常画面へ
               </button>
-              <div>
-                <h1 className="text-2xl font-bold flex items-center">
-                  <span className="text-3xl mr-3">⚡</span>
-                  スーパー管理コンソール
-                </h1>
-                <p className="text-red-100 text-sm mt-1">
-                  システム全体の管理・設定
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-red-100">ログイン中</p>
-              <p className="font-medium">{user.name}</p>
+              <button
+                onClick={logout}
+                className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded transition"
+              >
+                ログアウト
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      </nav>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* タブナビゲーション */}
-        <div className="bg-white rounded-lg shadow mb-6">
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8 px-6">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
-                    activeTab === tab.id
-                      ? 'border-red-500 text-red-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  <span className="mr-2">{tab.icon}</span>
-                  {tab.name}
-                </button>
-              ))}
-            </nav>
+        {/* テナント情報カード */}
+        <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Activity className="h-5 w-5 text-red-500" />
+            テナント概要
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="text-center">
+              <p className="text-sm text-gray-600">総ユーザー数</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {tenantStats.totalUsers}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-gray-600">アクティブ</p>
+              <p className="text-2xl font-bold text-green-600">
+                {tenantStats.activeUsers}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-gray-600">部署数</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {tenantStats.departments}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-gray-600">データ使用量</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {tenantStats.dataUsage}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-gray-600">プラン</p>
+              <p className="text-lg font-bold text-purple-600">
+                {tenantStats.planType}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-gray-600">契約期限</p>
+              <p className="text-lg font-bold text-gray-900">
+                {tenantStats.contractEnd}
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* コンテンツエリア */}
-        {activeTab === 'overview' && (
-          <div>
-            {/* 統計カード */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {stats.map((stat, index) => (
-                <div key={index} className="bg-white rounded-lg shadow p-6">
-                  <div className="flex items-center">
-                    <div
-                      className={`flex-shrink-0 ${stat.color} rounded-md p-3`}
-                    >
-                      <span className="text-white text-2xl">{stat.icon}</span>
-                    </div>
-                    <div className="ml-5 w-0 flex-1">
-                      <dl>
-                        <dt className="text-sm font-medium text-gray-500 truncate">
-                          {stat.label}
-                        </dt>
-                        <dd className="text-lg font-medium text-gray-900">
-                          {stat.value}
-                        </dd>
-                      </dl>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* システム状態 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white rounded-lg shadow">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    システム状態
-                  </h3>
-                </div>
-                <div className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">
-                        データベース
-                      </span>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        正常
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">
-                        API サーバー
-                      </span>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        正常
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">
-                        ファイルストレージ
-                      </span>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        正常
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">
-                        バックアップ
-                      </span>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                        実行中
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg shadow">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    最近のアクティビティ
-                  </h3>
-                </div>
-                <div className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex items-start">
-                      <div className="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                      <div className="ml-3">
-                        <p className="text-sm text-gray-900">
-                          新規ユーザーが追加されました
-                        </p>
-                        <p className="text-xs text-gray-500">2分前</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start">
-                      <div className="flex-shrink-0 w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                      <div className="ml-3">
-                        <p className="text-sm text-gray-900">
-                          見積が承認されました
-                        </p>
-                        <p className="text-xs text-gray-500">15分前</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start">
-                      <div className="flex-shrink-0 w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
-                      <div className="ml-3">
-                        <p className="text-sm text-gray-900">
-                          システム設定が更新されました
-                        </p>
-                        <p className="text-xs text-gray-500">1時間前</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* その他のタブは今後実装 */}
-        {activeTab !== 'overview' && (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <div className="text-6xl mb-4">🚧</div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">準備中</h3>
-            <p className="text-gray-600">この機能は現在開発中です。</p>
+        {/* クイックアクション */}
+        <h2 className="text-xl font-bold text-gray-900 mb-4">管理機能</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {quickActions.map((action) => (
             <button
-              onClick={() => {
-                if (activeTab === 'users') router.push('/admin/users');
-                else if (activeTab === 'masters') router.push('/admin/masters');
-                else if (activeTab === 'permissions')
-                  router.push('/admin/permissions');
-                else if (activeTab === 'organization')
-                  router.push('/admin/organization');
-                else if (activeTab === 'approval-flows')
-                  router.push('/admin/approval-flows');
-              }}
-              className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              key={action.title}
+              onClick={() => router.push(action.href)}
+              className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-200 p-6 text-left group"
             >
-              詳細ページへ
+              <div
+                className={`inline-flex p-3 rounded-lg bg-gradient-to-r ${action.color} mb-4`}
+              >
+                <action.icon className="h-6 w-6 text-white" />
+              </div>
+              <h3 className="font-bold text-gray-900 mb-1 flex items-center justify-between">
+                {action.title}
+                {action.count && (
+                  <span className="text-2xl font-bold text-gray-400">
+                    {action.count}
+                  </span>
+                )}
+              </h3>
+              <p className="text-sm text-gray-600 mb-2">{action.description}</p>
+              <div className="flex items-center text-sm text-gray-500 group-hover:text-blue-600 transition-colors">
+                管理画面へ
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </div>
             </button>
+          ))}
+        </div>
+
+        {/* その他の管理項目 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* 承認フロー設定 */}
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <FileText className="h-5 w-5 text-blue-500" />
+              承認フロー設定
+            </h3>
+            <div className="space-y-3">
+              <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center justify-between group">
+                <span>見積承認ルート</span>
+                <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
+              </button>
+              <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center justify-between group">
+                <span>発注承認ルート</span>
+                <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
+              </button>
+              <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center justify-between group">
+                <span>経費承認ルート</span>
+                <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
+              </button>
+            </div>
           </div>
-        )}
+
+          {/* システム設定 */}
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Settings className="h-5 w-5 text-gray-500" />
+              システム設定
+            </h3>
+            <div className="space-y-3">
+              <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center justify-between group">
+                <span>通知設定</span>
+                <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
+              </button>
+              <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center justify-between group">
+                <span>セキュリティ設定</span>
+                <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
+              </button>
+              <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center justify-between group">
+                <span>バックアップ設定</span>
+                <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
