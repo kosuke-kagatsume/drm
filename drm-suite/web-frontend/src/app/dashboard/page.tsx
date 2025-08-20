@@ -10,12 +10,13 @@ import MarketingDashboard from './marketing';
 import AccountingDashboard from './accounting';
 
 export default function DashboardPage() {
-  const { user, isLoading, logout } = useAuth();
+  const { user, isLoading, logout, isSuperAdmin } = useAuth();
   const router = useRouter();
   const [showEstimateModal, setShowEstimateModal] = useState(false);
 
   const getRoleMapping = (role: string) => {
     // Map Japanese role names to dashboard types
+    if (role === 'super_admin') return 'executive'; // スーパー管理者は経営者ダッシュボードを表示
     if (role === '経営者') return 'executive';
     if (role === '支店長') return 'manager';
     if (role === '営業担当') return 'sales';
@@ -43,6 +44,7 @@ export default function DashboardPage() {
   }, [user, router]);
 
   const getRoleTitle = (role: string) => {
+    if (role === 'super_admin') return 'スーパー管理者ダッシュボード';
     const mappedRole = getRoleMapping(role);
     switch (mappedRole) {
       case 'sales':
@@ -61,6 +63,7 @@ export default function DashboardPage() {
   };
 
   const getRoleColor = (role: string) => {
+    if (role === 'super_admin') return 'from-red-500 to-orange-500'; // スーパー管理者は赤系
     const mappedRole = getRoleMapping(role);
     switch (mappedRole) {
       case 'sales':
@@ -110,6 +113,15 @@ export default function DashboardPage() {
               </p>
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
+              {isSuperAdmin() && (
+                <button
+                  onClick={() => router.push('/admin')}
+                  className="bg-red-500/20 hover:bg-red-500/30 px-3 sm:px-4 py-2 rounded transition text-sm sm:text-base whitespace-nowrap border border-white/30"
+                >
+                  <span className="mr-1 sm:mr-2">⚡</span>
+                  <span>管理コンソール</span>
+                </button>
+              )}
               {(getRoleMapping(user.role) === 'sales' ||
                 getRoleMapping(user.role) === 'manager' ||
                 getRoleMapping(user.role) === 'executive') && (

@@ -14,6 +14,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, name: string, role: string) => void;
   logout: () => void;
+  isSuperAdmin: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -21,6 +22,7 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   login: () => {},
   logout: () => {},
+  isSuperAdmin: () => false,
 });
 
 export const useAuth = () => {
@@ -99,8 +101,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/login');
   };
 
+  const isSuperAdmin = () => {
+    return user?.role === 'super_admin';
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+    <AuthContext.Provider
+      value={{ user, isLoading, login, logout, isSuperAdmin }}
+    >
       {children}
     </AuthContext.Provider>
   );
