@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
 // 見積もりインターフェース定義
@@ -125,6 +125,7 @@ const AI_SUGGESTIONS = [
 
 export default function EnhancedCreateEstimatePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('details');
   const [showTemplateModal, setShowTemplateModal] = useState(false);
@@ -135,9 +136,15 @@ export default function EnhancedCreateEstimatePage() {
     (typeof DW_VENDORS)[0] | null
   >(null);
 
+  // 編集モードの判定
+  const editId = searchParams.get('edit');
+  const isEditMode = !!editId;
+
   // 基本情報
   const [estimateInfo, setEstimateInfo] = useState({
-    estimateNumber: 'EST-2024-0001',
+    estimateNumber: isEditMode
+      ? `EST-2024-${String(editId).padStart(3, '0')}`
+      : 'EST-2024-0001',
     version: 1,
     customerName: '',
     customerCompany: '',
@@ -333,6 +340,16 @@ export default function EnhancedCreateEstimatePage() {
     },
   ]);
 
+  // 編集モードの場合、データを読み込む
+  useEffect(() => {
+    if (isEditMode && editId) {
+      // 実際のアプリではAPIから読み込む
+      // ここではモックデータで対応
+      console.log(`編集モード: 見積ID ${editId} を読み込み中...`);
+      // 既存のセクションデータが既に設定されているため、追加の処理は不要
+    }
+  }, [isEditMode, editId]);
+
   // 諸経費設定
   const [expenses, setExpenses] = useState({
     siteManagementRate: 10,
@@ -476,7 +493,9 @@ export default function EnhancedCreateEstimatePage() {
               <div>
                 <h1 className="text-3xl font-bold flex items-center">
                   <span className="text-4xl mr-3">📝</span>
-                  プロフェッショナル見積作成
+                  {isEditMode
+                    ? 'プロフェッショナル見積編集'
+                    : 'プロフェッショナル見積作成'}
                 </h1>
                 <p className="text-dandori-yellow/80 text-sm mt-1">
                   見積番号: {estimateInfo.estimateNumber} | バージョン:{' '}

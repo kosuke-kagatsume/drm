@@ -471,7 +471,9 @@ export default function EstimatesPage() {
                         </button>
                         <button
                           onClick={() =>
-                            router.push(`/estimates/${estimate.id}/edit`)
+                            router.push(
+                              `/estimates/create/enhanced?edit=${estimate.id}`,
+                            )
                           }
                           className="p-1.5 text-gray-600 hover:text-dandori-blue hover:bg-dandori-blue/10 rounded transition-colors"
                           title="編集"
@@ -572,7 +574,9 @@ export default function EstimatesPage() {
                 >
                   <button
                     onClick={() =>
-                      router.push(`/estimates/${estimate.id}/edit`)
+                      router.push(
+                        `/estimates/create/enhanced?edit=${estimate.id}`,
+                      )
                     }
                     className="flex-1 py-1.5 bg-dandori-blue text-white text-sm rounded hover:bg-dandori-blue-dark transition-colors"
                   >

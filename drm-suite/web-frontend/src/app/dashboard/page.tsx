@@ -157,9 +157,9 @@ export default function DashboardPage() {
 
       {/* 見積作成選択モーダル */}
       {showEstimateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-4 overflow-hidden">
-            <div className="bg-gradient-dandori text-white p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="bg-gradient-dandori text-white p-6 flex-shrink-0">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">見積作成方法を選択</h2>
                 <button
@@ -171,7 +171,35 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="p-8">
+            <div className="p-8 overflow-y-auto flex-1">
+              {/* マスタ連携版への直接リンク - 目立つように上部に配置 */}
+              <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center text-white text-2xl shadow-lg mr-4">
+                      🔗
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900">
+                        マスタ連携版（推奨）
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        マスタデータから商品・品目を選択して効率的に見積作成
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowEstimateModal(false);
+                      router.push('/estimates/create-v2');
+                    }}
+                    className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg"
+                  >
+                    今すぐ使う →
+                  </button>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* 通常版 */}
                 <div className="group relative">
@@ -262,10 +290,6 @@ export default function DashboardPage() {
                       <div className="flex items-center text-sm text-gray-500">
                         <span className="mr-2 text-purple-500">★</span>
                         <span>AIアシスタント</span>
-                      </div>
-                      <div className="flex items-center text-sm text-gray-500">
-                        <span className="mr-2 text-purple-500">★</span>
-                        <span>協力会社連携</span>
                       </div>
                       <div className="flex items-center text-sm text-gray-500">
                         <span className="mr-2 text-purple-500">★</span>
