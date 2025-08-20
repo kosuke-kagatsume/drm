@@ -169,329 +169,557 @@ export default function ConstructionDashboard() {
         </div>
       </nav>
 
-      <div className="container mx-auto px-4 py-6">
-        {/* KPIカード */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">本日の現場数</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {mockSites.length}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  稼働中:{' '}
-                  {mockSites.filter((s) => s.status === 'in_progress').length}
-                </p>
-              </div>
-              <Building2 className="h-8 w-8 text-orange-500" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">出来高合計</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  ¥{(totalEarnedValue / 1000000).toFixed(1)}M
-                </p>
-                <p className="text-xs text-green-600 mt-1">
-                  進捗率: {progressRate}%
-                </p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-green-500" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">遅延案件</p>
-                <p className="text-2xl font-bold text-red-600">
-                  {mockSites.filter((s) => s.status === 'delayed').length}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">要対応</p>
-              </div>
-              <AlertTriangle className="h-8 w-8 text-red-500" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">作業員合計</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {mockSites.reduce((sum, s) => sum + s.workers, 0)}名
-                </p>
-                <p className="text-xs text-gray-500 mt-1">配置済み</p>
-              </div>
-              <Users className="h-8 w-8 text-blue-500" />
-            </div>
-          </div>
-        </div>
-
-        {/* タブ */}
-        <div className="bg-white rounded-lg shadow mb-6">
-          <div className="border-b">
-            <div className="flex space-x-1">
-              <button
-                onClick={() => setActiveTab('sites')}
-                className={`px-6 py-3 font-medium transition-colors ${
-                  activeTab === 'sites'
-                    ? 'text-orange-600 border-b-2 border-orange-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <Building2 className="inline h-4 w-4 mr-2" />
-                現場管理
-              </button>
-              <button
-                onClick={() => setActiveTab('progress')}
-                className={`px-6 py-3 font-medium transition-colors ${
-                  activeTab === 'progress'
-                    ? 'text-orange-600 border-b-2 border-orange-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <BarChart3 className="inline h-4 w-4 mr-2" />
-                進捗・出来高
-              </button>
-              <button
-                onClick={() => setActiveTab('materials')}
-                className={`px-6 py-3 font-medium transition-colors ${
-                  activeTab === 'materials'
-                    ? 'text-orange-600 border-b-2 border-orange-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <Package className="inline h-4 w-4 mr-2" />
-                資材管理
-              </button>
-            </div>
-          </div>
-
-          <div className="p-6">
-            {/* 現場管理タブ */}
-            {activeTab === 'sites' && (
-              <div className="space-y-4">
-                {mockSites
-                  .sort((a, b) => {
-                    const priorityOrder = { urgent: 0, high: 1, normal: 2 };
-                    return (
-                      priorityOrder[a.priority] - priorityOrder[b.priority]
-                    );
-                  })
-                  .map((site) => (
-                    <div
-                      key={site.id}
-                      className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-                      onClick={() => {
-                        setSelectedSite(site);
-                        setShowSiteModal(true);
-                      }}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-bold text-lg">{site.name}</h3>
-                            {site.priority === 'urgent' && (
-                              <span className="px-2 py-1 bg-red-100 text-red-600 text-xs rounded-full font-medium">
-                                緊急
-                              </span>
-                            )}
-                            {site.priority === 'high' && (
-                              <span className="px-2 py-1 bg-orange-100 text-orange-600 text-xs rounded-full font-medium">
-                                優先
-                              </span>
-                            )}
-                            {site.status === 'delayed' && (
-                              <span className="px-2 py-1 bg-red-500 text-white text-xs rounded-full font-medium">
-                                遅延
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
-                            <div className="flex items-center gap-1">
-                              <MapPin className="h-4 w-4" />
-                              {site.address}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-4 w-4" />
-                              {site.startTime} - {site.endTime}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Users className="h-4 w-4" />
-                              作業員 {site.workers}名
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Banknote className="h-4 w-4" />¥
-                              {(site.earnedValue / 1000000).toFixed(1)}M / ¥
-                              {(site.contractAmount / 1000000).toFixed(1)}M
-                            </div>
-                          </div>
-
-                          {site.memo && (
-                            <div className="mt-3 p-2 bg-yellow-50 rounded text-sm">
-                              📝 {site.memo}
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="ml-4 text-center">
-                          <div className="text-3xl font-bold text-orange-600">
-                            {site.progress}%
-                          </div>
-                          <div className="w-24 h-2 bg-gray-200 rounded-full mt-2">
-                            <div
-                              className="h-full bg-gradient-to-r from-orange-500 to-red-500 rounded-full"
-                              style={{ width: `${site.progress}%` }}
-                            />
-                          </div>
-                          <p className="text-xs text-gray-500 mt-1">進捗率</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            )}
-
-            {/* 進捗・出来高タブ */}
-            {activeTab === 'progress' && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h3 className="font-bold text-lg mb-4">現場別出来高</h3>
-                    <div className="space-y-3">
-                      {mockSites.map((site) => (
-                        <div key={site.id}>
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="text-sm font-medium">
-                              {site.name}
-                            </span>
-                            <span className="text-sm text-gray-600">
-                              ¥{(site.earnedValue / 1000000).toFixed(1)}M
-                            </span>
-                          </div>
-                          <div className="w-full h-3 bg-gray-200 rounded-full">
-                            <div
-                              className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"
-                              style={{
-                                width: `${(site.earnedValue / site.contractAmount) * 100}%`,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* メインコンテンツ（左側3カラム） */}
+          <div className="lg:col-span-3">
+            {/* トップ統計 */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">新規現場</p>
+                    <p className="text-2xl font-bold text-gray-900">2件</p>
+                    <p className="text-xs text-gray-500">今月獲得</p>
                   </div>
+                  <div className="text-2xl">🏗️</div>
+                </div>
+              </div>
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">完了案件</p>
+                    <p className="text-2xl font-bold text-gray-900">5件</p>
+                    <p className="text-xs text-gray-500">品質完了</p>
+                  </div>
+                  <div className="text-2xl">✅</div>
+                </div>
+              </div>
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">安全記録</p>
+                    <p className="text-2xl font-bold text-green-600">120日</p>
+                    <p className="text-xs text-gray-500">無事故継続</p>
+                  </div>
+                  <div className="text-2xl">🛡️</div>
+                </div>
+              </div>
+            </div>
 
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h3 className="font-bold text-lg mb-4">月次推移</h3>
-                    <div className="h-48 flex items-end justify-between px-4">
-                      {[65, 72, 68, 85, 90, 78, 82].map((value, idx) => (
-                        <div key={idx} className="flex flex-col items-center">
-                          <div
-                            className="w-8 bg-gradient-to-t from-orange-500 to-yellow-500 rounded-t"
-                            style={{ height: `${value * 1.5}px` }}
-                          />
-                          <span className="text-xs text-gray-500 mt-1">
-                            {idx + 1}月
-                          </span>
-                        </div>
-                      ))}
+            {/* 施工財務分析 */}
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl shadow-lg p-6 mb-8">
+              <h2 className="text-xl font-bold mb-4 flex items-center">
+                <BarChart3 className="h-6 w-6 mr-2" />
+                施工財務分析
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* 施工指標 */}
+                <div className="bg-green-50 rounded-lg p-4">
+                  <h3 className="font-bold text-green-800 mb-3 flex items-center">
+                    💰 収益指標
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-700">営業利益</span>
+                      <span className="font-bold text-green-800">¥3.2M</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-700">粗利率</span>
+                      <span className="font-bold text-green-800">28.5%</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-700">受注単価</span>
+                      <span className="font-bold text-green-800">¥15.2M</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <h3 className="font-bold text-yellow-800 mb-2">未承認請求</h3>
-                  <div className="space-y-2">
+                {/* 施工効率 */}
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <h3 className="font-bold text-blue-800 mb-3 flex items-center">
+                    📈 施工効率
+                  </h3>
+                  <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span>山田様邸 - 追加工事</span>
-                      <span className="font-bold text-yellow-800">
-                        ¥350,000
-                      </span>
+                      <span className="text-sm text-gray-700">工程達成率</span>
+                      <span className="font-bold text-blue-800">92.3%</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span>鈴木様邸 - 仕様変更</span>
-                      <span className="font-bold text-yellow-800">
-                        ¥180,000
-                      </span>
+                      <span className="text-sm text-gray-700">品質スコア</span>
+                      <span className="font-bold text-blue-800">96点</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-700">平均工期</span>
+                      <span className="font-bold text-blue-800">45日</span>
                     </div>
                   </div>
                 </div>
               </div>
-            )}
 
-            {/* 資材管理タブ */}
-            {activeTab === 'materials' && (
-              <div className="space-y-4">
-                {mockMaterials.map((material, idx) => (
-                  <div
-                    key={idx}
-                    className={`p-4 rounded-lg border ${
-                      material.status === 'shortage'
-                        ? 'bg-red-50 border-red-200'
-                        : material.status === 'unordered'
-                          ? 'bg-yellow-50 border-yellow-200'
-                          : 'bg-orange-50 border-orange-200'
+              {/* 目標進捗 */}
+              <div className="mt-6">
+                <h3 className="font-bold mb-4 flex items-center">
+                  🎯 目標進捗
+                </h3>
+
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm">月次売上目標</span>
+                      <span className="text-sm font-bold">¥12.5M / ¥15M</span>
+                    </div>
+                    <div className="w-full h-3 bg-white/20 rounded-full">
+                      <div
+                        className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full"
+                        style={{ width: '83%' }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm">四半期目標</span>
+                      <span className="text-sm font-bold">¥35M / ¥42M</span>
+                    </div>
+                    <div className="w-full h-3 bg-white/20 rounded-full">
+                      <div
+                        className="h-full bg-gradient-to-r from-green-400 to-blue-500 rounded-full"
+                        style={{ width: '83%' }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ステータスアイコン */}
+              <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl mb-1">📋</div>
+                  <p className="text-sm">経費申請</p>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl mb-1">📦</div>
+                  <p className="text-sm">在庫確認</p>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl mb-1">📊</div>
+                  <p className="text-sm">売上分析</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 施工管理センター */}
+            <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl shadow-lg p-6 mb-8">
+              <h2 className="text-xl font-bold mb-4 flex items-center">
+                🎯 施工管理センター
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <button
+                  onClick={() => setShowSiteModal(true)}
+                  className="bg-white/10 hover:bg-white/20 backdrop-blur rounded-xl p-4 transition-all duration-200"
+                >
+                  <div className="text-center">
+                    <div className="text-3xl mb-2">👷</div>
+                    <h3 className="font-bold text-sm">現場管理</h3>
+                    <p className="text-xs opacity-90">CRM</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setShowSafetyModal(true)}
+                  className="bg-white/10 hover:bg-white/20 backdrop-blur rounded-xl p-4 transition-all duration-200"
+                >
+                  <div className="text-center">
+                    <div className="text-3xl mb-2">🛡️</div>
+                    <h3 className="font-bold text-sm">安全管理</h3>
+                    <p className="text-xs opacity-90">安全</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setShowPhotoModal(true)}
+                  className="bg-white/10 hover:bg-white/20 backdrop-blur rounded-xl p-4 transition-all duration-200"
+                >
+                  <div className="text-center">
+                    <div className="text-3xl mb-2">📷</div>
+                    <h3 className="font-bold text-sm">工事写真</h3>
+                    <p className="text-xs opacity-90">記録</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setShowReportModal(true)}
+                  className="bg-white/10 hover:bg-white/20 backdrop-blur rounded-xl p-4 transition-all duration-200"
+                >
+                  <div className="text-center">
+                    <div className="text-3xl mb-2">🛠️</div>
+                    <h3 className="font-bold text-sm">品質管理</h3>
+                    <p className="text-xs opacity-90">エリア</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* 既存のタブコンテンツ */}
+
+            {/* タブ */}
+            <div className="bg-white rounded-lg shadow mb-6">
+              <div className="border-b">
+                <div className="flex space-x-1">
+                  <button
+                    onClick={() => setActiveTab('sites')}
+                    className={`px-6 py-3 font-medium transition-colors ${
+                      activeTab === 'sites'
+                        ? 'text-orange-600 border-b-2 border-orange-600'
+                        : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h4 className="font-bold text-lg">{material.name}</h4>
-                        <p className="text-sm text-gray-600">
-                          在庫: {material.remaining}
-                          {material.unit} / 必要: {material.required}
-                          {material.unit}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          仕入先: {material.supplier} | 納期:{' '}
-                          {material.leadTime}
-                        </p>
+                    <Building2 className="inline h-4 w-4 mr-2" />
+                    現場管理
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('progress')}
+                    className={`px-6 py-3 font-medium transition-colors ${
+                      activeTab === 'progress'
+                        ? 'text-orange-600 border-b-2 border-orange-600'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    <BarChart3 className="inline h-4 w-4 mr-2" />
+                    進捗・出来高
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('materials')}
+                    className={`px-6 py-3 font-medium transition-colors ${
+                      activeTab === 'materials'
+                        ? 'text-orange-600 border-b-2 border-orange-600'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    <Package className="inline h-4 w-4 mr-2" />
+                    資材管理
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6">
+                {/* 現場管理タブ */}
+                {activeTab === 'sites' && (
+                  <div className="space-y-4">
+                    {mockSites
+                      .sort((a, b) => {
+                        const priorityOrder = { urgent: 0, high: 1, normal: 2 };
+                        return (
+                          priorityOrder[a.priority] - priorityOrder[b.priority]
+                        );
+                      })
+                      .map((site) => (
+                        <div
+                          key={site.id}
+                          className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                          onClick={() => {
+                            setSelectedSite(site);
+                            setShowSiteModal(true);
+                          }}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h3 className="font-bold text-lg">
+                                  {site.name}
+                                </h3>
+                                {site.priority === 'urgent' && (
+                                  <span className="px-2 py-1 bg-red-100 text-red-600 text-xs rounded-full font-medium">
+                                    緊急
+                                  </span>
+                                )}
+                                {site.priority === 'high' && (
+                                  <span className="px-2 py-1 bg-orange-100 text-orange-600 text-xs rounded-full font-medium">
+                                    優先
+                                  </span>
+                                )}
+                                {site.status === 'delayed' && (
+                                  <span className="px-2 py-1 bg-red-500 text-white text-xs rounded-full font-medium">
+                                    遅延
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                                <div className="flex items-center gap-1">
+                                  <MapPin className="h-4 w-4" />
+                                  {site.address}
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Clock className="h-4 w-4" />
+                                  {site.startTime} - {site.endTime}
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Users className="h-4 w-4" />
+                                  作業員 {site.workers}名
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Banknote className="h-4 w-4" />¥
+                                  {(site.earnedValue / 1000000).toFixed(1)}M / ¥
+                                  {(site.contractAmount / 1000000).toFixed(1)}M
+                                </div>
+                              </div>
+
+                              {site.memo && (
+                                <div className="mt-3 p-2 bg-yellow-50 rounded text-sm">
+                                  📝 {site.memo}
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="ml-4 text-center">
+                              <div className="text-3xl font-bold text-orange-600">
+                                {site.progress}%
+                              </div>
+                              <div className="w-24 h-2 bg-gray-200 rounded-full mt-2">
+                                <div
+                                  className="h-full bg-gradient-to-r from-orange-500 to-red-500 rounded-full"
+                                  style={{ width: `${site.progress}%` }}
+                                />
+                              </div>
+                              <p className="text-xs text-gray-500 mt-1">
+                                進捗率
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+
+                {/* 進捗・出来高タブ */}
+                {activeTab === 'progress' && (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <h3 className="font-bold text-lg mb-4">現場別出来高</h3>
+                        <div className="space-y-3">
+                          {mockSites.map((site) => (
+                            <div key={site.id}>
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="text-sm font-medium">
+                                  {site.name}
+                                </span>
+                                <span className="text-sm text-gray-600">
+                                  ¥{(site.earnedValue / 1000000).toFixed(1)}M
+                                </span>
+                              </div>
+                              <div className="w-full h-3 bg-gray-200 rounded-full">
+                                <div
+                                  className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"
+                                  style={{
+                                    width: `${(site.earnedValue / site.contractAmount) * 100}%`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <button className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
-                        発注する
-                      </button>
+
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <h3 className="font-bold text-lg mb-4">月次推移</h3>
+                        <div className="h-48 flex items-end justify-between px-4">
+                          {[65, 72, 68, 85, 90, 78, 82].map((value, idx) => (
+                            <div
+                              key={idx}
+                              className="flex flex-col items-center"
+                            >
+                              <div
+                                className="w-8 bg-gradient-to-t from-orange-500 to-yellow-500 rounded-t"
+                                style={{ height: `${value * 1.5}px` }}
+                              />
+                              <span className="text-xs text-gray-500 mt-1">
+                                {idx + 1}月
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <h3 className="font-bold text-yellow-800 mb-2">
+                        未承認請求
+                      </h3>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span>山田様邸 - 追加工事</span>
+                          <span className="font-bold text-yellow-800">
+                            ¥350,000
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span>鈴木様邸 - 仕様変更</span>
+                          <span className="font-bold text-yellow-800">
+                            ¥180,000
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+                )}
 
-        {/* クイックアクション */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <button
-            onClick={() => setShowPhotoModal(true)}
-            className="bg-white rounded-lg shadow p-4 hover:shadow-md transition flex items-center justify-center gap-2"
-          >
-            <Camera className="h-5 w-5 text-gray-600" />
-            <span>現場写真</span>
-          </button>
-          <button
-            onClick={() => setShowSafetyModal(true)}
-            className="bg-white rounded-lg shadow p-4 hover:shadow-md transition flex items-center justify-center gap-2"
-          >
-            <CheckSquare className="h-5 w-5 text-gray-600" />
-            <span>チェックリスト</span>
-          </button>
-          <button
-            onClick={() => setShowReportModal(true)}
-            className="bg-white rounded-lg shadow p-4 hover:shadow-md transition flex items-center justify-center gap-2"
-          >
-            <FileText className="h-5 w-5 text-gray-600" />
-            <span>日報作成</span>
-          </button>
-          <button
-            onClick={() => setShowMaterialModal(true)}
-            className="bg-white rounded-lg shadow p-4 hover:shadow-md transition flex items-center justify-center gap-2"
-          >
-            <Activity className="h-5 w-5 text-gray-600" />
-            <span>原価管理</span>
-          </button>
+                {/* 資材管理タブ */}
+                {activeTab === 'materials' && (
+                  <div className="space-y-4">
+                    {mockMaterials.map((material, idx) => (
+                      <div
+                        key={idx}
+                        className={`p-4 rounded-lg border ${
+                          material.status === 'shortage'
+                            ? 'bg-red-50 border-red-200'
+                            : material.status === 'unordered'
+                              ? 'bg-yellow-50 border-yellow-200'
+                              : 'bg-orange-50 border-orange-200'
+                        }`}
+                      >
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h4 className="font-bold text-lg">
+                              {material.name}
+                            </h4>
+                            <p className="text-sm text-gray-600">
+                              在庫: {material.remaining}
+                              {material.unit} / 必要: {material.required}
+                              {material.unit}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              仕入先: {material.supplier} | 納期:{' '}
+                              {material.leadTime}
+                            </p>
+                          </div>
+                          <button className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                            発注する
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* RAGアシスタントサイドバー（右側1カラム） */}
+          <div className="lg:col-span-1">
+            <div className="bg-gradient-to-br from-purple-600 to-pink-600 text-white rounded-xl shadow-lg p-6 mb-6">
+              <h3 className="font-bold text-lg mb-4 flex items-center">
+                🤖 RAG施工アシスタント
+              </h3>
+
+              <div className="space-y-4">
+                <div className="bg-white/10 rounded-lg p-3">
+                  <h4 className="text-sm font-bold mb-2">おすすめ質問</h4>
+                  <div className="space-y-2 text-xs">
+                    <div className="cursor-pointer hover:bg-white/10 p-1 rounded">
+                      💡 「基礎工事の品質チェックポイントは？」
+                    </div>
+                    <div className="cursor-pointer hover:bg-white/10 p-1 rounded">
+                      💡 「安全管理で注意すべき項目は？」
+                    </div>
+                    <div className="cursor-pointer hover:bg-white/10 p-1 rounded">
+                      💡 「工程遅延時の対応方法は？」
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <textarea
+                    placeholder="例: 鉄筋工事の検査基準について教えて..."
+                    className="w-full h-20 p-3 rounded-lg text-gray-800 text-sm resize-none"
+                  />
+                  <button className="w-full mt-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white py-2 rounded-lg hover:shadow-lg transition-all">
+                    RAGに聞く
+                  </button>
+                </div>
+
+                <div className="text-xs opacity-90">
+                  <h4 className="font-bold mb-2">最近の検索</h4>
+                  <div className="space-y-1">
+                    <div>• コンクリート品質基準</div>
+                    <div>• 足場安全規則</div>
+                    <div>• 工程表作成方法</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 今日の現場予定 */}
+            <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+              <h3 className="font-bold text-lg mb-4 text-gray-900">
+                📅 今日の現場予定
+              </h3>
+              <div className="space-y-3">
+                {mockSites.slice(0, 3).map((site, index) => (
+                  <div
+                    key={index}
+                    className="border-l-4 border-orange-500 pl-3 py-2 bg-orange-50 rounded-r"
+                  >
+                    <h4 className="font-medium text-sm text-gray-900">
+                      {site.name}
+                    </h4>
+                    <p className="text-xs text-gray-600">
+                      {site.startTime} - {site.endTime}
+                    </p>
+                    <p className="text-xs text-orange-600">
+                      進捗: {site.progress}%
+                    </p>
+                  </div>
+                ))}
+                <button className="w-full text-sm text-orange-600 hover:text-orange-700 mt-2">
+                  すべての現場を見る →
+                </button>
+              </div>
+            </div>
+
+            {/* 安全アラート */}
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+              <h3 className="font-bold text-red-800 mb-3 flex items-center">
+                ⚠️ 安全アラート
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div className="bg-white rounded p-2">
+                  <p className="text-red-700 font-medium">天候注意報</p>
+                  <p className="text-xs text-red-600">
+                    強風予報 - 高所作業注意
+                  </p>
+                </div>
+                <div className="bg-white rounded p-2">
+                  <p className="text-red-700 font-medium">安全点検期限</p>
+                  <p className="text-xs text-red-600">足場点検 - あと3日</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 品質管理 */}
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+              <h3 className="font-bold text-blue-800 mb-3 flex items-center">
+                ✅ 品質管理
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-700">今月合格率</span>
+                  <span className="font-bold text-blue-800">96.8%</span>
+                </div>
+                <div className="w-full h-2 bg-gray-200 rounded-full">
+                  <div
+                    className="h-full bg-gradient-to-r from-blue-500 to-green-500 rounded-full"
+                    style={{ width: '97%' }}
+                  ></div>
+                </div>
+                <div className="text-xs text-gray-600">目標: 95% 以上</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

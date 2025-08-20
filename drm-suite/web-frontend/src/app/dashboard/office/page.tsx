@@ -249,364 +249,685 @@ export default function OfficeDashboard() {
         </div>
       </nav>
 
-      <div className="container mx-auto px-4 py-6">
-        {/* KPIカード */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">本日の来客数</p>
-                <p className="text-2xl font-bold text-gray-900">8名</p>
-                <p className="text-xs text-green-600 mt-1">前日比 +2</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* メインコンテンツ（左側3カラム） */}
+          <div className="lg:col-span-3">
+            {/* トップ統計 */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">本日の来客数</p>
+                    <p className="text-2xl font-bold text-gray-900">8名</p>
+                    <p className="text-xs text-gray-500">前日比 +2</p>
+                  </div>
+                  <div className="text-2xl">👥</div>
+                </div>
               </div>
-              <Users className="h-8 w-8 text-purple-500" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">平均応答時間</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {averageResponseTime}分
-                </p>
-                <p className="text-xs text-green-600 mt-1">目標達成中</p>
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">平均応答時間</p>
+                    <p className="text-2xl font-bold text-gray-900">3分</p>
+                    <p className="text-xs text-gray-500">目標達成中</p>
+                  </div>
+                  <div className="text-2xl">🕐</div>
+                </div>
               </div>
-              <Clock className="h-8 w-8 text-blue-500" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">未対応</p>
-                <p className="text-2xl font-bold text-red-600">
-                  {urgentInquiries}件
-                </p>
-                <p className="text-xs text-gray-500 mt-1">クレーム優先</p>
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">未対応</p>
+                    <p className="text-2xl font-bold text-red-600">1件</p>
+                    <p className="text-xs text-gray-500">クレーム優先</p>
+                  </div>
+                  <div className="text-2xl">❗</div>
+                </div>
               </div>
-              <AlertCircle className="h-8 w-8 text-red-500" />
             </div>
-          </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">顧客満足度</p>
-                <p className="text-2xl font-bold text-gray-900">4.5</p>
-                <p className="text-xs text-gray-500 mt-1">★★★★☆</p>
+            {/* 事務処理分析 */}
+            <div className="bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl shadow-lg p-6 mb-8">
+              <h2 className="text-xl font-bold mb-4 flex items-center">
+                <TrendingUp className="h-6 w-6 mr-2" />
+                事務処理分析
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* 処理指標 */}
+                <div className="bg-green-50 rounded-lg p-4">
+                  <h3 className="font-bold text-green-800 mb-3 flex items-center">
+                    💼 処理指標
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-700">
+                        月間処理件数
+                      </span>
+                      <span className="font-bold text-green-800">486件</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-700">
+                        書類処理速度
+                      </span>
+                      <span className="font-bold text-green-800">8.5分/件</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-700">顧客満足度</span>
+                      <span className="font-bold text-green-800">4.7/5.0</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 事務効率 */}
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <h3 className="font-bold text-blue-800 mb-3 flex items-center">
+                    📈 事務効率
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-700">
+                        電話対応時間
+                      </span>
+                      <span className="font-bold text-blue-800">3.2分</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-700">
+                        来客案内時間
+                      </span>
+                      <span className="font-bold text-blue-800">2.8分</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-700">書類完成率</span>
+                      <span className="font-bold text-blue-800">98.5%</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <TrendingUp className="h-8 w-8 text-green-500" />
-            </div>
-          </div>
-        </div>
 
-        {/* タブ */}
-        <div className="bg-white rounded-lg shadow mb-6">
-          <div className="border-b">
-            <div className="flex space-x-1">
-              <button
-                onClick={() => setActiveTab('reception')}
-                className={`px-6 py-3 font-medium transition-colors ${
-                  activeTab === 'reception'
-                    ? 'text-purple-600 border-b-2 border-purple-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <DoorOpen className="inline h-4 w-4 mr-2" />
-                来店受付
-              </button>
-              <button
-                onClick={() => setActiveTab('inquiries')}
-                className={`px-6 py-3 font-medium transition-colors ${
-                  activeTab === 'inquiries'
-                    ? 'text-purple-600 border-b-2 border-purple-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <PhoneCall className="inline h-4 w-4 mr-2" />
-                問い合わせ対応
-              </button>
-              <button
-                onClick={() => setActiveTab('resources')}
-                className={`px-6 py-3 font-medium transition-colors ${
-                  activeTab === 'resources'
-                    ? 'text-purple-600 border-b-2 border-purple-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <Building className="inline h-4 w-4 mr-2" />
-                リソース管理
-              </button>
-            </div>
-          </div>
+              {/* 目標進捗 */}
+              <div className="mt-6">
+                <h3 className="font-bold mb-4 flex items-center">
+                  🎯 月次目標進捗
+                </h3>
 
-          <div className="p-6">
-            {/* 来店受付タブ */}
-            {activeTab === 'reception' && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-bold">来店中のお客様</h3>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm">処理件数目標</span>
+                      <span className="text-sm font-bold">486件 / 550件</span>
+                    </div>
+                    <div className="w-full h-3 bg-white/20 rounded-full">
+                      <div
+                        className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full"
+                        style={{ width: '88%' }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm">対応品質目標</span>
+                      <span className="text-sm font-bold">4.7 / 4.5</span>
+                    </div>
+                    <div className="w-full h-3 bg-white/20 rounded-full">
+                      <div
+                        className="h-full bg-gradient-to-r from-green-400 to-blue-500 rounded-full"
+                        style={{ width: '100%' }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ステータスアイコン */}
+              <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl mb-1">📞</div>
+                  <p className="text-sm">電話対応</p>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl mb-1">📋</div>
+                  <p className="text-sm">資料作成</p>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl mb-1">📊</div>
+                  <p className="text-sm">スケジュール管理</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 事務活動センター */}
+            <div className="bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-xl shadow-lg p-6 mb-8">
+              <h2 className="text-xl font-bold mb-4 flex items-center">
+                🏢 事務活動センター
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <button className="bg-white/10 hover:bg-white/20 backdrop-blur rounded-xl p-4 transition-all duration-200">
+                  <div className="text-center">
+                    <div className="text-3xl mb-2">👥</div>
+                    <h3 className="font-bold text-sm">来店受付</h3>
+                    <p className="text-xs opacity-90">CRM</p>
+                  </div>
+                </button>
+
+                <button className="bg-white/10 hover:bg-white/20 backdrop-blur rounded-xl p-4 transition-all duration-200">
+                  <div className="text-center">
+                    <div className="text-3xl mb-2">📞</div>
+                    <h3 className="font-bold text-sm">電話対応</h3>
+                    <p className="text-xs opacity-90">問合せ</p>
+                  </div>
+                </button>
+
+                <button className="bg-white/10 hover:bg-white/20 backdrop-blur rounded-xl p-4 transition-all duration-200">
+                  <div className="text-center">
+                    <div className="text-3xl mb-2">📋</div>
+                    <h3 className="font-bold text-sm">書類管理</h3>
+                    <p className="text-xs opacity-90">管理</p>
+                  </div>
+                </button>
+
+                <button className="bg-white/10 hover:bg-white/20 backdrop-blur rounded-xl p-4 transition-all duration-200">
+                  <div className="text-center">
+                    <div className="text-3xl mb-2">📊</div>
+                    <h3 className="font-bold text-sm">リソース管理</h3>
+                    <p className="text-xs opacity-90">エリア</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* 既存のコンテンツ */}
+            {/* KPIカード */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">本日の来客数</p>
+                    <p className="text-2xl font-bold text-gray-900">8名</p>
+                    <p className="text-xs text-green-600 mt-1">前日比 +2</p>
+                  </div>
+                  <Users className="h-8 w-8 text-purple-500" />
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">平均応答時間</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {averageResponseTime}分
+                    </p>
+                    <p className="text-xs text-green-600 mt-1">目標達成中</p>
+                  </div>
+                  <Clock className="h-8 w-8 text-blue-500" />
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">未対応</p>
+                    <p className="text-2xl font-bold text-red-600">
+                      {urgentInquiries}件
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">クレーム優先</p>
+                  </div>
+                  <AlertCircle className="h-8 w-8 text-red-500" />
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">顧客満足度</p>
+                    <p className="text-2xl font-bold text-gray-900">4.5</p>
+                    <p className="text-xs text-gray-500 mt-1">★★★★☆</p>
+                  </div>
+                  <TrendingUp className="h-8 w-8 text-green-500" />
+                </div>
+              </div>
+            </div>
+
+            {/* タブ */}
+            <div className="bg-white rounded-lg shadow mb-6">
+              <div className="border-b">
+                <div className="flex space-x-1">
                   <button
-                    onClick={() => setShowReceptionModal(true)}
-                    className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:shadow-lg transition"
+                    onClick={() => setActiveTab('reception')}
+                    className={`px-6 py-3 font-medium transition-colors ${
+                      activeTab === 'reception'
+                        ? 'text-purple-600 border-b-2 border-purple-600'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
                   >
-                    <UserPlus className="inline h-4 w-4 mr-2" />
-                    新規受付
+                    <DoorOpen className="inline h-4 w-4 mr-2" />
+                    来店受付
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('inquiries')}
+                    className={`px-6 py-3 font-medium transition-colors ${
+                      activeTab === 'inquiries'
+                        ? 'text-purple-600 border-b-2 border-purple-600'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    <PhoneCall className="inline h-4 w-4 mr-2" />
+                    問い合わせ対応
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('resources')}
+                    className={`px-6 py-3 font-medium transition-colors ${
+                      activeTab === 'resources'
+                        ? 'text-purple-600 border-b-2 border-purple-600'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    <Building className="inline h-4 w-4 mr-2" />
+                    リソース管理
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6">
+                {/* 来店受付タブ */}
+                {activeTab === 'reception' && (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-bold">来店中のお客様</h3>
+                      <button
+                        onClick={() => setShowReceptionModal(true)}
+                        className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:shadow-lg transition"
+                      >
+                        <UserPlus className="inline h-4 w-4 mr-2" />
+                        新規受付
+                      </button>
+                    </div>
+
+                    <div className="space-y-3">
+                      {mockVisitors.map((visitor) => (
+                        <div
+                          key={visitor.id}
+                          className="border rounded-lg p-4 hover:shadow-md transition"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h4 className="font-bold text-lg">
+                                  {visitor.name}
+                                </h4>
+                                {visitor.status === 'waiting' && (
+                                  <span className="px-2 py-1 bg-orange-100 text-orange-600 text-xs rounded-full">
+                                    待機中 {visitor.waitingTime}分
+                                  </span>
+                                )}
+                                {visitor.status === 'in_meeting' && (
+                                  <span className="px-2 py-1 bg-green-100 text-green-600 text-xs rounded-full">
+                                    対応中
+                                  </span>
+                                )}
+                                {visitor.status === 'scheduled' && (
+                                  <span className="px-2 py-1 bg-blue-100 text-blue-600 text-xs rounded-full">
+                                    予約
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                                <div className="flex items-center gap-1">
+                                  <FileText className="h-4 w-4" />
+                                  目的: {visitor.purpose}
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Clock className="h-4 w-4" />
+                                  到着: {visitor.arrivalTime}
+                                </div>
+                                {visitor.room && (
+                                  <div className="flex items-center gap-1">
+                                    <Building className="h-4 w-4" />
+                                    {visitor.room}使用中
+                                  </div>
+                                )}
+                                {visitor.assignee && (
+                                  <div className="flex items-center gap-1">
+                                    <User className="h-4 w-4" />
+                                    担当: {visitor.assignee}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="ml-4">
+                              {visitor.status === 'waiting' && (
+                                <button className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition">
+                                  担当呼出
+                                </button>
+                              )}
+                              {visitor.status === 'in_meeting' && (
+                                <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">
+                                  詳細確認
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 問い合わせ対応タブ */}
+                {activeTab === 'inquiries' && (
+                  <div className="space-y-4">
+                    <div className="mb-4">
+                      <h3 className="text-lg font-bold mb-2">
+                        問い合わせキュー
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        クレームを優先的に表示しています
+                      </p>
+                    </div>
+
+                    <div className="space-y-3">
+                      {mockInquiries
+                        .sort((a, b) => {
+                          if (a.priority === 'urgent') return -1;
+                          if (b.priority === 'urgent') return 1;
+                          return 0;
+                        })
+                        .map((inquiry) => (
+                          <div
+                            key={inquiry.id}
+                            className={`border rounded-lg p-4 cursor-pointer hover:shadow-md transition ${
+                              inquiry.priority === 'urgent'
+                                ? 'border-red-300 bg-red-50'
+                                : ''
+                            }`}
+                            onClick={() => setSelectedInquiry(inquiry)}
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  {getInquiryIcon(inquiry.type)}
+                                  <h4 className="font-bold">{inquiry.name}</h4>
+                                  {inquiry.priority === 'urgent' && (
+                                    <span className="px-2 py-1 bg-red-500 text-white text-xs rounded-full">
+                                      クレーム
+                                    </span>
+                                  )}
+                                  {inquiry.status === 'assigned' && (
+                                    <span className="px-2 py-1 bg-green-100 text-green-600 text-xs rounded-full">
+                                      対応中
+                                    </span>
+                                  )}
+                                </div>
+
+                                <p className="text-sm text-gray-700 mb-1">
+                                  {inquiry.content}
+                                </p>
+                                <div className="flex items-center gap-4 text-xs text-gray-500">
+                                  <span>受付: {inquiry.time}</span>
+                                  {inquiry.assignee && (
+                                    <span>担当: {inquiry.assignee}</span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="ml-4">
+                                {inquiry.status === 'unassigned' && (
+                                  <button className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition">
+                                    割当
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* リソース管理タブ */}
+                {activeTab === 'resources' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="text-lg font-bold mb-4">会議室・商談室</h3>
+                      <div className="space-y-2">
+                        {mockRooms.map((room) => (
+                          <div
+                            key={room.id}
+                            className="flex justify-between items-center p-3 border rounded-lg hover:shadow-sm transition"
+                          >
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-medium">{room.name}</h4>
+                                {room.isPrivate && (
+                                  <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                                    個室
+                                  </span>
+                                )}
+                              </div>
+                              {room.status === 'available' ? (
+                                <p className="text-xs text-green-600">
+                                  空き（次: {room.nextReservation}）
+                                </p>
+                              ) : (
+                                <p className="text-xs text-red-600">
+                                  {room.currentUser}（～{room.until}）
+                                </p>
+                              )}
+                              <p className="text-xs text-gray-500">
+                                定員: {room.capacity}名
+                              </p>
+                            </div>
+                            <div
+                              className={`w-3 h-3 rounded-full ${
+                                room.status === 'available'
+                                  ? 'bg-green-500'
+                                  : 'bg-red-500'
+                              }`}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="text-lg font-bold mb-4">車両管理</h3>
+                      <div className="space-y-2">
+                        {mockVehicles.map((vehicle) => (
+                          <div
+                            key={vehicle.id}
+                            className="flex justify-between items-center p-3 border rounded-lg hover:shadow-sm transition"
+                          >
+                            <div className="flex-1">
+                              <h4 className="font-medium">{vehicle.name}</h4>
+                              <p className="text-xs text-gray-500">
+                                {vehicle.number}
+                              </p>
+                              {vehicle.status === 'in_use' ? (
+                                <p className="text-xs text-orange-600">
+                                  {vehicle.user}使用中（{vehicle.destination}
+                                  ）～
+                                  {vehicle.returnTime}
+                                </p>
+                              ) : (
+                                <p className="text-xs text-green-600">
+                                  利用可能 | 燃料: {vehicle.fuel}%
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Car
+                                className={`h-5 w-5 ${vehicle.status === 'available' ? 'text-green-500' : 'text-orange-500'}`}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* クイックアクション */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <button
+                onClick={() => setShowCustomerModal(true)}
+                className="bg-white rounded-lg shadow p-4 hover:shadow-md transition flex items-center justify-center gap-2"
+              >
+                <UserPlus className="h-5 w-5 text-gray-600" />
+                <span>顧客登録</span>
+              </button>
+              <button
+                onClick={() => setShowScheduleModal(true)}
+                className="bg-white rounded-lg shadow p-4 hover:shadow-md transition flex items-center justify-center gap-2"
+              >
+                <Calendar className="h-5 w-5 text-gray-600" />
+                <span>予約管理</span>
+              </button>
+              <button
+                onClick={() => setShowDocumentModal(true)}
+                className="bg-white rounded-lg shadow p-4 hover:shadow-md transition flex items-center justify-center gap-2"
+              >
+                <FileText className="h-5 w-5 text-gray-600" />
+                <span>書類作成</span>
+              </button>
+              <button className="bg-white rounded-lg shadow p-4 hover:shadow-md transition flex items-center justify-center gap-2">
+                <Phone className="h-5 w-5 text-gray-600" />
+                <span>電話記録</span>
+              </button>
+            </div>
+          </div>
+
+          {/* RAG事務アシスタントサイドバー（右側1カラム） */}
+          <div className="lg:col-span-1">
+            <div className="bg-gradient-to-br from-pink-600 to-purple-600 text-white rounded-xl shadow-lg p-6 mb-6">
+              <h3 className="font-bold text-lg mb-4 flex items-center">
+                🤖 RAG事務アシスタント
+              </h3>
+
+              <div className="space-y-4">
+                <div className="bg-white/10 rounded-lg p-3">
+                  <h4 className="text-sm font-bold mb-2">おすすめ質問</h4>
+                  <div className="space-y-2 text-xs">
+                    <div className="cursor-pointer hover:bg-white/10 p-1 rounded">
+                      💡 「電話対応のマナーポイントは？」
+                    </div>
+                    <div className="cursor-pointer hover:bg-white/10 p-1 rounded">
+                      💡 「契約書の確認項目は？」
+                    </div>
+                    <div className="cursor-pointer hover:bg-white/10 p-1 rounded">
+                      💡 「クレーム対応の基本手順は？」
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <textarea
+                    placeholder="例: 見積書作成時の注意点を教えて..."
+                    className="w-full h-20 p-3 rounded-lg text-gray-800 text-sm resize-none"
+                  />
+                  <button className="w-full mt-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-2 rounded-lg hover:shadow-lg transition-all">
+                    RAGに聞く
                   </button>
                 </div>
 
-                <div className="space-y-3">
-                  {mockVisitors.map((visitor) => (
+                <div className="text-xs opacity-90">
+                  <h4 className="font-bold mb-2">最近の検索</h4>
+                  <div className="space-y-1">
+                    <div>• 領収書発行手順</div>
+                    <div>• 協力会社A連絡先</div>
+                    <div>• 原価率改善方法</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 来店中のお客様 */}
+            <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+              <h3 className="font-bold text-lg mb-4 text-gray-900">
+                👥 来店中のお客様
+              </h3>
+              <div className="space-y-3">
+                {mockVisitors
+                  .filter(
+                    (v) => v.status === 'waiting' || v.status === 'in_meeting',
+                  )
+                  .map((visitor, index) => (
                     <div
-                      key={visitor.id}
-                      className="border rounded-lg p-4 hover:shadow-md transition"
+                      key={index}
+                      className="border-l-4 border-purple-500 pl-3 py-2 bg-purple-50 rounded-r"
                     >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h4 className="font-bold text-lg">
-                              {visitor.name}
-                            </h4>
-                            {visitor.status === 'waiting' && (
-                              <span className="px-2 py-1 bg-orange-100 text-orange-600 text-xs rounded-full">
-                                待機中 {visitor.waitingTime}分
-                              </span>
-                            )}
-                            {visitor.status === 'in_meeting' && (
-                              <span className="px-2 py-1 bg-green-100 text-green-600 text-xs rounded-full">
-                                対応中
-                              </span>
-                            )}
-                            {visitor.status === 'scheduled' && (
-                              <span className="px-2 py-1 bg-blue-100 text-blue-600 text-xs rounded-full">
-                                予約
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
-                            <div className="flex items-center gap-1">
-                              <FileText className="h-4 w-4" />
-                              目的: {visitor.purpose}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-4 w-4" />
-                              到着: {visitor.arrivalTime}
-                            </div>
-                            {visitor.room && (
-                              <div className="flex items-center gap-1">
-                                <Building className="h-4 w-4" />
-                                {visitor.room}使用中
-                              </div>
-                            )}
-                            {visitor.assignee && (
-                              <div className="flex items-center gap-1">
-                                <User className="h-4 w-4" />
-                                担当: {visitor.assignee}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="ml-4">
-                          {visitor.status === 'waiting' && (
-                            <button className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition">
-                              担当呼出
-                            </button>
-                          )}
-                          {visitor.status === 'in_meeting' && (
-                            <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">
-                              詳細確認
-                            </button>
-                          )}
-                        </div>
-                      </div>
+                      <h4 className="font-medium text-sm text-gray-900">
+                        {visitor.name}
+                      </h4>
+                      <p className="text-xs text-gray-600">{visitor.purpose}</p>
+                      <p className="text-xs text-purple-600">
+                        {visitor.status === 'waiting'
+                          ? `待ち時間: ${visitor.waitingTime}分`
+                          : '対応中'}
+                      </p>
                     </div>
                   ))}
+                <button className="w-full text-sm text-purple-600 hover:text-purple-700 mt-2">
+                  新規受付 →
+                </button>
+              </div>
+            </div>
+
+            {/* 今日のタスク */}
+            <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6">
+              <h3 className="font-bold text-orange-800 mb-3 flex items-center">
+                📋 今日のタスク
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div className="bg-white rounded p-2 flex items-center justify-between">
+                  <span className="text-gray-700">月次報告書作成</span>
+                  <span className="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded">
+                    期限今日
+                  </span>
+                </div>
+                <div className="bg-white rounded p-2 flex items-center justify-between">
+                  <span className="text-gray-700">契約書ファイリング</span>
+                  <span className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded">
+                    完了
+                  </span>
+                </div>
+                <div className="bg-white rounded p-2 flex items-center justify-between">
+                  <span className="text-gray-700">顧客DB更新</span>
+                  <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
+                    進行中
+                  </span>
                 </div>
               </div>
-            )}
+            </div>
 
-            {/* 問い合わせ対応タブ */}
-            {activeTab === 'inquiries' && (
-              <div className="space-y-4">
-                <div className="mb-4">
-                  <h3 className="text-lg font-bold mb-2">問い合わせキュー</h3>
-                  <p className="text-sm text-gray-600">
-                    クレームを優先的に表示しています
-                  </p>
+            {/* 処理効率 */}
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+              <h3 className="font-bold text-green-800 mb-3 flex items-center">
+                ⚡ 今月の処理効率
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-700">平均処理時間</span>
+                  <span className="font-bold text-green-800">8.5分</span>
                 </div>
-
-                <div className="space-y-3">
-                  {mockInquiries
-                    .sort((a, b) => {
-                      if (a.priority === 'urgent') return -1;
-                      if (b.priority === 'urgent') return 1;
-                      return 0;
-                    })
-                    .map((inquiry) => (
-                      <div
-                        key={inquiry.id}
-                        className={`border rounded-lg p-4 cursor-pointer hover:shadow-md transition ${
-                          inquiry.priority === 'urgent'
-                            ? 'border-red-300 bg-red-50'
-                            : ''
-                        }`}
-                        onClick={() => setSelectedInquiry(inquiry)}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              {getInquiryIcon(inquiry.type)}
-                              <h4 className="font-bold">{inquiry.name}</h4>
-                              {inquiry.priority === 'urgent' && (
-                                <span className="px-2 py-1 bg-red-500 text-white text-xs rounded-full">
-                                  クレーム
-                                </span>
-                              )}
-                              {inquiry.status === 'assigned' && (
-                                <span className="px-2 py-1 bg-green-100 text-green-600 text-xs rounded-full">
-                                  対応中
-                                </span>
-                              )}
-                            </div>
-
-                            <p className="text-sm text-gray-700 mb-1">
-                              {inquiry.content}
-                            </p>
-                            <div className="flex items-center gap-4 text-xs text-gray-500">
-                              <span>受付: {inquiry.time}</span>
-                              {inquiry.assignee && (
-                                <span>担当: {inquiry.assignee}</span>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="ml-4">
-                            {inquiry.status === 'unassigned' && (
-                              <button className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition">
-                                割当
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                <div className="w-full h-2 bg-gray-200 rounded-full">
+                  <div
+                    className="h-full bg-gradient-to-r from-green-500 to-blue-500 rounded-full"
+                    style={{ width: '85%' }}
+                  ></div>
+                </div>
+                <div className="text-xs text-gray-600">
+                  目標: 10分以内（達成中！）
                 </div>
               </div>
-            )}
-
-            {/* リソース管理タブ */}
-            {activeTab === 'resources' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-bold mb-4">会議室・商談室</h3>
-                  <div className="space-y-2">
-                    {mockRooms.map((room) => (
-                      <div
-                        key={room.id}
-                        className="flex justify-between items-center p-3 border rounded-lg hover:shadow-sm transition"
-                      >
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-medium">{room.name}</h4>
-                            {room.isPrivate && (
-                              <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                                個室
-                              </span>
-                            )}
-                          </div>
-                          {room.status === 'available' ? (
-                            <p className="text-xs text-green-600">
-                              空き（次: {room.nextReservation}）
-                            </p>
-                          ) : (
-                            <p className="text-xs text-red-600">
-                              {room.currentUser}（～{room.until}）
-                            </p>
-                          )}
-                          <p className="text-xs text-gray-500">
-                            定員: {room.capacity}名
-                          </p>
-                        </div>
-                        <div
-                          className={`w-3 h-3 rounded-full ${
-                            room.status === 'available'
-                              ? 'bg-green-500'
-                              : 'bg-red-500'
-                          }`}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-bold mb-4">車両管理</h3>
-                  <div className="space-y-2">
-                    {mockVehicles.map((vehicle) => (
-                      <div
-                        key={vehicle.id}
-                        className="flex justify-between items-center p-3 border rounded-lg hover:shadow-sm transition"
-                      >
-                        <div className="flex-1">
-                          <h4 className="font-medium">{vehicle.name}</h4>
-                          <p className="text-xs text-gray-500">
-                            {vehicle.number}
-                          </p>
-                          {vehicle.status === 'in_use' ? (
-                            <p className="text-xs text-orange-600">
-                              {vehicle.user}使用中（{vehicle.destination}）～
-                              {vehicle.returnTime}
-                            </p>
-                          ) : (
-                            <p className="text-xs text-green-600">
-                              利用可能 | 燃料: {vehicle.fuel}%
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Car
-                            className={`h-5 w-5 ${vehicle.status === 'available' ? 'text-green-500' : 'text-orange-500'}`}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
-        </div>
-
-        {/* クイックアクション */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <button
-            onClick={() => setShowCustomerModal(true)}
-            className="bg-white rounded-lg shadow p-4 hover:shadow-md transition flex items-center justify-center gap-2"
-          >
-            <UserPlus className="h-5 w-5 text-gray-600" />
-            <span>顧客登録</span>
-          </button>
-          <button
-            onClick={() => setShowScheduleModal(true)}
-            className="bg-white rounded-lg shadow p-4 hover:shadow-md transition flex items-center justify-center gap-2"
-          >
-            <Calendar className="h-5 w-5 text-gray-600" />
-            <span>予約管理</span>
-          </button>
-          <button
-            onClick={() => setShowDocumentModal(true)}
-            className="bg-white rounded-lg shadow p-4 hover:shadow-md transition flex items-center justify-center gap-2"
-          >
-            <FileText className="h-5 w-5 text-gray-600" />
-            <span>書類作成</span>
-          </button>
-          <button className="bg-white rounded-lg shadow p-4 hover:shadow-md transition flex items-center justify-center gap-2">
-            <Phone className="h-5 w-5 text-gray-600" />
-            <span>電話記録</span>
-          </button>
         </div>
       </div>
 

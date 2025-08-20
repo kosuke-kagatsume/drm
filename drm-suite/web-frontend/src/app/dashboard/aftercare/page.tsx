@@ -208,518 +208,823 @@ export default function AftercareDashboard() {
         </div>
       </nav>
 
-      <div className="container mx-auto px-4 py-6">
-        {/* KPIカード */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">NPSスコア</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {mockCSScores.nps}
-                </p>
-                <p className="text-xs text-green-600 mt-1">前月比 +3</p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-green-500" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">顧客満足度</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {mockCSScores.satisfaction}/5.0
-                </p>
-                <div className="flex gap-0.5 mt-1">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      className={`h-3 w-3 ${
-                        star <= Math.floor(mockCSScores.satisfaction)
-                          ? 'text-yellow-400 fill-yellow-400'
-                          : 'text-gray-300'
-                      }`}
-                    />
-                  ))}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* メインコンテンツ（左側3カラム） */}
+          <div className="lg:col-span-3">
+            {/* トップ統計 */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">NPSスコア</p>
+                    <p className="text-2xl font-bold text-green-600">72</p>
+                    <p className="text-xs text-gray-500">前月比 +3</p>
+                  </div>
+                  <div className="text-2xl">📈</div>
                 </div>
               </div>
-              <Star className="h-8 w-8 text-yellow-500" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">今月の点検</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {mockCSScores.thisMonth.count}件
-                </p>
-                <p className="text-xs text-blue-600 mt-1">
-                  完了率 {completionRate}%
-                </p>
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">顧客満足度</p>
+                    <p className="text-2xl font-bold text-gray-900">4.3/5.0</p>
+                    <p className="text-xs text-gray-500">⭐⭐⭐⭐☆</p>
+                  </div>
+                  <div className="text-2xl">⭐</div>
+                </div>
               </div>
-              <CheckCircle className="h-8 w-8 text-blue-500" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">是正受注額</p>
-                <p className="text-2xl font-bold text-gray-900">¥525K</p>
-                <p className="text-xs text-green-600 mt-1">前月比 +12%</p>
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">今月の点検</p>
+                    <p className="text-2xl font-bold text-gray-900">12件</p>
+                    <p className="text-xs text-gray-500">完了率 75%</p>
+                  </div>
+                  <div className="text-2xl">🔧</div>
+                </div>
               </div>
-              <DollarSign className="h-8 w-8 text-green-500" />
             </div>
-          </div>
-        </div>
 
-        {/* タブ */}
-        <div className="bg-white rounded-lg shadow mb-6">
-          <div className="border-b">
-            <div className="flex space-x-1">
-              <button
-                onClick={() => setActiveTab('inspections')}
-                className={`px-6 py-3 font-medium transition-colors ${
-                  activeTab === 'inspections'
-                    ? 'text-cyan-600 border-b-2 border-cyan-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <Calendar className="inline h-4 w-4 mr-2" />
-                点検予定
-              </button>
-              <button
-                onClick={() => setActiveTab('defects')}
-                className={`px-6 py-3 font-medium transition-colors ${
-                  activeTab === 'defects'
-                    ? 'text-cyan-600 border-b-2 border-cyan-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <Wrench className="inline h-4 w-4 mr-2" />
-                是正案件
-              </button>
-              <button
-                onClick={() => setActiveTab('warranty')}
-                className={`px-6 py-3 font-medium transition-colors ${
-                  activeTab === 'warranty'
-                    ? 'text-cyan-600 border-b-2 border-cyan-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <Shield className="inline h-4 w-4 mr-2" />
-                保証管理
-              </button>
-              <button
-                onClick={() => setActiveTab('analytics')}
-                className={`px-6 py-3 font-medium transition-colors ${
-                  activeTab === 'analytics'
-                    ? 'text-cyan-600 border-b-2 border-cyan-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <BarChart3 className="inline h-4 w-4 mr-2" />
-                分析
-              </button>
-            </div>
-          </div>
+            {/* アフター収益分析 */}
+            <div className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl shadow-lg p-6 mb-8">
+              <h2 className="text-xl font-bold mb-4 flex items-center">
+                <BarChart3 className="h-6 w-6 mr-2" />
+                アフター収益分析
+              </h2>
 
-          <div className="p-6">
-            {/* 点検予定タブ */}
-            {activeTab === 'inspections' && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-bold">今月の点検予定</h3>
-                  <div className="flex gap-2">
-                    <button className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded transition">
-                      今週
-                    </button>
-                    <button className="px-3 py-1 bg-cyan-500 text-white rounded">
-                      今月
-                    </button>
-                    <button className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded transition">
-                      来月
-                    </button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* 収益指標 */}
+                <div className="bg-green-50 rounded-lg p-4">
+                  <h3 className="font-bold text-green-800 mb-3 flex items-center">
+                    💰 収益指標
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-700">月間売上</span>
+                      <span className="font-bold text-green-800">¥2.8M</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-700">平均単価</span>
+                      <span className="font-bold text-green-800">¥240K</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-700">利益率</span>
+                      <span className="font-bold text-green-800">65.2%</span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  {mockInspections.map((inspection) => (
-                    <div
-                      key={inspection.id}
-                      className="border rounded-lg p-4 hover:shadow-md transition cursor-pointer"
-                      onClick={() => setSelectedInspection(inspection)}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h4 className="font-bold text-lg">
-                              {inspection.customerName}
-                            </h4>
-                            <span className="px-2 py-1 bg-cyan-100 text-cyan-700 text-xs rounded-full font-medium">
-                              {inspection.type}
-                            </span>
-                            {inspection.status === 'overdue' && (
-                              <span className="px-2 py-1 bg-red-500 text-white text-xs rounded-full font-medium">
-                                期限超過
-                              </span>
-                            )}
-                          </div>
+                {/* アフター効率 */}
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <h3 className="font-bold text-blue-800 mb-3 flex items-center">
+                    🎯 サービス効率
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-700">対応時間</span>
+                      <span className="font-bold text-blue-800">
+                        24時間以内
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-700">解決率</span>
+                      <span className="font-bold text-blue-800">96.5%</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-700">リピート率</span>
+                      <span className="font-bold text-blue-800">88.3%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-                          <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
-                            <div className="flex items-center gap-1">
-                              <Home className="h-4 w-4" />
-                              {inspection.address}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-4 w-4" />
-                              {inspection.scheduledDate} (
-                              {getDaysUntil(inspection.scheduledDate)})
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Hammer className="h-4 w-4" />
-                              {inspection.constructionType}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Phone className="h-4 w-4" />
-                              {inspection.phoneNumber}
-                            </div>
-                          </div>
+              {/* 目標進捗 */}
+              <div className="mt-6">
+                <h3 className="font-bold mb-4 flex items-center">
+                  📊 月次目標進捗
+                </h3>
 
-                          <div className="mt-2 text-xs text-gray-500">
-                            完工日: {inspection.completionDate} | 契約金額: ¥
-                            {(inspection.contractAmount / 1000000).toFixed(1)}M
-                          </div>
-                        </div>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm">点検完了目標</span>
+                      <span className="text-sm font-bold">12件 / 16件</span>
+                    </div>
+                    <div className="w-full h-3 bg-white/20 rounded-full">
+                      <div
+                        className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full"
+                        style={{ width: '75%' }}
+                      ></div>
+                    </div>
+                  </div>
 
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowInspectionModal(true);
-                          }}
-                          className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition"
-                        >
-                          点検開始
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm">顧客満足度目標</span>
+                      <span className="text-sm font-bold">4.3 / 4.0</span>
+                    </div>
+                    <div className="w-full h-3 bg-white/20 rounded-full">
+                      <div
+                        className="h-full bg-gradient-to-r from-green-400 to-blue-500 rounded-full"
+                        style={{ width: '100%' }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ステータスアイコン */}
+              <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl mb-1">📅</div>
+                  <p className="text-sm">点検予定</p>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl mb-1">🔧</div>
+                  <p className="text-sm">修理案件</p>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl mb-1">📊</div>
+                  <p className="text-sm">分析</p>
+                </div>
+              </div>
+            </div>
+
+            {/* アフター活動センター */}
+            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl shadow-lg p-6 mb-8">
+              <h2 className="text-xl font-bold mb-4 flex items-center">
+                🏠 アフター活動センター
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <button className="bg-white/10 hover:bg-white/20 backdrop-blur rounded-xl p-4 transition-all duration-200">
+                  <div className="text-center">
+                    <div className="text-3xl mb-2">🔧</div>
+                    <h3 className="font-bold text-sm">点検管理</h3>
+                    <p className="text-xs opacity-90">定期点検</p>
+                  </div>
+                </button>
+
+                <button className="bg-white/10 hover:bg-white/20 backdrop-blur rounded-xl p-4 transition-all duration-200">
+                  <div className="text-center">
+                    <div className="text-3xl mb-2">🛠️</div>
+                    <h3 className="font-bold text-sm">修理対応</h3>
+                    <p className="text-xs opacity-90">緊急対応</p>
+                  </div>
+                </button>
+
+                <button className="bg-white/10 hover:bg-white/20 backdrop-blur rounded-xl p-4 transition-all duration-200">
+                  <div className="text-center">
+                    <div className="text-3xl mb-2">⭐</div>
+                    <h3 className="font-bold text-sm">顧客満足</h3>
+                    <p className="text-xs opacity-90">フォロー</p>
+                  </div>
+                </button>
+
+                <button className="bg-white/10 hover:bg-white/20 backdrop-blur rounded-xl p-4 transition-all duration-200">
+                  <div className="text-center">
+                    <div className="text-3xl mb-2">📈</div>
+                    <h3 className="font-bold text-sm">収益分析</h3>
+                    <p className="text-xs opacity-90">エリア</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* 既存のコンテンツ */}
+            {/* KPIカード */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">NPSスコア</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {mockCSScores.nps}
+                    </p>
+                    <p className="text-xs text-green-600 mt-1">前月比 +3</p>
+                  </div>
+                  <TrendingUp className="h-8 w-8 text-green-500" />
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">顧客満足度</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {mockCSScores.satisfaction}/5.0
+                    </p>
+                    <div className="flex gap-0.5 mt-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`h-3 w-3 ${
+                            star <= Math.floor(mockCSScores.satisfaction)
+                              ? 'text-yellow-400 fill-yellow-400'
+                              : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <Star className="h-8 w-8 text-yellow-500" />
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">今月の点検</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {mockCSScores.thisMonth.count}件
+                    </p>
+                    <p className="text-xs text-blue-600 mt-1">
+                      完了率 {completionRate}%
+                    </p>
+                  </div>
+                  <CheckCircle className="h-8 w-8 text-blue-500" />
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">是正受注額</p>
+                    <p className="text-2xl font-bold text-gray-900">¥525K</p>
+                    <p className="text-xs text-green-600 mt-1">前月比 +12%</p>
+                  </div>
+                  <DollarSign className="h-8 w-8 text-green-500" />
+                </div>
+              </div>
+            </div>
+
+            {/* タブ */}
+            <div className="bg-white rounded-lg shadow mb-6">
+              <div className="border-b">
+                <div className="flex space-x-1">
+                  <button
+                    onClick={() => setActiveTab('inspections')}
+                    className={`px-6 py-3 font-medium transition-colors ${
+                      activeTab === 'inspections'
+                        ? 'text-cyan-600 border-b-2 border-cyan-600'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    <Calendar className="inline h-4 w-4 mr-2" />
+                    点検予定
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('defects')}
+                    className={`px-6 py-3 font-medium transition-colors ${
+                      activeTab === 'defects'
+                        ? 'text-cyan-600 border-b-2 border-cyan-600'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    <Wrench className="inline h-4 w-4 mr-2" />
+                    是正案件
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('warranty')}
+                    className={`px-6 py-3 font-medium transition-colors ${
+                      activeTab === 'warranty'
+                        ? 'text-cyan-600 border-b-2 border-cyan-600'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    <Shield className="inline h-4 w-4 mr-2" />
+                    保証管理
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('analytics')}
+                    className={`px-6 py-3 font-medium transition-colors ${
+                      activeTab === 'analytics'
+                        ? 'text-cyan-600 border-b-2 border-cyan-600'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    <BarChart3 className="inline h-4 w-4 mr-2" />
+                    分析
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6">
+                {/* 点検予定タブ */}
+                {activeTab === 'inspections' && (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-bold">今月の点検予定</h3>
+                      <div className="flex gap-2">
+                        <button className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded transition">
+                          今週
+                        </button>
+                        <button className="px-3 py-1 bg-cyan-500 text-white rounded">
+                          今月
+                        </button>
+                        <button className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded transition">
+                          来月
                         </button>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
-            {/* 是正案件タブ */}
-            {activeTab === 'defects' && (
+                    <div className="space-y-3">
+                      {mockInspections.map((inspection) => (
+                        <div
+                          key={inspection.id}
+                          className="border rounded-lg p-4 hover:shadow-md transition cursor-pointer"
+                          onClick={() => setSelectedInspection(inspection)}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h4 className="font-bold text-lg">
+                                  {inspection.customerName}
+                                </h4>
+                                <span className="px-2 py-1 bg-cyan-100 text-cyan-700 text-xs rounded-full font-medium">
+                                  {inspection.type}
+                                </span>
+                                {inspection.status === 'overdue' && (
+                                  <span className="px-2 py-1 bg-red-500 text-white text-xs rounded-full font-medium">
+                                    期限超過
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                                <div className="flex items-center gap-1">
+                                  <Home className="h-4 w-4" />
+                                  {inspection.address}
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Calendar className="h-4 w-4" />
+                                  {inspection.scheduledDate} (
+                                  {getDaysUntil(inspection.scheduledDate)})
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Hammer className="h-4 w-4" />
+                                  {inspection.constructionType}
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Phone className="h-4 w-4" />
+                                  {inspection.phoneNumber}
+                                </div>
+                              </div>
+
+                              <div className="mt-2 text-xs text-gray-500">
+                                完工日: {inspection.completionDate} | 契約金額:
+                                ¥
+                                {(inspection.contractAmount / 1000000).toFixed(
+                                  1,
+                                )}
+                                M
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowInspectionModal(true);
+                              }}
+                              className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition"
+                            >
+                              点検開始
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 是正案件タブ */}
+                {activeTab === 'defects' && (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-bold">是正案件一覧</h3>
+                      <button
+                        onClick={() => setShowEstimateModal(true)}
+                        className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg hover:shadow-lg transition"
+                      >
+                        <FileText className="inline h-4 w-4 mr-2" />
+                        見積作成
+                      </button>
+                    </div>
+
+                    <div className="space-y-3">
+                      {mockDefects.map((defect) => (
+                        <div
+                          key={defect.id}
+                          className="border rounded-lg p-4 hover:shadow-md transition"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h4 className="font-bold">
+                                  {defect.customerName}
+                                </h4>
+                                {defect.warranty && (
+                                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                                    保証対象
+                                  </span>
+                                )}
+                                {defect.severity === 'high' && (
+                                  <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">
+                                    重要度: 高
+                                  </span>
+                                )}
+                              </div>
+
+                              <p className="text-sm text-gray-700 mb-2">
+                                {defect.issue}
+                              </p>
+
+                              <div className="flex items-center gap-4 text-sm">
+                                <span className="text-gray-600">
+                                  報告日: {defect.reportDate}
+                                </span>
+                                <span className="font-bold text-cyan-600">
+                                  ¥{defect.estimateAmount.toLocaleString()}
+                                </span>
+                                <span
+                                  className={`px-2 py-1 text-xs rounded-full ${
+                                    defect.progress === 'construction'
+                                      ? 'bg-green-100 text-green-600'
+                                      : defect.progress === 'draft'
+                                        ? 'bg-gray-100 text-gray-600'
+                                        : 'bg-yellow-100 text-yellow-600'
+                                  }`}
+                                >
+                                  {defect.progress === 'construction'
+                                    ? '工事中'
+                                    : defect.progress === 'draft'
+                                      ? '見積作成済'
+                                      : '承認待ち'}
+                                </span>
+                              </div>
+                            </div>
+
+                            <button className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded transition">
+                              詳細
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 保証管理タブ */}
+                {activeTab === 'warranty' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="text-lg font-bold mb-4">保証区分</h3>
+                      <div className="space-y-3">
+                        <div className="bg-gray-50 rounded-lg p-4">
+                          <div className="flex justify-between items-center mb-2">
+                            <h4 className="font-medium">構造保証</h4>
+                            <span className="text-sm font-bold text-cyan-600">
+                              10年
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            対象: 基礎、柱、梁、屋根
+                          </div>
+                          <div className="mt-2 h-2 bg-gray-200 rounded-full">
+                            <div
+                              className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
+                              style={{ width: '100%' }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="bg-gray-50 rounded-lg p-4">
+                          <div className="flex justify-between items-center mb-2">
+                            <h4 className="font-medium">雨漏り保証</h4>
+                            <span className="text-sm font-bold text-cyan-600">
+                              10年
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            対象: 屋根、外壁、サッシ周り
+                          </div>
+                          <div className="mt-2 h-2 bg-gray-200 rounded-full">
+                            <div
+                              className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
+                              style={{ width: '100%' }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="bg-gray-50 rounded-lg p-4">
+                          <div className="flex justify-between items-center mb-2">
+                            <h4 className="font-medium">設備保証</h4>
+                            <span className="text-sm font-bold text-cyan-600">
+                              1-5年
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            対象: 給湯器、エアコン、換気扇等
+                          </div>
+                          <div className="mt-2 h-2 bg-gray-200 rounded-full">
+                            <div
+                              className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
+                              style={{ width: '60%' }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="text-lg font-bold mb-4">リマインド設定</h3>
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="space-y-3">
+                          <label className="flex items-center gap-3 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={reminderSettings.oneMonth}
+                              onChange={(e) =>
+                                setReminderSettings({
+                                  ...reminderSettings,
+                                  oneMonth: e.target.checked,
+                                })
+                              }
+                              className="w-4 h-4 text-cyan-500"
+                            />
+                            <span>1ヶ月前に通知</span>
+                          </label>
+                          <label className="flex items-center gap-3 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={reminderSettings.oneWeek}
+                              onChange={(e) =>
+                                setReminderSettings({
+                                  ...reminderSettings,
+                                  oneWeek: e.target.checked,
+                                })
+                              }
+                              className="w-4 h-4 text-cyan-500"
+                            />
+                            <span>1週間前に通知</span>
+                          </label>
+                          <label className="flex items-center gap-3 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={reminderSettings.oneDay}
+                              onChange={(e) =>
+                                setReminderSettings({
+                                  ...reminderSettings,
+                                  oneDay: e.target.checked,
+                                })
+                              }
+                              className="w-4 h-4 text-cyan-500"
+                            />
+                            <span>前日に通知</span>
+                          </label>
+                        </div>
+
+                        <div className="mt-4 pt-4 border-t">
+                          <p className="text-sm font-medium mb-2">通知方法</p>
+                          <div className="space-y-2">
+                            <label className="flex items-center gap-2 text-sm">
+                              <input
+                                type="checkbox"
+                                defaultChecked
+                                className="w-4 h-4"
+                              />
+                              <Mail className="h-4 w-4" />
+                              メール
+                            </label>
+                            <label className="flex items-center gap-2 text-sm">
+                              <input type="checkbox" className="w-4 h-4" />
+                              <MessageSquare className="h-4 w-4" />
+                              SMS
+                            </label>
+                            <label className="flex items-center gap-2 text-sm text-gray-400">
+                              <input
+                                type="checkbox"
+                                disabled
+                                className="w-4 h-4"
+                              />
+                              <MessageSquare className="h-4 w-4" />
+                              LINE（準備中）
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 分析タブ */}
+                {activeTab === 'analytics' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h3 className="font-bold text-lg mb-4">月次点検実績</h3>
+                      <div className="h-48 flex items-end justify-between px-4">
+                        {[85, 92, 78, 95, 88, 75, 90].map((value, idx) => (
+                          <div key={idx} className="flex flex-col items-center">
+                            <div
+                              className="w-8 bg-gradient-to-t from-cyan-500 to-blue-500 rounded-t"
+                              style={{ height: `${value * 1.5}px` }}
+                            />
+                            <span className="text-xs text-gray-500 mt-1">
+                              {idx + 1}月
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h3 className="font-bold text-lg mb-4">是正案件分析</h3>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">外壁関連</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-32 h-3 bg-gray-200 rounded-full">
+                              <div
+                                className="h-full bg-red-500 rounded-full"
+                                style={{ width: '45%' }}
+                              />
+                            </div>
+                            <span className="text-sm font-bold">45%</span>
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">設備関連</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-32 h-3 bg-gray-200 rounded-full">
+                              <div
+                                className="h-full bg-yellow-500 rounded-full"
+                                style={{ width: '30%' }}
+                              />
+                            </div>
+                            <span className="text-sm font-bold">30%</span>
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">屋根関連</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-32 h-3 bg-gray-200 rounded-full">
+                              <div
+                                className="h-full bg-blue-500 rounded-full"
+                                style={{ width: '25%' }}
+                              />
+                            </div>
+                            <span className="text-sm font-bold">25%</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* クイックアクション */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <button
+                onClick={() => setShowChecklistModal(true)}
+                className="bg-white rounded-lg shadow p-4 hover:shadow-md transition flex items-center justify-center gap-2"
+              >
+                <ClipboardCheck className="h-5 w-5 text-gray-600" />
+                <span>チェックリスト</span>
+              </button>
+              <button
+                onClick={() => setShowPhotoModal(true)}
+                className="bg-white rounded-lg shadow p-4 hover:shadow-md transition flex items-center justify-center gap-2"
+              >
+                <Camera className="h-5 w-5 text-gray-600" />
+                <span>写真アップ</span>
+              </button>
+              <button
+                onClick={() => setShowReportModal(true)}
+                className="bg-white rounded-lg shadow p-4 hover:shadow-md transition flex items-center justify-center gap-2"
+              >
+                <FileText className="h-5 w-5 text-gray-600" />
+                <span>報告書作成</span>
+              </button>
+              <button
+                onClick={() => setShowCSModal(true)}
+                className="bg-white rounded-lg shadow p-4 hover:shadow-md transition flex items-center justify-center gap-2"
+              >
+                <Star className="h-5 w-5 text-gray-600" />
+                <span>CS調査</span>
+              </button>
+            </div>
+          </div>
+
+          {/* RAGアフターアシスタントサイドバー（右側1カラム） */}
+          <div className="lg:col-span-1">
+            <div className="bg-gradient-to-br from-cyan-600 to-blue-600 text-white rounded-xl shadow-lg p-6 mb-6">
+              <h3 className="font-bold text-lg mb-4 flex items-center">
+                🤖 RAGアフターアシスタント
+              </h3>
+
               <div className="space-y-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-bold">是正案件一覧</h3>
-                  <button
-                    onClick={() => setShowEstimateModal(true)}
-                    className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg hover:shadow-lg transition"
-                  >
-                    <FileText className="inline h-4 w-4 mr-2" />
-                    見積作成
+                <div className="bg-white/10 rounded-lg p-3">
+                  <h4 className="text-sm font-bold mb-2">おすすめ質問</h4>
+                  <div className="space-y-2 text-xs">
+                    <div className="cursor-pointer hover:bg-white/10 p-1 rounded">
+                      💡 「定期点検のチェックポイントは？」
+                    </div>
+                    <div className="cursor-pointer hover:bg-white/10 p-1 rounded">
+                      💡 「外壁クラックの補修方法は？」
+                    </div>
+                    <div className="cursor-pointer hover:bg-white/10 p-1 rounded">
+                      💡 「顧客満足度向上のコツは？」
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <textarea
+                    placeholder="例: 築10年の屋根点検で注意すべき点は？"
+                    className="w-full h-20 p-3 rounded-lg text-gray-800 text-sm resize-none"
+                  />
+                  <button className="w-full mt-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white py-2 rounded-lg hover:shadow-lg transition-all">
+                    RAGに聞く
                   </button>
                 </div>
 
-                <div className="space-y-3">
-                  {mockDefects.map((defect) => (
-                    <div
-                      key={defect.id}
-                      className="border rounded-lg p-4 hover:shadow-md transition"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h4 className="font-bold">{defect.customerName}</h4>
-                            {defect.warranty && (
-                              <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
-                                保証対象
-                              </span>
-                            )}
-                            {defect.severity === 'high' && (
-                              <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">
-                                重要度: 高
-                              </span>
-                            )}
-                          </div>
-
-                          <p className="text-sm text-gray-700 mb-2">
-                            {defect.issue}
-                          </p>
-
-                          <div className="flex items-center gap-4 text-sm">
-                            <span className="text-gray-600">
-                              報告日: {defect.reportDate}
-                            </span>
-                            <span className="font-bold text-cyan-600">
-                              ¥{defect.estimateAmount.toLocaleString()}
-                            </span>
-                            <span
-                              className={`px-2 py-1 text-xs rounded-full ${
-                                defect.progress === 'construction'
-                                  ? 'bg-green-100 text-green-600'
-                                  : defect.progress === 'draft'
-                                    ? 'bg-gray-100 text-gray-600'
-                                    : 'bg-yellow-100 text-yellow-600'
-                              }`}
-                            >
-                              {defect.progress === 'construction'
-                                ? '工事中'
-                                : defect.progress === 'draft'
-                                  ? '見積作成済'
-                                  : '承認待ち'}
-                            </span>
-                          </div>
-                        </div>
-
-                        <button className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded transition">
-                          詳細
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* 保証管理タブ */}
-            {activeTab === 'warranty' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-bold mb-4">保証区分</h3>
-                  <div className="space-y-3">
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-medium">構造保証</h4>
-                        <span className="text-sm font-bold text-cyan-600">
-                          10年
-                        </span>
-                      </div>
-                      <div className="text-xs text-gray-600">
-                        対象: 基礎、柱、梁、屋根
-                      </div>
-                      <div className="mt-2 h-2 bg-gray-200 rounded-full">
-                        <div
-                          className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
-                          style={{ width: '100%' }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-medium">雨漏り保証</h4>
-                        <span className="text-sm font-bold text-cyan-600">
-                          10年
-                        </span>
-                      </div>
-                      <div className="text-xs text-gray-600">
-                        対象: 屋根、外壁、サッシ周り
-                      </div>
-                      <div className="mt-2 h-2 bg-gray-200 rounded-full">
-                        <div
-                          className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
-                          style={{ width: '100%' }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-medium">設備保証</h4>
-                        <span className="text-sm font-bold text-cyan-600">
-                          1-5年
-                        </span>
-                      </div>
-                      <div className="text-xs text-gray-600">
-                        対象: 給湯器、エアコン、換気扇等
-                      </div>
-                      <div className="mt-2 h-2 bg-gray-200 rounded-full">
-                        <div
-                          className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
-                          style={{ width: '60%' }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-bold mb-4">リマインド設定</h3>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="space-y-3">
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={reminderSettings.oneMonth}
-                          onChange={(e) =>
-                            setReminderSettings({
-                              ...reminderSettings,
-                              oneMonth: e.target.checked,
-                            })
-                          }
-                          className="w-4 h-4 text-cyan-500"
-                        />
-                        <span>1ヶ月前に通知</span>
-                      </label>
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={reminderSettings.oneWeek}
-                          onChange={(e) =>
-                            setReminderSettings({
-                              ...reminderSettings,
-                              oneWeek: e.target.checked,
-                            })
-                          }
-                          className="w-4 h-4 text-cyan-500"
-                        />
-                        <span>1週間前に通知</span>
-                      </label>
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={reminderSettings.oneDay}
-                          onChange={(e) =>
-                            setReminderSettings({
-                              ...reminderSettings,
-                              oneDay: e.target.checked,
-                            })
-                          }
-                          className="w-4 h-4 text-cyan-500"
-                        />
-                        <span>前日に通知</span>
-                      </label>
-                    </div>
-
-                    <div className="mt-4 pt-4 border-t">
-                      <p className="text-sm font-medium mb-2">通知方法</p>
-                      <div className="space-y-2">
-                        <label className="flex items-center gap-2 text-sm">
-                          <input
-                            type="checkbox"
-                            defaultChecked
-                            className="w-4 h-4"
-                          />
-                          <Mail className="h-4 w-4" />
-                          メール
-                        </label>
-                        <label className="flex items-center gap-2 text-sm">
-                          <input type="checkbox" className="w-4 h-4" />
-                          <MessageSquare className="h-4 w-4" />
-                          SMS
-                        </label>
-                        <label className="flex items-center gap-2 text-sm text-gray-400">
-                          <input type="checkbox" disabled className="w-4 h-4" />
-                          <MessageSquare className="h-4 w-4" />
-                          LINE（準備中）
-                        </label>
-                      </div>
-                    </div>
+                <div className="text-xs opacity-90">
+                  <h4 className="font-bold mb-2">最近の検索</h4>
+                  <div className="space-y-1">
+                    <div>• 屋根リフォーム見積項目</div>
+                    <div>• 協力会社A連絡先</div>
+                    <div>• 原価率改善方法</div>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
 
-            {/* 分析タブ */}
-            {activeTab === 'analytics' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="font-bold text-lg mb-4">月次点検実績</h3>
-                  <div className="h-48 flex items-end justify-between px-4">
-                    {[85, 92, 78, 95, 88, 75, 90].map((value, idx) => (
-                      <div key={idx} className="flex flex-col items-center">
-                        <div
-                          className="w-8 bg-gradient-to-t from-cyan-500 to-blue-500 rounded-t"
-                          style={{ height: `${value * 1.5}px` }}
-                        />
-                        <span className="text-xs text-gray-500 mt-1">
-                          {idx + 1}月
-                        </span>
-                      </div>
-                    ))}
+            {/* 今月の点検予定 */}
+            <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+              <h3 className="font-bold text-lg mb-4 text-gray-900">
+                📅 今月の点検予定
+              </h3>
+              <div className="space-y-3">
+                {mockInspections.slice(0, 3).map((inspection, index) => (
+                  <div
+                    key={index}
+                    className="border-l-4 border-cyan-500 pl-3 py-2 bg-cyan-50 rounded-r"
+                  >
+                    <h4 className="font-medium text-sm text-gray-900">
+                      {inspection.customerName}
+                    </h4>
+                    <p className="text-xs text-gray-600">{inspection.type}</p>
+                    <p className="text-xs text-cyan-600">
+                      {inspection.status === 'overdue'
+                        ? '遅延'
+                        : `予定: ${inspection.scheduledDate}`}
+                    </p>
                   </div>
+                ))}
+                <button className="w-full text-sm text-cyan-600 hover:text-cyan-700 mt-2">
+                  点検開始 →
+                </button>
+              </div>
+            </div>
+
+            {/* 定期受注額 */}
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+              <h3 className="font-bold text-green-800 mb-3 flex items-center">
+                💰 定期受注額
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div className="bg-white rounded p-2">
+                  <p className="text-green-700 font-medium">¥525K</p>
+                  <p className="text-xs text-green-600">前月比 +12%</p>
                 </div>
-
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="font-bold text-lg mb-4">是正案件分析</h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">外壁関連</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-32 h-3 bg-gray-200 rounded-full">
-                          <div
-                            className="h-full bg-red-500 rounded-full"
-                            style={{ width: '45%' }}
-                          />
-                        </div>
-                        <span className="text-sm font-bold">45%</span>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">設備関連</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-32 h-3 bg-gray-200 rounded-full">
-                          <div
-                            className="h-full bg-yellow-500 rounded-full"
-                            style={{ width: '30%' }}
-                          />
-                        </div>
-                        <span className="text-sm font-bold">30%</span>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">屋根関連</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-32 h-3 bg-gray-200 rounded-full">
-                          <div
-                            className="h-full bg-blue-500 rounded-full"
-                            style={{ width: '25%' }}
-                          />
-                        </div>
-                        <span className="text-sm font-bold">25%</span>
-                      </div>
-                    </div>
-                  </div>
+                <div className="text-xs text-gray-600">
+                  目標: ¥500K/月（達成！）
                 </div>
               </div>
-            )}
+            </div>
+
+            {/* 顧客満足度 */}
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+              <h3 className="font-bold text-blue-800 mb-3 flex items-center">
+                ⭐ 顧客満足度
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-700">今月平均</span>
+                  <span className="font-bold text-blue-800">4.3/5.0</span>
+                </div>
+                <div className="w-full h-2 bg-gray-200 rounded-full">
+                  <div
+                    className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"
+                    style={{ width: '86%' }}
+                  ></div>
+                </div>
+                <div className="text-xs text-gray-600">⭐⭐⭐⭐☆</div>
+              </div>
+            </div>
           </div>
-        </div>
-
-        {/* クイックアクション */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <button
-            onClick={() => setShowChecklistModal(true)}
-            className="bg-white rounded-lg shadow p-4 hover:shadow-md transition flex items-center justify-center gap-2"
-          >
-            <ClipboardCheck className="h-5 w-5 text-gray-600" />
-            <span>チェックリスト</span>
-          </button>
-          <button
-            onClick={() => setShowPhotoModal(true)}
-            className="bg-white rounded-lg shadow p-4 hover:shadow-md transition flex items-center justify-center gap-2"
-          >
-            <Camera className="h-5 w-5 text-gray-600" />
-            <span>写真アップ</span>
-          </button>
-          <button
-            onClick={() => setShowReportModal(true)}
-            className="bg-white rounded-lg shadow p-4 hover:shadow-md transition flex items-center justify-center gap-2"
-          >
-            <FileText className="h-5 w-5 text-gray-600" />
-            <span>報告書作成</span>
-          </button>
-          <button
-            onClick={() => setShowCSModal(true)}
-            className="bg-white rounded-lg shadow p-4 hover:shadow-md transition flex items-center justify-center gap-2"
-          >
-            <Star className="h-5 w-5 text-gray-600" />
-            <span>CS調査</span>
-          </button>
         </div>
       </div>
 
