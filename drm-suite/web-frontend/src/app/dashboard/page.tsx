@@ -34,11 +34,11 @@ export default function DashboardPage() {
       const roleMapping = getRoleMapping(user.role);
       // Redirect to specific dashboards for new roles
       if (roleMapping === 'construction') {
-        router.push('/dashboard/construction');
+        router.replace('/dashboard/construction');
       } else if (roleMapping === 'office') {
-        router.push('/dashboard/office');
+        router.replace('/dashboard/office');
       } else if (roleMapping === 'aftercare') {
-        router.push('/dashboard/aftercare');
+        router.replace('/dashboard/aftercare');
       }
     }
   }, [user, router]);
@@ -82,6 +82,23 @@ export default function DashboardPage() {
   };
 
   if (isLoading || !user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dandori-blue mx-auto"></div>
+          <p className="mt-4 text-gray-600">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 専用ダッシュボードページがある役職は何も表示せずリダイレクト
+  const roleMapping = getRoleMapping(user.role);
+  if (
+    roleMapping === 'construction' ||
+    roleMapping === 'office' ||
+    roleMapping === 'aftercare'
+  ) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
