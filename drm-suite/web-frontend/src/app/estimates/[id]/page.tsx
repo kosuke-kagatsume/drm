@@ -1,837 +1,743 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { getConstructionMasters } from '@/data/construction-masters';
+import {
+  ArrowLeft,
+  Eye,
+  BarChart3,
+  Edit,
+  Copy,
+  FileText,
+  Check,
+  X,
+  AlertCircle,
+  Download,
+  Send,
+  MoreHorizontal,
+  Calendar,
+  User,
+  Building,
+  Phone,
+  Mail,
+  MapPin,
+  Package,
+  Wrench,
+} from 'lucide-react';
 
-interface EstimateItem {
+interface Estimate {
   id: string;
-  category: string;
-  description: string;
-  unit: string;
-  quantity: number;
-  unitPrice: number;
-  laborCost: number;
-  materialCost: number;
-  totalPrice: number;
-  margin: number;
-  notes?: string;
-}
-
-interface EstimateData {
-  id: string;
-  customer: string;
-  projectName: string;
-  address: string;
-  workType: string;
-  createdDate: string;
+  customerId: string;
+  customerName: string;
+  title: string;
+  date: string;
   validUntil: string;
-  status: 'draft' | 'sent' | 'approved' | 'rejected';
-  items: EstimateItem[];
-  subtotal: number;
-  tax: number;
-  total: number;
-  notes: string;
+  paymentTerms: string;
+  items: any[];
+  overheadSettings: any;
+  totals: any;
+  notes?: string;
+  createdBy: string;
+  createdAt: string;
+  status: 'draft' | 'submitted' | 'approved' | 'rejected' | 'expired';
 }
 
 export default function EstimateDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const { user, isLoading } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
+  const { user } = useAuth();
+  const [estimate, setEstimate] = useState<Estimate | null>(null);
+  const [masters, setMasters] = useState<any>({});
+  const [viewMode, setViewMode] = useState<'preview' | 'analysis'>('preview');
+  const [showApprovalModal, setShowApprovalModal] = useState(false);
+  const [approvalAction, setApprovalAction] = useState<'approve' | 'reject'>(
+    'approve',
+  );
+  const [approvalComment, setApprovalComment] = useState('');
 
-  const [estimate, setEstimate] = useState<EstimateData>({
-    id: params.id as string,
-    customer: '田中建設株式会社',
-    projectName: '田中様邸 外壁・屋根塗装工事',
-    address: '東京都港区六本木1-1-1',
-    workType: '外壁・屋根塗装',
-    createdDate: '2024-01-15',
-    validUntil: '2024-02-15',
-    status: 'sent',
-    subtotal: 2500000,
-    tax: 250000,
-    total: 2750000,
-    notes:
-      '※足場設置期間中は騒音が発生する場合があります\n※雨天時は作業を中止いたします',
-    items: [
-      {
-        id: '1',
-        category: '足場工事',
-        description: '外部足場設置・撤去',
-        unit: '㎡',
-        quantity: 150,
-        unitPrice: 1200,
-        laborCost: 120000,
-        materialCost: 60000,
-        totalPrice: 180000,
-        margin: 33,
-        notes: '安全対策込み',
-      },
-      {
-        id: '2',
-        category: '外壁塗装',
-        description: 'シリコン塗料 3回塗り',
-        unit: '㎡',
-        quantity: 120,
-        unitPrice: 3500,
-        laborCost: 280000,
-        materialCost: 140000,
-        totalPrice: 420000,
-        margin: 25,
-        notes: 'プライマー・中塗り・上塗り',
-      },
-      {
-        id: '3',
-        category: '屋根塗装',
-        description: 'ウレタン塗料 3回塗り',
-        unit: '㎡',
-        quantity: 80,
-        unitPrice: 4200,
-        laborCost: 224000,
-        materialCost: 112000,
-        totalPrice: 336000,
-        margin: 30,
-        notes: 'タスペーサー設置込み',
-      },
-      {
-        id: '4',
-        category: '付帯工事',
-        description: '雨樋・破風板塗装',
-        unit: '式',
-        quantity: 1,
-        unitPrice: 180000,
-        laborCost: 120000,
-        materialCost: 60000,
-        totalPrice: 180000,
-        margin: 33,
-        notes: '部分補修込み',
-      },
-    ],
-  });
-
-  const [editingItem, setEditingItem] = useState<EstimateItem | null>(null);
-  const [newItem, setNewItem] = useState<Partial<EstimateItem>>({
-    category: '',
-    description: '',
-    unit: '㎡',
-    quantity: 0,
-    unitPrice: 0,
-    laborCost: 0,
-    materialCost: 0,
-    notes: '',
-  });
-
-  const calculateItemTotal = (item: Partial<EstimateItem>) => {
-    const quantity = item.quantity || 0;
-    const laborCost = item.laborCost || 0;
-    const materialCost = item.materialCost || 0;
-    const totalCost = laborCost + materialCost;
-    const totalPrice = quantity * (item.unitPrice || 0);
-    const margin =
-      totalCost > 0 ? ((totalPrice - totalCost) / totalPrice) * 100 : 0;
-
-    return {
-      totalPrice,
-      margin: Math.round(margin),
-    };
-  };
-
-  const handleItemEdit = (item: EstimateItem) => {
-    setEditingItem({ ...item });
-  };
-
-  const handleItemSave = () => {
-    if (!editingItem) return;
-
-    const calculated = calculateItemTotal(editingItem);
-    const updatedItem = {
-      ...editingItem,
-      totalPrice: calculated.totalPrice,
-      margin: calculated.margin,
-    };
-
-    setEstimate((prev) => ({
-      ...prev,
-      items: prev.items.map((item) =>
-        item.id === editingItem.id ? updatedItem : item,
-      ),
-    }));
-    setEditingItem(null);
-  };
-
-  const handleItemAdd = () => {
-    if (!newItem.category || !newItem.description) return;
-
-    const calculated = calculateItemTotal(newItem);
-    const item: EstimateItem = {
-      id: Date.now().toString(),
-      category: newItem.category || '',
-      description: newItem.description || '',
-      unit: newItem.unit || '㎡',
-      quantity: newItem.quantity || 0,
-      unitPrice: newItem.unitPrice || 0,
-      laborCost: newItem.laborCost || 0,
-      materialCost: newItem.materialCost || 0,
-      totalPrice: calculated.totalPrice,
-      margin: calculated.margin,
-      notes: newItem.notes,
-    };
-
-    setEstimate((prev) => ({
-      ...prev,
-      items: [...prev.items, item],
-    }));
-
-    setNewItem({
-      category: '',
-      description: '',
-      unit: '㎡',
-      quantity: 0,
-      unitPrice: 0,
-      laborCost: 0,
-      materialCost: 0,
-      notes: '',
-    });
-  };
-
-  const handleItemDelete = (id: string) => {
-    setEstimate((prev) => ({
-      ...prev,
-      items: prev.items.filter((item) => item.id !== id),
-    }));
-  };
-
-  const duplicateItem = (item: EstimateItem) => {
-    const newItem: EstimateItem = {
-      ...item,
-      id: Date.now().toString(),
-      description: `${item.description} (コピー)`,
-    };
-    setEstimate((prev) => ({
-      ...prev,
-      items: [...prev.items, newItem],
-    }));
-  };
-
-  // Recalculate totals when items change
   useEffect(() => {
-    const subtotal = estimate.items.reduce(
-      (sum, item) => sum + item.totalPrice,
-      0,
+    const data = getConstructionMasters();
+    setMasters(data);
+
+    // LocalStorageから見積データを取得
+    const estimates = JSON.parse(localStorage.getItem('estimates') || '[]');
+    const foundEstimate = estimates.find(
+      (est: Estimate) => est.id === params.id,
     );
-    const tax = subtotal * 0.1;
-    const total = subtotal + tax;
+    setEstimate(foundEstimate);
+  }, [params.id]);
 
-    setEstimate((prev) => ({
-      ...prev,
-      subtotal,
-      tax,
-      total,
-    }));
-  }, [estimate.items]);
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'draft':
-        return 'bg-gray-100 text-gray-800';
-      case 'sent':
-        return 'bg-blue-100 text-blue-800';
-      case 'approved':
-        return 'bg-green-100 text-green-800';
-      case 'rejected':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'draft':
-        return '下書き';
-      case 'sent':
-        return '送付済み';
-      case 'approved':
-        return '承認済み';
-      case 'rejected':
-        return '却下';
-      default:
-        return status;
-    }
-  };
-
-  if (isLoading || !user) {
+  if (!estimate) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dandori-blue mx-auto"></div>
-          <p className="mt-4 text-gray-600">読み込み中...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">見積データを読み込み中...</p>
         </div>
       </div>
     );
   }
 
+  const customer = masters.customers?.find(
+    (c: any) => c.id === estimate.customerId,
+  );
+  const paymentTerm = masters.paymentTerms?.find(
+    (pt: any) => pt.id === estimate.paymentTerms,
+  );
+
+  // 見積複製
+  const handleDuplicate = () => {
+    const newEstimate = {
+      ...estimate,
+      id: `EST-${Date.now()}`,
+      status: 'draft' as const,
+      title: `${estimate.title}（複製）`,
+      date: new Date().toISOString().split('T')[0],
+      createdAt: new Date().toISOString(),
+    };
+
+    const estimates = JSON.parse(localStorage.getItem('estimates') || '[]');
+    estimates.push(newEstimate);
+    localStorage.setItem('estimates', JSON.stringify(estimates));
+
+    router.push(`/estimates/${newEstimate.id}`);
+  };
+
+  // 承認処理
+  const handleApproval = () => {
+    const newStatus = approvalAction === 'approve' ? 'approved' : 'rejected';
+    const updatedEstimate = {
+      ...estimate,
+      status: newStatus,
+      approvalDate: new Date().toISOString(),
+      approvedBy: user?.email,
+      approvalComment,
+    };
+
+    const estimates = JSON.parse(localStorage.getItem('estimates') || '[]');
+    const updatedEstimates = estimates.map((est: Estimate) =>
+      est.id === estimate.id ? updatedEstimate : est,
+    );
+    localStorage.setItem('estimates', JSON.stringify(updatedEstimates));
+    setEstimate(updatedEstimate);
+    setShowApprovalModal(false);
+    setApprovalComment('');
+  };
+
+  // ステータス表示
+  const getStatusBadge = (status: string) => {
+    const statusConfig = {
+      draft: { text: '下書き', className: 'bg-gray-100 text-gray-800' },
+      submitted: { text: '提出済み', className: 'bg-blue-100 text-blue-800' },
+      approved: { text: '承認済み', className: 'bg-green-100 text-green-800' },
+      rejected: { text: '却下', className: 'bg-red-100 text-red-800' },
+      expired: { text: '期限切れ', className: 'bg-orange-100 text-orange-800' },
+    };
+
+    const config =
+      statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
+    return (
+      <span
+        className={`px-3 py-1 rounded-full text-sm font-medium ${config.className}`}
+      >
+        {config.text}
+      </span>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-6 py-4">
+      {/* ヘッダー */}
+      <div className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center">
               <button
-                onClick={() => router.back()}
-                className="text-gray-600 hover:text-gray-800"
+                onClick={() => router.push('/estimates')}
+                className="mr-4 hover:opacity-80 transition"
               >
-                ← 戻る
+                <ArrowLeft className="h-6 w-6" />
               </button>
-              <h1 className="text-2xl font-bold text-gray-900">
-                見積書詳細 #{estimate.id}
-              </h1>
-              <span
-                className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(estimate.status)}`}
-              >
-                {getStatusLabel(estimate.status)}
-              </span>
+              <div>
+                <h1 className="text-2xl font-bold">見積詳細 - {estimate.id}</h1>
+                <p className="text-sm opacity-90 mt-1">
+                  {estimate.title} | {estimate.customerName}
+                </p>
+              </div>
             </div>
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={() => setIsEditing(!isEditing)}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition ${
-                  isEditing
-                    ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
-                }`}
-              >
-                {isEditing ? '編集終了' : '編集開始'}
-              </button>
-              <button className="bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700">
-                PDF出力
-              </button>
-              {estimate.status === 'draft' && (
-                <button className="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700">
-                  送付
+            <div className="flex items-center gap-4">
+              {getStatusBadge(estimate.status)}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setViewMode('preview')}
+                  className={`px-4 py-2 rounded-lg transition flex items-center gap-2 ${
+                    viewMode === 'preview'
+                      ? 'bg-white/30 text-white'
+                      : 'bg-white/10 text-white/80 hover:bg-white/20'
+                  }`}
+                >
+                  <Eye className="h-4 w-4" />
+                  プレビュー
                 </button>
-              )}
+                <button
+                  onClick={() => setViewMode('analysis')}
+                  className={`px-4 py-2 rounded-lg transition flex items-center gap-2 ${
+                    viewMode === 'analysis'
+                      ? 'bg-white/30 text-white'
+                      : 'bg-white/10 text-white/80 hover:bg-white/20'
+                  }`}
+                >
+                  <BarChart3 className="h-4 w-4" />
+                  分析
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-3 space-y-8">
-            {/* Project Info */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-12 gap-8">
+          {/* メインコンテンツ */}
+          <div className="col-span-12 lg:col-span-8">
+            {viewMode === 'preview' ? (
+              // プレビューモード
+              <div className="bg-white rounded-lg shadow">
+                {/* 見積書ヘッダー */}
+                <div className="p-8 border-b">
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                        見積書
+                      </h2>
+                      <p className="text-gray-600">見積番号: {estimate.id}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-gray-600">見積日</p>
+                      <p className="text-lg font-semibold">{estimate.date}</p>
+                      <p className="text-sm text-gray-600 mt-2">有効期限</p>
+                      <p className="text-lg font-semibold">
+                        {estimate.validUntil}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="text-center mb-6">
+                    <h3 className="text-2xl font-bold text-blue-600">
+                      {estimate.title}
+                    </h3>
+                  </div>
+
+                  {/* 顧客情報 */}
+                  {customer && (
+                    <div className="mb-6">
+                      <h4 className="text-lg font-semibold mb-3 text-gray-700">
+                        お客様情報
+                      </h4>
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-gray-500" />
+                            <span className="font-medium">{customer.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-4 w-4 text-gray-500" />
+                            <span>{customer.tel}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4 text-gray-500" />
+                            <span>{customer.email}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-gray-500" />
+                            <span>
+                              {customer.prefecture}
+                              {customer.city}
+                              {customer.address}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 明細 */}
+                <div className="p-8">
+                  <h4 className="text-lg font-semibold mb-4">工事明細</h4>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                            項目名
+                          </th>
+                          <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">
+                            数量
+                          </th>
+                          <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">
+                            単位
+                          </th>
+                          <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">
+                            単価
+                          </th>
+                          <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">
+                            金額
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {estimate.items.map((item: any) => (
+                          <tr key={item.id}>
+                            <td className="px-4 py-4">
+                              <div className="flex items-center gap-2">
+                                {item.itemType === 'product' ? (
+                                  <Package className="h-4 w-4 text-blue-500" />
+                                ) : (
+                                  <Wrench className="h-4 w-4 text-green-500" />
+                                )}
+                                <span className="font-medium">{item.name}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4 text-center">
+                              {item.quantity}
+                            </td>
+                            <td className="px-4 py-4 text-center">
+                              {item.unit}
+                            </td>
+                            <td className="px-4 py-4 text-right">
+                              ¥{item.unitPrice.toLocaleString()}
+                            </td>
+                            <td className="px-4 py-4 text-right font-medium">
+                              ¥{item.amount.toLocaleString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* 集計 */}
+                  <div className="mt-8 border-t pt-6">
+                    <div className="max-w-md ml-auto space-y-3">
+                      <div className="flex justify-between">
+                        <span>小計</span>
+                        <span className="font-medium">
+                          ¥{estimate.totals.subtotal.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>現場管理費</span>
+                        <span>
+                          ¥{estimate.totals.overhead.管理費.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>一般管理費</span>
+                        <span>
+                          ¥
+                          {estimate.totals.overhead.一般管理費.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>諸経費</span>
+                        <span>
+                          ¥{estimate.totals.overhead.諸経費.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>廃材処分費</span>
+                        <span>
+                          ¥
+                          {estimate.totals.overhead.廃材処分費.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between border-t pt-2">
+                        <span>税抜合計</span>
+                        <span className="font-medium">
+                          ¥{estimate.totals.beforeTax.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>消費税（10%）</span>
+                        <span className="font-medium">
+                          ¥{estimate.totals.tax.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-xl font-bold text-blue-600 border-t pt-3">
+                        <span>合計金額</span>
+                        <span>¥{estimate.totals.total.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 支払条件・備考 */}
+                  <div className="mt-8 space-y-4">
+                    <div>
+                      <h5 className="font-semibold text-gray-700 mb-2">
+                        支払条件
+                      </h5>
+                      <p className="text-gray-600">
+                        {paymentTerm?.name || '現金'}
+                      </p>
+                    </div>
+                    {estimate.notes && (
+                      <div>
+                        <h5 className="font-semibold text-gray-700 mb-2">
+                          備考
+                        </h5>
+                        <p className="text-gray-600">{estimate.notes}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // 分析モード
+              <div className="space-y-6">
+                {/* 利益分析 */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h3 className="text-lg font-bold mb-6">収益性分析</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="text-center p-6 bg-blue-50 rounded-lg">
+                      <p className="text-sm text-blue-600 font-medium mb-2">
+                        売上高
+                      </p>
+                      <p className="text-3xl font-bold text-blue-700">
+                        ¥{estimate.totals.total.toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="text-center p-6 bg-red-50 rounded-lg">
+                      <p className="text-sm text-red-600 font-medium mb-2">
+                        原価合計
+                      </p>
+                      <p className="text-3xl font-bold text-red-700">
+                        ¥{estimate.totals.costTotal.toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="text-center p-6 bg-green-50 rounded-lg">
+                      <p className="text-sm text-green-600 font-medium mb-2">
+                        粗利益
+                      </p>
+                      <p className="text-3xl font-bold text-green-700">
+                        ¥{estimate.totals.profit.toLocaleString()}
+                      </p>
+                      <p className="text-sm text-green-600 mt-2">
+                        利益率: {estimate.totals.profitRate.toFixed(1)}%
+                      </p>
+                    </div>
+                  </div>
+
+                  {estimate.totals.profitRate < 20 && (
+                    <div className="mt-6 p-4 bg-yellow-50 rounded-lg flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm text-yellow-800">
+                        <p className="font-medium">
+                          利益率が目標（20%）を下回っています
+                        </p>
+                        <p className="mt-1">
+                          単価調整や原価見直しを検討してください
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 項目別利益分析 */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h3 className="text-lg font-bold mb-6">項目別利益分析</h3>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                            項目名
+                          </th>
+                          <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">
+                            売上
+                          </th>
+                          <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">
+                            原価
+                          </th>
+                          <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">
+                            粗利
+                          </th>
+                          <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">
+                            利益率
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {estimate.items.map((item: any) => (
+                          <tr key={item.id}>
+                            <td className="px-4 py-4 font-medium">
+                              {item.name}
+                            </td>
+                            <td className="px-4 py-4 text-right">
+                              ¥{item.amount.toLocaleString()}
+                            </td>
+                            <td className="px-4 py-4 text-right">
+                              ¥
+                              {(
+                                item.costPrice * item.quantity
+                              ).toLocaleString()}
+                            </td>
+                            <td className="px-4 py-4 text-right font-medium">
+                              ¥{item.profitAmount.toLocaleString()}
+                            </td>
+                            <td className="px-4 py-4 text-right">
+                              <span
+                                className={`font-medium ${
+                                  item.profitRate >= 25
+                                    ? 'text-green-600'
+                                    : item.profitRate >= 15
+                                      ? 'text-yellow-600'
+                                      : 'text-red-600'
+                                }`}
+                              >
+                                {item.profitRate.toFixed(1)}%
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* コスト構成分析 */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h3 className="text-lg font-bold mb-6">コスト構成分析</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600 mb-1">現場管理費</p>
+                      <p className="text-lg font-bold">
+                        ¥{estimate.totals.overhead.管理費.toLocaleString()}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {(
+                          (estimate.totals.overhead.管理費 /
+                            estimate.totals.total) *
+                          100
+                        ).toFixed(1)}
+                        %
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600 mb-1">一般管理費</p>
+                      <p className="text-lg font-bold">
+                        ¥{estimate.totals.overhead.一般管理費.toLocaleString()}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {(
+                          (estimate.totals.overhead.一般管理費 /
+                            estimate.totals.total) *
+                          100
+                        ).toFixed(1)}
+                        %
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600 mb-1">諸経費</p>
+                      <p className="text-lg font-bold">
+                        ¥{estimate.totals.overhead.諸経費.toLocaleString()}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {(
+                          (estimate.totals.overhead.諸経費 /
+                            estimate.totals.total) *
+                          100
+                        ).toFixed(1)}
+                        %
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600 mb-1">廃材処分費</p>
+                      <p className="text-lg font-bold">
+                        ¥{estimate.totals.overhead.廃材処分費.toLocaleString()}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {(
+                          (estimate.totals.overhead.廃材処分費 /
+                            estimate.totals.total) *
+                          100
+                        ).toFixed(1)}
+                        %
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* サイドバー */}
+          <div className="col-span-12 lg:col-span-4 space-y-6">
+            {/* アクション */}
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-semibold mb-4">📋 工事概要</h2>
-              <div className="grid grid-cols-2 gap-6">
+              <h3 className="text-lg font-bold mb-4">操作</h3>
+              <div className="space-y-3">
+                <button
+                  onClick={() =>
+                    router.push(`/estimates/create-v2?template=${estimate.id}`)
+                  }
+                  className="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition flex items-center gap-2 justify-center"
+                >
+                  <Edit className="h-4 w-4" />
+                  編集
+                </button>
+                <button
+                  onClick={handleDuplicate}
+                  className="w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition flex items-center gap-2 justify-center"
+                >
+                  <Copy className="h-4 w-4" />
+                  複製
+                </button>
+                <button className="w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition flex items-center gap-2 justify-center">
+                  <FileText className="h-4 w-4" />
+                  PDF出力
+                </button>
+                <button className="w-full bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition flex items-center gap-2 justify-center">
+                  <Send className="h-4 w-4" />
+                  メール送信
+                </button>
+              </div>
+            </div>
+
+            {/* 承認フロー */}
+            {estimate.status === 'submitted' && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-bold mb-4">承認処理</h3>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => {
+                      setApprovalAction('approve');
+                      setShowApprovalModal(true);
+                    }}
+                    className="w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition flex items-center gap-2 justify-center"
+                  >
+                    <Check className="h-4 w-4" />
+                    承認
+                  </button>
+                  <button
+                    onClick={() => {
+                      setApprovalAction('reject');
+                      setShowApprovalModal(true);
+                    }}
+                    className="w-full bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition flex items-center gap-2 justify-center"
+                  >
+                    <X className="h-4 w-4" />
+                    却下
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* 基本情報 */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-bold mb-4">基本情報</h3>
+              <div className="space-y-3 text-sm">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    顧客名
-                  </label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={estimate.customer}
-                      onChange={(e) =>
-                        setEstimate((prev) => ({
-                          ...prev,
-                          customer: e.target.value,
-                        }))
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    />
-                  ) : (
-                    <p className="text-gray-900">{estimate.customer}</p>
-                  )}
+                  <span className="text-gray-600">作成者:</span>
+                  <span className="ml-2 font-medium">{estimate.createdBy}</span>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    工事名
-                  </label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={estimate.projectName}
-                      onChange={(e) =>
-                        setEstimate((prev) => ({
-                          ...prev,
-                          projectName: e.target.value,
-                        }))
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    />
-                  ) : (
-                    <p className="text-gray-900">{estimate.projectName}</p>
-                  )}
+                  <span className="text-gray-600">作成日:</span>
+                  <span className="ml-2 font-medium">
+                    {new Date(estimate.createdAt).toLocaleDateString('ja-JP')}
+                  </span>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    工事住所
-                  </label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={estimate.address}
-                      onChange={(e) =>
-                        setEstimate((prev) => ({
-                          ...prev,
-                          address: e.target.value,
-                        }))
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    />
-                  ) : (
-                    <p className="text-gray-900">{estimate.address}</p>
-                  )}
+                  <span className="text-gray-600">有効期限:</span>
+                  <span className="ml-2 font-medium">
+                    {estimate.validUntil}
+                  </span>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    工事種別
-                  </label>
-                  {isEditing ? (
-                    <select
-                      value={estimate.workType}
-                      onChange={(e) =>
-                        setEstimate((prev) => ({
-                          ...prev,
-                          workType: e.target.value,
-                        }))
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    >
-                      <option value="外壁・屋根塗装">外壁・屋根塗装</option>
-                      <option value="外壁塗装">外壁塗装</option>
-                      <option value="屋根塗装">屋根塗装</option>
-                      <option value="防水工事">防水工事</option>
-                      <option value="その他">その他</option>
-                    </select>
-                  ) : (
-                    <p className="text-gray-900">{estimate.workType}</p>
-                  )}
+                  <span className="text-gray-600">項目数:</span>
+                  <span className="ml-2 font-medium">
+                    {estimate.items.length}項目
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Estimate Items */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-4 border-b flex justify-between items-center">
-                <h2 className="text-lg font-semibold">📝 見積明細</h2>
-                {isEditing && (
-                  <button
-                    onClick={() =>
-                      setNewItem({ ...newItem, category: '', description: '' })
-                    }
-                    className="bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700"
-                  >
-                    項目追加
-                  </button>
+            {/* 履歴 */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-bold mb-4">変更履歴</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <div>
+                    <p className="font-medium">見積作成</p>
+                    <p className="text-gray-500 text-xs">
+                      {new Date(estimate.createdAt).toLocaleDateString('ja-JP')}
+                    </p>
+                  </div>
+                </div>
+                {estimate.status !== 'draft' && (
+                  <div className="flex items-center gap-3 text-sm">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <div>
+                      <p className="font-medium">
+                        ステータス変更: {getStatusBadge(estimate.status)}
+                      </p>
+                      <p className="text-gray-500 text-xs">システム</p>
+                    </div>
+                  </div>
                 )}
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        工種
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        工事内容
-                      </th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                        単位
-                      </th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                        数量
-                      </th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                        単価
-                      </th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                        金額
-                      </th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                        粗利率
-                      </th>
-                      {isEditing && (
-                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                          操作
-                        </th>
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {estimate.items.map((item) => (
-                      <tr key={item.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-4 text-sm font-medium text-gray-900">
-                          {editingItem?.id === item.id ? (
-                            <input
-                              type="text"
-                              value={editingItem.category}
-                              onChange={(e) =>
-                                setEditingItem((prev) =>
-                                  prev
-                                    ? { ...prev, category: e.target.value }
-                                    : null,
-                                )
-                              }
-                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                            />
-                          ) : (
-                            item.category
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-900">
-                          {editingItem?.id === item.id ? (
-                            <input
-                              type="text"
-                              value={editingItem.description}
-                              onChange={(e) =>
-                                setEditingItem((prev) =>
-                                  prev
-                                    ? { ...prev, description: e.target.value }
-                                    : null,
-                                )
-                              }
-                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                            />
-                          ) : (
-                            <div>
-                              <p>{item.description}</p>
-                              {item.notes && (
-                                <p className="text-xs text-gray-500 mt-1">
-                                  ※ {item.notes}
-                                </p>
-                              )}
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-center">
-                          {editingItem?.id === item.id ? (
-                            <select
-                              value={editingItem.unit}
-                              onChange={(e) =>
-                                setEditingItem((prev) =>
-                                  prev
-                                    ? { ...prev, unit: e.target.value }
-                                    : null,
-                                )
-                              }
-                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                            >
-                              <option value="㎡">㎡</option>
-                              <option value="m">m</option>
-                              <option value="個">個</option>
-                              <option value="式">式</option>
-                            </select>
-                          ) : (
-                            item.unit
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-center">
-                          {editingItem?.id === item.id ? (
-                            <input
-                              type="number"
-                              value={editingItem.quantity}
-                              onChange={(e) =>
-                                setEditingItem((prev) =>
-                                  prev
-                                    ? {
-                                        ...prev,
-                                        quantity:
-                                          parseFloat(e.target.value) || 0,
-                                      }
-                                    : null,
-                                )
-                              }
-                              className="w-20 px-2 py-1 border border-gray-300 rounded text-sm text-center"
-                            />
-                          ) : (
-                            item.quantity.toLocaleString()
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-center">
-                          {editingItem?.id === item.id ? (
-                            <input
-                              type="number"
-                              value={editingItem.unitPrice}
-                              onChange={(e) =>
-                                setEditingItem((prev) =>
-                                  prev
-                                    ? {
-                                        ...prev,
-                                        unitPrice:
-                                          parseFloat(e.target.value) || 0,
-                                      }
-                                    : null,
-                                )
-                              }
-                              className="w-24 px-2 py-1 border border-gray-300 rounded text-sm text-center"
-                            />
-                          ) : (
-                            `¥${item.unitPrice.toLocaleString()}`
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-center font-medium">
-                          ¥{item.totalPrice.toLocaleString()}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-center">
-                          <span
-                            className={`px-2 py-1 rounded text-xs font-medium ${
-                              item.margin >= 25
-                                ? 'bg-green-100 text-green-800'
-                                : item.margin >= 15
-                                  ? 'bg-yellow-100 text-yellow-800'
-                                  : 'bg-red-100 text-red-800'
-                            }`}
-                          >
-                            {item.margin}%
-                          </span>
-                        </td>
-                        {isEditing && (
-                          <td className="px-4 py-4 text-center">
-                            {editingItem?.id === item.id ? (
-                              <div className="flex space-x-2">
-                                <button
-                                  onClick={handleItemSave}
-                                  className="text-green-600 hover:text-green-800 text-xs"
-                                >
-                                  保存
-                                </button>
-                                <button
-                                  onClick={() => setEditingItem(null)}
-                                  className="text-gray-600 hover:text-gray-800 text-xs"
-                                >
-                                  取消
-                                </button>
-                              </div>
-                            ) : (
-                              <div className="flex space-x-2">
-                                <button
-                                  onClick={() => handleItemEdit(item)}
-                                  className="text-blue-600 hover:text-blue-800 text-xs"
-                                >
-                                  編集
-                                </button>
-                                <button
-                                  onClick={() => duplicateItem(item)}
-                                  className="text-purple-600 hover:text-purple-800 text-xs"
-                                >
-                                  複製
-                                </button>
-                                <button
-                                  onClick={() => handleItemDelete(item.id)}
-                                  className="text-red-600 hover:text-red-800 text-xs"
-                                >
-                                  削除
-                                </button>
-                              </div>
-                            )}
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-
-                    {/* Add New Item Row */}
-                    {isEditing && (
-                      <tr className="bg-blue-50">
-                        <td className="px-4 py-4">
-                          <input
-                            type="text"
-                            value={newItem.category}
-                            onChange={(e) =>
-                              setNewItem((prev) => ({
-                                ...prev,
-                                category: e.target.value,
-                              }))
-                            }
-                            placeholder="工種"
-                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                          />
-                        </td>
-                        <td className="px-4 py-4">
-                          <input
-                            type="text"
-                            value={newItem.description}
-                            onChange={(e) =>
-                              setNewItem((prev) => ({
-                                ...prev,
-                                description: e.target.value,
-                              }))
-                            }
-                            placeholder="工事内容"
-                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                          />
-                        </td>
-                        <td className="px-4 py-4">
-                          <select
-                            value={newItem.unit}
-                            onChange={(e) =>
-                              setNewItem((prev) => ({
-                                ...prev,
-                                unit: e.target.value,
-                              }))
-                            }
-                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                          >
-                            <option value="㎡">㎡</option>
-                            <option value="m">m</option>
-                            <option value="個">個</option>
-                            <option value="式">式</option>
-                          </select>
-                        </td>
-                        <td className="px-4 py-4">
-                          <input
-                            type="number"
-                            value={newItem.quantity}
-                            onChange={(e) =>
-                              setNewItem((prev) => ({
-                                ...prev,
-                                quantity: parseFloat(e.target.value) || 0,
-                              }))
-                            }
-                            placeholder="0"
-                            className="w-20 px-2 py-1 border border-gray-300 rounded text-sm text-center"
-                          />
-                        </td>
-                        <td className="px-4 py-4">
-                          <input
-                            type="number"
-                            value={newItem.unitPrice}
-                            onChange={(e) =>
-                              setNewItem((prev) => ({
-                                ...prev,
-                                unitPrice: parseFloat(e.target.value) || 0,
-                              }))
-                            }
-                            placeholder="0"
-                            className="w-24 px-2 py-1 border border-gray-300 rounded text-sm text-center"
-                          />
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          ¥
-                          {calculateItemTotal(
-                            newItem,
-                          ).totalPrice.toLocaleString()}
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          <span className="text-xs text-gray-600">
-                            {calculateItemTotal(newItem).margin}%
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          <button
-                            onClick={handleItemAdd}
-                            className="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700"
-                          >
-                            追加
-                          </button>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Notes */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold mb-4">📝 備考・特記事項</h3>
-              {isEditing ? (
-                <textarea
-                  value={estimate.notes}
-                  onChange={(e) =>
-                    setEstimate((prev) => ({ ...prev, notes: e.target.value }))
-                  }
-                  rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                />
-              ) : (
-                <div className="text-gray-700 whitespace-pre-line">
-                  {estimate.notes}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Total Summary */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold mb-4">💰 金額サマリー</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">小計:</span>
-                  <span className="font-medium">
-                    ¥{estimate.subtotal.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">消費税 (10%):</span>
-                  <span className="font-medium">
-                    ¥{estimate.tax.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between text-lg font-bold border-t pt-3">
-                  <span>合計:</span>
-                  <span className="text-blue-600">
-                    ¥{estimate.total.toLocaleString()}
-                  </span>
-                </div>
-                <div className="mt-4 pt-3 border-t">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">平均粗利率:</span>
-                    <span className="font-medium">
-                      {estimate.items.length > 0
-                        ? Math.round(
-                            estimate.items.reduce(
-                              (sum, item) => sum + item.margin,
-                              0,
-                            ) / estimate.items.length,
-                          )
-                        : 0}
-                      %
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* RAG Assistant */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-4 border-b bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
-                <h3 className="font-semibold">🤖 見積アシスタント</h3>
-              </div>
-              <div className="p-6">
-                <div className="space-y-4">
-                  <div className="bg-purple-50 p-3 rounded">
-                    <p className="text-sm font-medium text-purple-900 mb-2">
-                      💡 提案
-                    </p>
-                    <p className="text-xs text-purple-700 mb-2">
-                      「外壁塗装の平均粗利率25%は適正です。類似工事の過去実績と比較しますか？」
-                    </p>
-                    <button className="text-xs bg-purple-600 text-white px-3 py-1 rounded">
-                      比較する
-                    </button>
-                  </div>
-                  <div>
-                    <textarea
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                      rows={3}
-                      placeholder="例: この見積の適正価格は？"
-                    />
-                    <button className="mt-2 w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 text-sm">
-                      AIに相談
-                    </button>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* 承認モーダル */}
+      {showApprovalModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="px-6 py-4 border-b">
+              <h3 className="text-lg font-bold">
+                {approvalAction === 'approve' ? '見積承認' : '見積却下'}
+              </h3>
+            </div>
+            <div className="px-6 py-4">
+              <p className="text-gray-600 mb-4">
+                {approvalAction === 'approve'
+                  ? 'この見積を承認しますか？'
+                  : 'この見積を却下しますか？'}
+              </p>
+              <textarea
+                value={approvalComment}
+                onChange={(e) => setApprovalComment(e.target.value)}
+                placeholder="コメント（任意）"
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="px-6 py-4 border-t flex gap-3 justify-end">
+              <button
+                onClick={() => setShowApprovalModal(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleApproval}
+                className={`px-4 py-2 rounded-lg text-white transition ${
+                  approvalAction === 'approve'
+                    ? 'bg-green-500 hover:bg-green-600'
+                    : 'bg-red-500 hover:bg-red-600'
+                }`}
+              >
+                {approvalAction === 'approve' ? '承認する' : '却下する'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

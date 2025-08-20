@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { getConstructionMasters } from '@/data/construction-masters';
 import {
@@ -22,6 +22,8 @@ import {
   Check,
   X,
   Copy,
+  BookOpen,
+  Star,
 } from 'lucide-react';
 
 interface EstimateItem {
@@ -40,10 +42,21 @@ interface EstimateItem {
   notes?: string;
 }
 
-export default function CreateEstimateV2() {
+function CreateEstimateV2Content() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const [masters, setMasters] = useState<any>({});
+
+  // テンプレート関連
+  const [isEditingTemplate, setIsEditingTemplate] = useState(false);
+  const [currentTemplateId, setCurrentTemplateId] = useState<string | null>(
+    null,
+  );
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [templateName, setTemplateName] = useState('');
+  const [templateDescription, setTemplateDescription] = useState('');
+  const [templateCategory, setTemplateCategory] = useState('外壁・屋根工事');
   const [activeTab, setActiveTab] = useState<'customer' | 'items' | 'summary'>(
     'customer',
   );
@@ -90,7 +103,119 @@ export default function CreateEstimateV2() {
     const validDate = new Date();
     validDate.setDate(validDate.getDate() + 30);
     setValidUntil(validDate.toISOString().split('T')[0]);
-  }, []);
+
+    // URLパラメータからテンプレート読み込み
+    const templateId = searchParams.get('template');
+    const editTemplate = searchParams.get('edit_template') === 'true';
+
+    if (templateId) {
+      loadTemplate(templateId, editTemplate);
+    }
+  }, [searchParams]);
+
+  // テンプレート読み込み
+  const loadTemplate = (templateId: string, editMode: boolean = false) => {
+    const templates = JSON.parse(
+      localStorage.getItem('estimate_templates') || '[]',
+    );
+    const template = templates.find((t: any) => t.id === templateId);
+
+    if (template) {
+      setItems(template.items || []);
+      setOverheadSettings(
+        template.overheadSettings || {
+          管理費率: 0.08,
+          一般管理費率: 0.05,
+          諸経費率: 0.03,
+          廃材処分費率: 0.02,
+        },
+      );
+
+      if (editMode) {
+        setIsEditingTemplate(true);
+        setCurrentTemplateId(templateId);
+        setTemplateName(template.name);
+        setTemplateDescription(template.description);
+        setTemplateCategory(template.category);
+        setEstimateTitle(`${template.name}（テンプレート編集）`);
+      } else {
+        setEstimateTitle(template.name);
+      }
+
+      // 明細タブに移動
+      if (template.items && template.items.length > 0) {
+        setActiveTab('items');
+      }
+    }
+  };
+
+  // テンプレート保存
+  const saveTemplate = () => {
+    if (!templateName) {
+      alert('テンプレート名を入力してください');
+      return;
+    }
+
+    const templates = JSON.parse(
+      localStorage.getItem('estimate_templates') || '[]',
+    );
+    const templateData = {
+      id: currentTemplateId || `TMPL-${Date.now()}`,
+      name: templateName,
+      description: templateDescription,
+      category: templateCategory,
+      items,
+      overheadSettings,
+      isDefault: false,
+      createdBy: user?.email || '',
+      createdAt: currentTemplateId
+        ? templates.find((t: any) => t.id === currentTemplateId)?.createdAt ||
+          new Date().toISOString()
+        : new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      usageCount: currentTemplateId
+        ? templates.find((t: any) => t.id === currentTemplateId)?.usageCount ||
+          0
+        : 0,
+    };
+
+    let updatedTemplates;
+    if (currentTemplateId) {
+      // 既存テンプレート更新
+      updatedTemplates = templates.map((t: any) =>
+        t.id === currentTemplateId ? templateData : t,
+      );
+    } else {
+      // 新規テンプレート追加
+      updatedTemplates = [...templates, templateData];
+    }
+
+    localStorage.setItem(
+      'estimate_templates',
+      JSON.stringify(updatedTemplates),
+    );
+    setShowTemplateModal(false);
+
+    alert(
+      currentTemplateId
+        ? 'テンプレートを更新しました'
+        : 'テンプレートを保存しました',
+    );
+
+    // テンプレート編集モードの場合は一覧に戻る
+    if (isEditingTemplate) {
+      router.push('/estimates/templates');
+    }
+  };
+
+  // 新規テンプレート作成
+  const createNewTemplate = () => {
+    setCurrentTemplateId(null);
+    setTemplateName('');
+    setTemplateDescription('');
+    setTemplateCategory('外壁・屋根工事');
+    setShowTemplateModal(true);
+  };
 
   // 顧客検索
   const filteredCustomers = masters.customers?.filter(
@@ -297,13 +422,44 @@ export default function CreateEstimateV2() {
                 </p>
               </div>
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-2">
+              {/* テンプレート管理ボタン */}
+              <button
+                onClick={() => router.push('/estimates/templates')}
+                className="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition flex items-center gap-2"
+              >
+                <BookOpen className="h-4 w-4" />
+                テンプレート
+              </button>
+
+              {/* テンプレート保存ボタン（項目がある場合のみ） */}
+              {items.length > 0 && !isEditingTemplate && (
+                <button
+                  onClick={createNewTemplate}
+                  className="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition flex items-center gap-2"
+                >
+                  <Star className="h-4 w-4" />
+                  テンプレート化
+                </button>
+              )}
+
+              {/* テンプレート更新ボタン（テンプレート編集時） */}
+              {isEditingTemplate && (
+                <button
+                  onClick={() => setShowTemplateModal(true)}
+                  className="bg-yellow-500 hover:bg-yellow-600 px-4 py-2 rounded-lg transition flex items-center gap-2"
+                >
+                  <Star className="h-4 w-4" />
+                  テンプレート更新
+                </button>
+              )}
+
               <button
                 onClick={handleSave}
                 className="bg-white/20 hover:bg-white/30 px-6 py-2 rounded-lg transition flex items-center gap-2"
               >
                 <Save className="h-4 w-4" />
-                保存
+                {isEditingTemplate ? '見積として保存' : '保存'}
               </button>
               <button className="bg-green-500 hover:bg-green-600 px-6 py-2 rounded-lg transition flex items-center gap-2">
                 <FileText className="h-4 w-4" />
@@ -866,6 +1022,111 @@ export default function CreateEstimateV2() {
           </div>
         </div>
       )}
+
+      {/* テンプレート保存モーダル */}
+      {showTemplateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="px-6 py-4 border-b">
+              <h3 className="text-lg font-bold">
+                {currentTemplateId ? 'テンプレート更新' : 'テンプレート保存'}
+              </h3>
+            </div>
+            <div className="px-6 py-4">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    テンプレート名 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={templateName}
+                    onChange={(e) => setTemplateName(e.target.value)}
+                    placeholder="例: 一般住宅外壁塗装基本パック"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    説明
+                  </label>
+                  <textarea
+                    value={templateDescription}
+                    onChange={(e) => setTemplateDescription(e.target.value)}
+                    placeholder="このテンプレートの用途や特徴を入力..."
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    カテゴリ
+                  </label>
+                  <select
+                    value={templateCategory}
+                    onChange={(e) => setTemplateCategory(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="外壁・屋根工事">外壁・屋根工事</option>
+                    <option value="内装工事">内装工事</option>
+                    <option value="水回り工事">水回り工事</option>
+                    <option value="電気工事">電気工事</option>
+                    <option value="エクステリア工事">エクステリア工事</option>
+                    <option value="リフォーム工事">リフォーム工事</option>
+                    <option value="その他">その他</option>
+                  </select>
+                </div>
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertCircle className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-900">
+                      保存内容
+                    </span>
+                  </div>
+                  <ul className="text-sm text-blue-800 space-y-1">
+                    <li>• 明細項目: {items.length}項目</li>
+                    <li>
+                      • 諸経費設定: 管理費{overheadSettings.管理費率 * 100}%など
+                    </li>
+                    <li>• 顧客情報は保存されません</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t flex gap-3 justify-end">
+              <button
+                onClick={() => setShowTemplateModal(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={saveTemplate}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+              >
+                {currentTemplateId ? '更新' : '保存'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+export default function CreateEstimateV2() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="mt-4 text-gray-600">読み込み中...</p>
+          </div>
+        </div>
+      }
+    >
+      <CreateEstimateV2Content />
+    </Suspense>
   );
 }

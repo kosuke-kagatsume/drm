@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -31,88 +31,164 @@ export default function EstimatesPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const [estimates, setEstimates] = useState<Estimate[]>([
-    {
-      id: '1',
-      estimateNo: 'EST-2024-001',
-      customerName: '田中太郎',
-      companyName: '田中建設株式会社',
-      projectName: '田中様邸新築工事',
-      projectType: '新築住宅',
-      totalAmount: 15500000,
-      status: 'pending',
-      createdAt: '2024-08-01',
-      validUntil: '2024-08-31',
-      createdBy: '佐藤次郎',
-      lastModified: '2024-08-10',
-      version: 2,
-      tags: ['木造', '2階建て', '緊急'],
-    },
-    {
-      id: '2',
-      estimateNo: 'EST-2024-002',
-      customerName: '山田花子',
-      companyName: '山田商事株式会社',
-      projectName: '山田ビル外壁改修',
-      projectType: '外壁塗装',
-      totalAmount: 3200000,
-      status: 'approved',
-      createdAt: '2024-08-03',
-      validUntil: '2024-09-03',
-      createdBy: '鈴木一郎',
-      lastModified: '2024-08-05',
-      version: 1,
-      tags: ['塗装', 'ビル'],
-    },
-    {
-      id: '3',
-      estimateNo: 'EST-2024-003',
-      customerName: '鈴木明',
-      companyName: '鈴木不動産',
-      projectName: 'マンションリフォーム',
-      projectType: 'リフォーム',
-      totalAmount: 8500000,
-      status: 'draft',
-      createdAt: '2024-08-05',
-      validUntil: '2024-09-05',
-      createdBy: '佐藤次郎',
-      lastModified: '2024-08-09',
-      version: 3,
-      tags: ['マンション', '水回り'],
-    },
-    {
-      id: '4',
-      estimateNo: 'EST-2024-004',
-      customerName: '高橋一郎',
-      companyName: '',
-      projectName: '高橋様邸増築工事',
-      projectType: '増築',
-      totalAmount: 12000000,
-      status: 'rejected',
-      createdAt: '2024-07-20',
-      validUntil: '2024-08-20',
-      createdBy: '山田太郎',
-      lastModified: '2024-07-25',
-      version: 2,
-      tags: ['増築', '個人宅'],
-    },
-    {
-      id: '5',
-      estimateNo: 'EST-2024-005',
-      customerName: '渡辺美穂',
-      companyName: '渡辺コーポレーション',
-      projectName: '店舗内装工事',
-      projectType: '店舗内装',
-      totalAmount: 5500000,
-      status: 'expired',
-      createdAt: '2024-06-01',
-      validUntil: '2024-07-01',
-      createdBy: '鈴木一郎',
-      lastModified: '2024-06-15',
-      version: 1,
-      tags: ['飲食店', '内装'],
-    },
-  ]);
+  const [estimates, setEstimates] = useState<Estimate[]>([]);
+
+  // LocalStorageから見積データを読み込み
+  useEffect(() => {
+    const loadEstimates = () => {
+      const savedEstimates = localStorage.getItem('estimates');
+      if (savedEstimates) {
+        const parsed = JSON.parse(savedEstimates);
+        // 既存のフォーマットに変換
+        const formattedEstimates = parsed.map((est: any) => ({
+          id: est.id,
+          estimateNo: est.id,
+          customerName: est.customerName,
+          companyName: est.customerCompany || '',
+          projectName: est.title,
+          projectType: '建設工事',
+          totalAmount: est.totals?.total || 0,
+          status: est.status || 'draft',
+          createdAt:
+            est.date ||
+            est.createdAt?.split('T')[0] ||
+            new Date().toISOString().split('T')[0],
+          validUntil:
+            est.validUntil ||
+            new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+              .toISOString()
+              .split('T')[0],
+          createdBy: est.createdBy || 'システム',
+          lastModified:
+            est.createdAt?.split('T')[0] ||
+            new Date().toISOString().split('T')[0],
+          version: 1,
+          tags: [],
+        }));
+        setEstimates([
+          ...formattedEstimates,
+          {
+            id: '1',
+            estimateNo: 'EST-2024-001',
+            customerName: '田中太郎',
+            companyName: '田中建設株式会社',
+            projectName: '田中様邸新築工事',
+            projectType: '新築住宅',
+            totalAmount: 15500000,
+            status: 'pending',
+            createdAt: '2024-08-01',
+            validUntil: '2024-08-31',
+            createdBy: '佐藤次郎',
+            lastModified: '2024-08-10',
+            version: 2,
+            tags: ['木造', '2階建て', '緊急'],
+          },
+          {
+            id: '2',
+            estimateNo: 'EST-2024-002',
+            customerName: '山田花子',
+            companyName: '山田商事株式会社',
+            projectName: '山田ビル外壁改修',
+            projectType: '外壁塗装',
+            totalAmount: 3200000,
+            status: 'approved',
+            createdAt: '2024-08-03',
+            validUntil: '2024-09-03',
+            createdBy: '鈴木一郎',
+            lastModified: '2024-08-05',
+            version: 1,
+            tags: ['塗装', 'ビル'],
+          },
+          {
+            id: '3',
+            estimateNo: 'EST-2024-003',
+            customerName: '鈴木明',
+            companyName: '鈴木不動産',
+            projectName: 'マンションリフォーム',
+            projectType: 'リフォーム',
+            totalAmount: 8500000,
+            status: 'draft',
+            createdAt: '2024-08-05',
+            validUntil: '2024-09-05',
+            createdBy: '佐藤次郎',
+            lastModified: '2024-08-09',
+            version: 3,
+            tags: ['マンション', '水回り'],
+          },
+          {
+            id: '4',
+            estimateNo: 'EST-2024-004',
+            customerName: '高橋一郎',
+            companyName: '',
+            projectName: '高橋様邸増築工事',
+            projectType: '増築',
+            totalAmount: 12000000,
+            status: 'rejected',
+            createdAt: '2024-07-20',
+            validUntil: '2024-08-20',
+            createdBy: '山田太郎',
+            lastModified: '2024-07-25',
+            version: 2,
+            tags: ['増築', '個人宅'],
+          },
+          {
+            id: '5',
+            estimateNo: 'EST-2024-005',
+            customerName: '渡辺美穂',
+            companyName: '渡辺コーポレーション',
+            projectName: '店舗内装工事',
+            projectType: '店舗内装',
+            totalAmount: 5500000,
+            status: 'expired',
+            createdAt: '2024-06-01',
+            validUntil: '2024-07-01',
+            createdBy: '鈴木一郎',
+            lastModified: '2024-06-15',
+            version: 1,
+            tags: ['飲食店', '内装'],
+          },
+        ]);
+      } else {
+        // デモデータを設定
+        setEstimates([
+          {
+            id: '1',
+            estimateNo: 'EST-2024-001',
+            customerName: '田中太郎',
+            companyName: '田中建設株式会社',
+            projectName: '田中様邸新築工事',
+            projectType: '新築住宅',
+            totalAmount: 15500000,
+            status: 'pending',
+            createdAt: '2024-08-01',
+            validUntil: '2024-08-31',
+            createdBy: '佐藤次郎',
+            lastModified: '2024-08-10',
+            version: 2,
+            tags: ['木造', '2階建て', '緊急'],
+          },
+          {
+            id: '2',
+            estimateNo: 'EST-2024-002',
+            customerName: '山田花子',
+            companyName: '山田商事株式会社',
+            projectName: '山田ビル外壁改修',
+            projectType: '外壁塗装',
+            totalAmount: 3200000,
+            status: 'approved',
+            createdAt: '2024-08-03',
+            validUntil: '2024-09-03',
+            createdBy: '鈴木一郎',
+            lastModified: '2024-08-05',
+            version: 1,
+            tags: ['塗装', 'ビル'],
+          },
+        ]);
+      }
+    };
+
+    loadEstimates();
+  }, []);
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -191,6 +267,54 @@ export default function EstimatesPage() {
     });
 
   // 統計情報
+  // 見積複製
+  const handleDuplicate = (estimate: Estimate) => {
+    const newEstimate = {
+      ...estimate,
+      id: `EST-${Date.now()}`,
+      estimateNo: `EST-${new Date().getFullYear()}-${String(estimates.length + 1).padStart(3, '0')}`,
+      status: 'draft' as const,
+      createdAt: new Date().toISOString().split('T')[0],
+      lastModified: new Date().toISOString().split('T')[0],
+      version: 1,
+      projectName: `${estimate.projectName}（複製）`,
+    };
+    const newEstimates = [newEstimate, ...estimates];
+    setEstimates(newEstimates);
+
+    // LocalStorageも更新
+    const savedEstimates = localStorage.getItem('estimates');
+    if (savedEstimates) {
+      const parsed = JSON.parse(savedEstimates);
+      parsed.push({
+        ...newEstimate,
+        title: newEstimate.projectName,
+        date: newEstimate.createdAt,
+      });
+      localStorage.setItem('estimates', JSON.stringify(parsed));
+    }
+
+    alert('見積を複製しました');
+  };
+
+  // 見積削除
+  const handleDelete = (id: string) => {
+    if (confirm('この見積を削除してもよろしいですか？')) {
+      const newEstimates = estimates.filter((e) => e.id !== id);
+      setEstimates(newEstimates);
+
+      // LocalStorageも更新
+      const savedEstimates = localStorage.getItem('estimates');
+      if (savedEstimates) {
+        const parsed = JSON.parse(savedEstimates);
+        const filtered = parsed.filter((e: any) => e.id !== id);
+        localStorage.setItem('estimates', JSON.stringify(filtered));
+      }
+
+      alert('見積を削除しました');
+    }
+  };
+
   const stats = {
     total: estimates.length,
     totalAmount: estimates.reduce((sum, e) => sum + e.totalAmount, 0),
@@ -234,13 +358,21 @@ export default function EstimatesPage() {
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="px-6 py-2.5 bg-gradient-to-r from-dandori-blue to-dandori-sky text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
-            >
-              <span className="text-lg">+</span>
-              新規見積作成
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => router.push('/estimates/templates')}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition flex items-center gap-2"
+              >
+                📋 テンプレート管理
+              </button>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="px-6 py-2.5 bg-gradient-to-r from-dandori-blue to-dandori-sky text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
+              >
+                <span className="text-lg">+</span>
+                新規見積作成
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -481,6 +613,7 @@ export default function EstimatesPage() {
                           ✏️
                         </button>
                         <button
+                          onClick={() => handleDuplicate(estimate)}
                           className="p-1.5 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
                           title="複製"
                         >
@@ -493,6 +626,7 @@ export default function EstimatesPage() {
                           📄
                         </button>
                         <button
+                          onClick={() => handleDelete(estimate.id)}
                           className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                           title="削除"
                         >
