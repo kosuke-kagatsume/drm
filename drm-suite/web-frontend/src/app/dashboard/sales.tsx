@@ -23,7 +23,6 @@ interface SalesDashboardProps {
 export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
   const router = useRouter();
   const [todayTodos, setTodayTodos] = useState<TodoItem[]>([]);
-  const [showEstimateModal, setShowEstimateModal] = useState(false);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [showContractModal, setShowContractModal] = useState(false);
   const [showMapModal, setShowMapModal] = useState(false);
@@ -235,7 +234,7 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
             <div className="mt-2 text-sm text-red-700">
               <p>田中様邸の見積提出期限が4時間後です。</p>
               <button
-                onClick={() => setShowEstimateModal(true)}
+                onClick={() => router.push('/estimates/create-v2')}
                 className="mt-2 bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
               >
                 見積作成へ →
@@ -590,7 +589,7 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
             <p className="text-xs text-white/80">CRM</p>
           </button>
           <button
-            onClick={() => setShowEstimateModal(true)}
+            onClick={() => router.push('/estimates/create-v2')}
             className="bg-white/20 backdrop-blur-sm p-4 rounded-xl hover:bg-white/30 transform hover:scale-105 transition-all duration-200 border border-white/30"
           >
             <span className="text-3xl">📝</span>
@@ -656,71 +655,6 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
           <p className="mt-2 font-medium">経費精算</p>
         </button>
       </div>
-
-      {/* 見積作成選択モーダル */}
-      {showEstimateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-4 overflow-hidden">
-            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold">見積作成方法を選択</h2>
-                <button
-                  onClick={() => setShowEstimateModal(false)}
-                  className="text-white/80 hover:text-white text-2xl"
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* クイック作成 */}
-                <button
-                  onClick={() => {
-                    setShowEstimateModal(false);
-                    router.push('/estimates/create');
-                  }}
-                  className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl p-6 hover:border-blue-400 hover:shadow-lg transition-all duration-300 text-left"
-                >
-                  <div className="text-3xl mb-3">⚡</div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">
-                    クイック作成
-                  </h3>
-                  <p className="text-gray-600 text-sm mb-3">
-                    素早く簡単に見積を作成
-                  </p>
-                  <div className="text-xs text-gray-500 space-y-1">
-                    <div>✓ 5分で作成完了</div>
-                    <div>✓ テンプレート利用可</div>
-                    <div>✓ 基本機能搭載</div>
-                  </div>
-                </button>
-
-                {/* プロフェッショナル */}
-                <button
-                  onClick={() => {
-                    setShowEstimateModal(false);
-                    router.push('/estimates/create/enhanced');
-                  }}
-                  className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-6 hover:border-purple-400 hover:shadow-lg transition-all duration-300 text-left"
-                >
-                  <div className="text-3xl mb-3">🚀</div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">
-                    プロフェッショナル
-                  </h3>
-                  <p className="text-gray-600 text-sm mb-3">詳細な見積を作成</p>
-                  <div className="text-xs text-purple-600 space-y-1">
-                    <div>★ AI支援機能</div>
-                    <div>★ 原価・利益分析</div>
-                    <div>★ 3階層分類対応</div>
-                  </div>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* 顧客管理モーダル */}
       {showCustomerModal && (

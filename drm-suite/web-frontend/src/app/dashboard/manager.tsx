@@ -588,7 +588,7 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
                   </div>
                 </button>
                 <button
-                  onClick={() => router.push('/estimates/create')}
+                  onClick={() => router.push('/estimates/create-v2')}
                   className="w-full px-4 py-3 bg-gradient-warm text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"
                 >
                   <div className="flex items-center justify-between">
