@@ -1,6 +1,5 @@
 // src/app/api/pdf/guaranteed/[id]/route.ts
 import { NextRequest } from 'next/server';
-import puppeteer from 'puppeteer-core';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -193,10 +192,12 @@ th{background:#2196F3;color:white;text-align:left;font-weight:500;}
 </body></html>`;
 
     // Puppeteerの設定
-    let browserConfig;
+    let browser;
 
     if (isDev) {
-      browserConfig = {
+      // 開発環境: puppeteer-coreを使用
+      const puppeteerCore = await import('puppeteer-core');
+      browser = await puppeteerCore.default.launch({
         executablePath:
           '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
         headless: true,
@@ -208,18 +209,28 @@ th{background:#2196F3;color:white;text-align:left;font-weight:500;}
           '--disable-backgrounding-occluded-windows',
           '--disable-renderer-backgrounding',
         ],
-      };
+        defaultViewport: {
+          width: 794,
+          height: 1123,
+          deviceScaleFactor: 2,
+        },
+      });
     } else {
-      // Vercel環境用の設定 - @sparticuz/chromiumを動的インポート
+      // 本番環境: chromium-sparticuzとpuppeteer-coreを使用
       try {
-        const chromium = await import('@sparticuz/chromium');
+        const [chromium, puppeteerCore] = await Promise.all([
+          import('@sparticuz/chromium'),
+          import('puppeteer-core'),
+        ]);
+
+        // Chromiumの設定
         chromium.default.setHeadlessMode = true;
         chromium.default.setGraphicsMode = false;
 
         const executablePath = await chromium.default.executablePath();
-        console.log(`🔍 Chromium path: ${executablePath}`);
+        console.log(`🔍 Chromium binary path: ${executablePath}`);
 
-        browserConfig = {
+        browser = await puppeteerCore.default.launch({
           args: [
             ...chromium.default.args,
             '--font-render-hinting=none',
@@ -227,35 +238,41 @@ th{background:#2196F3;color:white;text-align:left;font-weight:500;}
           ],
           executablePath: executablePath,
           headless: chromium.default.headless,
-        };
-      } catch (e) {
-        console.error('⚠️ Chromium import/execution error:', e);
-        // フォールバック設定
-        browserConfig = {
-          headless: true,
-          args: [
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-            '--disable-gpu',
-            '--disable-web-security',
-            '--disable-features=IsolateOrigins',
-            '--disable-site-isolation-trials',
-            '--font-render-hinting=none',
-            '--lang=ja-JP',
-          ],
-        };
+          defaultViewport: {
+            width: 794,
+            height: 1123,
+            deviceScaleFactor: 2,
+          },
+        });
+      } catch (error) {
+        console.error('❌ Failed to launch browser with chromium:', error);
+
+        // 最終フォールバック: 通常のpuppeteerを試す
+        try {
+          const puppeteer = await import('puppeteer');
+          browser = await puppeteer.default.launch({
+            headless: true,
+            args: [
+              '--no-sandbox',
+              '--disable-setuid-sandbox',
+              '--disable-dev-shm-usage',
+              '--disable-gpu',
+              '--font-render-hinting=none',
+              '--lang=ja-JP',
+            ],
+            defaultViewport: {
+              width: 794,
+              height: 1123,
+              deviceScaleFactor: 2,
+            },
+          });
+          console.log('✅ Using fallback puppeteer');
+        } catch (fallbackError) {
+          console.error('❌ Fallback puppeteer also failed:', fallbackError);
+          throw new Error('Could not launch any browser instance');
+        }
       }
     }
-
-    const browser = await puppeteer.launch({
-      ...browserConfig,
-      defaultViewport: {
-        width: 794,
-        height: 1123,
-        deviceScaleFactor: 2,
-      },
-    });
 
     try {
       const page = await browser.newPage();
