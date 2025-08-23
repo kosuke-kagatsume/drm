@@ -34,7 +34,13 @@ export const useAuth = () => {
 };
 
 // 認証不要なパス
-const publicPaths = ['/login', '/', '/api'];
+const publicPaths = [
+  '/login',
+  '/',
+  '/api',
+  '/estimates/create-v2',
+  '/estimates/editor',
+];
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
