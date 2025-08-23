@@ -300,13 +300,16 @@ export default function CreateEstimateV2Page() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => {
-                  // 見積タイプに応じて適切なページへ遷移
+                  // 見積タイプに応じて適切なページへ遷移（v2エディタを使用）
                   const estimateId = `EST-${Date.now()}`;
                   if (selectedType === 'detailed') {
-                    router.push(`/estimates/editor/${estimateId}`);
+                    router.push(
+                      `/estimates/editor-v2/${estimateId}?type=detailed`,
+                    );
                   } else if (selectedType === 'financial') {
-                    // 資金計画書用のエディタへ（今後実装）
-                    router.push(`/estimates/financial/${estimateId}`);
+                    router.push(
+                      `/estimates/financial/${estimateId}?type=financial`,
+                    );
                   }
                 }}
                 className="group px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-3"
