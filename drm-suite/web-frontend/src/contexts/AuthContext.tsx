@@ -40,6 +40,7 @@ const publicPaths = [
   '/api',
   '/estimates/create-v2',
   '/estimates/editor',
+  '/estimates/financial',
 ];
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -84,7 +85,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // パスが公開パスでない場合、未ログインならログインページへ
     const isPublicPath = publicPaths.some(
-      (path) => pathname === path || pathname.startsWith('/api'),
+      (path) =>
+        pathname === path ||
+        pathname.startsWith(path) ||
+        pathname.startsWith('/api'),
     );
 
     if (!isPublicPath && !user) {

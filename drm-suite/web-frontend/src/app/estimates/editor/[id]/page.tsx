@@ -316,9 +316,9 @@ export default function EstimateEditorPage({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* ヘッダー */}
-      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
+      <div className="bg-white/95 backdrop-blur-lg border-b border-gray-200 sticky top-0 z-40 shadow-sm">
         <div className="px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -326,24 +326,22 @@ export default function EstimateEditorPage({
                 <ArrowLeft className="w-5 h-5" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                <h1 className="text-2xl font-bold text-gray-900">
                   詳細見積編集
                 </h1>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  見積番号: {params.id}
-                </p>
+                <p className="text-sm text-gray-600">見積番号: {params.id}</p>
               </div>
             </div>
 
             {/* アクションボタン */}
             <div className="flex items-center gap-3">
-              <button className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-2">
+              <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2">
                 <History className="w-4 h-4" />
                 履歴
               </button>
               <button
                 onClick={() => setShowTemplates(!showTemplates)}
-                className="px-4 py-2 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors flex items-center gap-2"
               >
                 <Package className="w-4 h-4" />
                 テンプレート
@@ -364,8 +362,8 @@ export default function EstimateEditorPage({
       {/* メインコンテンツ */}
       <div className="p-4 sm:p-6 lg:p-8">
         {/* スプレッドシート */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+          <div className="p-4 border-b border-gray-200 bg-gray-50">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <button
@@ -375,17 +373,17 @@ export default function EstimateEditorPage({
                   <Plus className="w-4 h-4" />
                   行追加
                 </button>
-                <button className="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-2 text-sm">
+                <button className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm">
                   <Copy className="w-4 h-4" />
                   コピー
                 </button>
-                <button className="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-2 text-sm">
+                <button className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm">
                   <Search className="w-4 h-4" />
                   検索
                 </button>
               </div>
 
-              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
                 <Grid3x3 className="w-4 h-4" />
                 <span>{items.length} 行</span>
               </div>
@@ -396,8 +394,8 @@ export default function EstimateEditorPage({
           <div ref={tableRef} className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-gradient-to-r from-blue-600 to-cyan-600">
-                  <th className="sticky left-0 z-10 bg-gradient-to-r from-blue-600 to-cyan-600 px-2 py-3 text-left text-xs font-medium text-white uppercase tracking-wider w-10"></th>
+                <tr className="bg-gradient-to-r from-blue-500 to-cyan-500">
+                  <th className="sticky left-0 z-10 bg-gradient-to-r from-blue-500 to-cyan-500 px-2 py-3 text-left text-xs font-medium text-white uppercase tracking-wider w-10"></th>
                   {columns.map((col) => (
                     <th
                       key={col.key}
@@ -409,19 +407,19 @@ export default function EstimateEditorPage({
                   ))}
                 </tr>
               </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="bg-white divide-y divide-gray-100">
                 {items.map((item, rowIndex) => (
                   <tr
                     key={item.id}
                     onContextMenu={(e) => handleContextMenu(e, rowIndex)}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                    className="hover:bg-blue-50/50 transition-colors"
                   >
-                    <td className="sticky left-0 z-10 bg-white dark:bg-gray-800 px-2 py-2 text-center">
+                    <td className="sticky left-0 z-10 bg-white px-2 py-2 text-center">
                       <button
                         onClick={() =>
                           setContextMenu({ x: 0, y: 0, row: rowIndex })
                         }
-                        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-600 rounded transition-colors"
+                        className="p-1 hover:bg-gray-100 rounded transition-colors"
                       >
                         <MoreVertical className="w-4 h-4 text-gray-400" />
                       </button>
@@ -462,7 +460,7 @@ export default function EstimateEditorPage({
                                 setEditingCell(null);
                               }
                             }}
-                            className="w-full px-1 py-0.5 border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                            className="w-full px-1 py-0.5 border-2 border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-50"
                             autoFocus
                           />
                         ) : (
@@ -487,21 +485,21 @@ export default function EstimateEditorPage({
           </div>
 
           {/* 合計欄 */}
-          <div className="p-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+          <div className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 border-t border-gray-200">
             <div className="flex justify-end items-center gap-8">
-              <div className="text-sm text-gray-600 dark:text-gray-300">
+              <div className="text-sm text-gray-700 font-medium">
                 <span>小計:</span>
                 <span className="ml-4 font-mono font-medium">
                   ¥{calculateTotal().toLocaleString()}
                 </span>
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-300">
+              <div className="text-sm text-gray-700 font-medium">
                 <span>消費税 (10%):</span>
                 <span className="ml-4 font-mono font-medium">
                   ¥{Math.floor(calculateTotal() * 0.1).toLocaleString()}
                 </span>
               </div>
-              <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+              <div className="text-lg font-bold text-blue-600">
                 <span>合計:</span>
                 <span className="ml-4 font-mono">
                   ¥{Math.floor(calculateTotal() * 1.1).toLocaleString()}
@@ -512,56 +510,56 @@ export default function EstimateEditorPage({
         </div>
 
         {/* キーボードショートカットヘルプ */}
-        <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-2 flex items-center gap-2">
+        <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+          <h3 className="text-sm font-semibold text-blue-900 mb-2 flex items-center gap-2">
             <Calculator className="w-4 h-4" />
             キーボードショートカット
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-blue-700 dark:text-blue-300">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-blue-700">
             <div>
-              <kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-700 rounded">
+              <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded shadow-sm">
                 Tab
               </kbd>{' '}
               次のセル
             </div>
             <div>
-              <kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-700 rounded">
+              <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded shadow-sm">
                 Enter
               </kbd>{' '}
               編集/下へ
             </div>
             <div>
-              <kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-700 rounded">
+              <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded shadow-sm">
                 Ctrl+C
               </kbd>{' '}
               コピー
             </div>
             <div>
-              <kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-700 rounded">
+              <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded shadow-sm">
                 Ctrl+V
               </kbd>{' '}
               ペースト
             </div>
             <div>
-              <kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-700 rounded">
+              <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded shadow-sm">
                 Delete
               </kbd>{' '}
               クリア
             </div>
             <div>
-              <kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-700 rounded">
+              <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded shadow-sm">
                 矢印キー
               </kbd>{' '}
               移動
             </div>
             <div>
-              <kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-700 rounded">
+              <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded shadow-sm">
                 右クリック
               </kbd>{' '}
               メニュー
             </div>
             <div>
-              <kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-700 rounded">
+              <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded shadow-sm">
                 Shift+Enter
               </kbd>{' '}
               上へ
@@ -582,7 +580,7 @@ export default function EstimateEditorPage({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed z-50 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-2 min-w-[160px]"
+              className="fixed z-50 bg-white rounded-lg shadow-xl border border-gray-200 py-2 min-w-[160px]"
               style={{ left: contextMenu.x, top: contextMenu.y }}
             >
               <button
@@ -590,7 +588,7 @@ export default function EstimateEditorPage({
                   addRow(contextMenu.row);
                   setContextMenu(null);
                 }}
-                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 行を上に挿入
@@ -600,29 +598,29 @@ export default function EstimateEditorPage({
                   addRow(contextMenu.row + 1);
                   setContextMenu(null);
                 }}
-                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 行を下に挿入
               </button>
-              <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+              <div className="border-t border-gray-200 my-1" />
               <button
                 onClick={() => {
                   setCopiedRows([items[contextMenu.row]]);
                   setContextMenu(null);
                 }}
-                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
               >
                 <Copy className="w-4 h-4" />
                 行をコピー
               </button>
-              <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+              <div className="border-t border-gray-200 my-1" />
               <button
                 onClick={() => {
                   deleteRow(contextMenu.row);
                   setContextMenu(null);
                 }}
-                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 text-red-600 dark:text-red-400"
+                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2 text-red-600"
               >
                 <Trash2 className="w-4 h-4" />
                 行を削除
@@ -639,54 +637,54 @@ export default function EstimateEditorPage({
             initial={{ x: 400, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 400, opacity: 0 }}
-            className="fixed right-0 top-0 h-full w-96 bg-white dark:bg-gray-800 shadow-2xl z-50 overflow-y-auto"
+            className="fixed right-0 top-0 h-full w-96 bg-white shadow-2xl z-50 overflow-y-auto border-l border-gray-200"
           >
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                <h2 className="text-xl font-bold text-gray-900">
                   テンプレート選択
                 </h2>
                 <button
                   onClick={() => setShowTemplates(false)}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                  className="p-2 hover:bg-gray-100 rounded-lg"
                 >
                   ✕
                 </button>
               </div>
 
               <div className="space-y-4">
-                <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 cursor-pointer transition-colors">
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                <div className="p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition-all">
+                  <h3 className="font-semibold text-gray-900">
                     キッチンリフォーム標準
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-gray-600 mt-1">
                     標準的なキッチンリフォーム工事一式
                   </p>
-                  <div className="mt-2 text-xs text-blue-600 dark:text-blue-400">
+                  <div className="mt-2 text-xs text-blue-600 font-medium">
                     15項目 • ¥1,200,000
                   </div>
                 </div>
 
-                <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 cursor-pointer transition-colors">
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                <div className="p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition-all">
+                  <h3 className="font-semibold text-gray-900">
                     浴室リフォーム標準
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-gray-600 mt-1">
                     ユニットバス交換工事一式
                   </p>
-                  <div className="mt-2 text-xs text-blue-600 dark:text-blue-400">
+                  <div className="mt-2 text-xs text-blue-600 font-medium">
                     12項目 • ¥800,000
                   </div>
                 </div>
 
-                <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 cursor-pointer transition-colors">
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                <div className="p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition-all">
+                  <h3 className="font-semibold text-gray-900">
                     トイレリフォーム
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-gray-600 mt-1">
                     便器交換・内装工事
                   </p>
-                  <div className="mt-2 text-xs text-blue-600 dark:text-blue-400">
+                  <div className="mt-2 text-xs text-blue-600 font-medium">
                     8項目 • ¥350,000
                   </div>
                 </div>
