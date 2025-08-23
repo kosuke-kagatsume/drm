@@ -17,14 +17,8 @@ export async function GET(
   try {
     console.log(`📄 Generating guaranteed PDF for estimate ${params.id}`);
 
-    // TTFフォントを読み込み
-    const [reg, med, bold] = await Promise.all([
-      fs.readFile(process.cwd() + '/public/fonts/NotoSansJP-Regular.ttf'),
-      fs.readFile(process.cwd() + '/public/fonts/NotoSansJP-Medium.ttf'),
-      fs.readFile(process.cwd() + '/public/fonts/NotoSansJP-Bold.ttf'),
-    ]);
-
-    const b64 = (b: Buffer) => b.toString('base64');
+    // オンラインフォント使用（確実に動作する方式）
+    console.log(`🌐 Using online fonts for guaranteed compatibility`);
 
     // 見積データ（簡易版）
     const estimateData = {
@@ -77,10 +71,11 @@ export async function GET(
 
     const html = `
 <!doctype html><html lang="ja"><head><meta charset="utf-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=block" rel="stylesheet">
 <style>
-@font-face{font-family:'Noto Sans JP';src:url(data:font/ttf;base64,${b64(reg)}) format('truetype');font-weight:400;font-display:block;}
-@font-face{font-family:'Noto Sans JP';src:url(data:font/ttf;base64,${b64(med)}) format('truetype');font-weight:500;font-display:block;}
-@font-face{font-family:'Noto Sans JP';src:url(data:font/ttf;base64,${b64(bold)}) format('truetype');font-weight:700;font-display:block;}
+@font-face{font-family:'Noto Sans JP';src:url('https://fonts.gstatic.com/s/notosansjp/v52/nKKF-GM_FYFRJvXzVXaAPe97P0Q_9mql0Q.woff2') format('woff2');font-weight:400;font-display:block;unicode-range:U+3000-30FF,U+4E00-9FAF,U+FF00-FFEF;}
+@font-face{font-family:'Noto Sans JP';src:url('https://fonts.gstatic.com/s/notosansjp/v52/nKKU-GM_FYFRJvXzVXaAPe9pdP_jCw.woff2') format('woff2');font-weight:500;font-display:block;unicode-range:U+3000-30FF,U+4E00-9FAF,U+FF00-FFEF;}
+@font-face{font-family:'Noto Sans JP';src:url('https://fonts.gstatic.com/s/notosansjp/v52/nKKU-GM_FYFRJvXzVXaAPe97dP_jCw.woff2') format('woff2');font-weight:700;font-display:block;unicode-range:U+3000-30FF,U+4E00-9FAF,U+FF00-FFEF;}
 *{font-family:'Noto Sans JP',system-ui,-apple-system,'Segoe UI',sans-serif !important;box-sizing:border-box;margin:0;padding:0;}
 @page{size:A4;margin:16mm 14mm;}
 body{-webkit-print-color-adjust:exact;print-color-adjust:exact;line-break:strict;word-break:normal;line-height:1.45;margin:0;font-size:11pt;color:#111;}
@@ -231,15 +226,54 @@ th{background:#2196F3;color:white;text-align:left;font-weight:500;}
     try {
       const page = await browser.newPage();
       await page.emulateMediaType('print');
-      await page.setContent(html, { waitUntil: 'load' });
 
-      console.log('⏳ Waiting for fonts to load...');
-      // フォント完全ロード待ち
+      console.log('⏳ Loading page with fonts...');
+      // フォント完全ロード待ち（延長版）
+      await page.goto(`data:text/html,${encodeURIComponent(html)}`, {
+        waitUntil: 'networkidle0',
+        timeout: 30000,
+      });
+
+      // 個別フォント読み込み確認
+      await page.evaluate(async () => {
+        const fontPromises = [];
+        const fonts = [
+          new FontFace(
+            'Noto Sans JP',
+            "url('https://fonts.gstatic.com/s/notosansjp/v52/nKKF-GM_FYFRJvXzVXaAPe97P0Q_9mql0Q.woff2')",
+            { weight: '400' },
+          ),
+          new FontFace(
+            'Noto Sans JP',
+            "url('https://fonts.gstatic.com/s/notosansjp/v52/nKKU-GM_FYFRJvXzVXaAPe9pdP_jCw.woff2')",
+            { weight: '500' },
+          ),
+          new FontFace(
+            'Noto Sans JP',
+            "url('https://fonts.gstatic.com/s/notosansjp/v52/nKKU-GM_FYFRJvXzVXaAPe97dP_jCw.woff2')",
+            { weight: '700' },
+          ),
+        ];
+
+        for (const font of fonts) {
+          fontPromises.push(
+            font.load().then(() => {
+              document.fonts.add(font);
+              return font.family + ' ' + font.weight + ' loaded';
+            }),
+          );
+        }
+
+        const results = await Promise.all(fontPromises);
+        console.log('FontFace API results:', results);
+        return results;
+      });
+
       await page.evaluateHandle('document.fonts.ready');
       await page.waitForFunction('document.fonts.status === "loaded"', {
-        timeout: 15000,
+        timeout: 20000,
       });
-      await page.waitForTimeout(100); // レイアウト安定のため
+      await page.waitForTimeout(500); // レイアウト安定のため
 
       // フォント状態確認
       const fontStatus = await page.evaluate(() => ({
