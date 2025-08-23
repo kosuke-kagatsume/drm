@@ -95,6 +95,103 @@ const CATEGORIES = [
   '諸経費',
 ];
 
+// マスターデータ
+interface MasterItem {
+  id: string;
+  name: string;
+  specification: string;
+  category: string;
+  unitPrice: number;
+  unit: string;
+  maker?: string;
+}
+
+const MASTER_DATA: MasterItem[] = [
+  // キッチン工事
+  {
+    id: 'kit001',
+    name: 'システムキッチン',
+    specification: 'LIXIL リシェルSI I型2550',
+    category: 'キッチン工事',
+    unitPrice: 650000,
+    unit: '台',
+    maker: 'LIXIL',
+  },
+  {
+    id: 'kit002',
+    name: 'キッチン取付工事',
+    specification: '既存撤去・新規設置',
+    category: 'キッチン工事',
+    unitPrice: 80000,
+    unit: '式',
+  },
+  {
+    id: 'kit003',
+    name: 'レンジフード',
+    specification: 'パナソニック FY-9HTC4-S',
+    category: 'キッチン工事',
+    unitPrice: 45000,
+    unit: '台',
+    maker: 'Panasonic',
+  },
+
+  // 浴室工事
+  {
+    id: 'bat001',
+    name: 'ユニットバス',
+    specification: 'TOTO サザナ 1616サイズ',
+    category: '浴室工事',
+    unitPrice: 850000,
+    unit: '台',
+    maker: 'TOTO',
+  },
+  {
+    id: 'bat002',
+    name: '浴室取付工事',
+    specification: '既存解体・新規設置',
+    category: '浴室工事',
+    unitPrice: 120000,
+    unit: '式',
+  },
+
+  // 内装工事
+  {
+    id: 'int001',
+    name: 'クロス工事',
+    specification: 'サンゲツ SP2800番台',
+    category: '内装工事',
+    unitPrice: 1200,
+    unit: 'm2',
+  },
+  {
+    id: 'int002',
+    name: 'フローリング',
+    specification: 'DAIKEN ハピア',
+    category: '内装工事',
+    unitPrice: 8500,
+    unit: 'm2',
+    maker: 'DAIKEN',
+  },
+
+  // 仮設工事
+  {
+    id: 'tmp001',
+    name: '単管足場',
+    specification: '外部足場一式',
+    category: '仮設工事',
+    unitPrice: 800,
+    unit: 'm2',
+  },
+  {
+    id: 'tmp002',
+    name: '養生シート',
+    specification: 'メッシュシート',
+    category: '仮設工事',
+    unitPrice: 300,
+    unit: 'm2',
+  },
+];
+
 // ドラッグ可能な行コンポーネント
 function SortableRow({
   item,
@@ -160,16 +257,14 @@ export default function EstimateEditorV2Page({
     'saved',
   );
   const [showTemplates, setShowTemplates] = useState(false);
-  const [showMasterSearch, setShowMasterSearch] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [showDiscount, setShowDiscount] = useState(false);
-  const [discountRate, setDiscountRate] = useState(0);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<{ [key: string]: string }>({});
   const [showPrintPreview, setShowPrintPreview] = useState(false);
-  const [batchEditMode, setBatchEditMode] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showMasterModal, setShowMasterModal] = useState(false);
+  const [masterCategory, setMasterCategory] = useState<string>('');
   const autoSaveTimer = useRef<NodeJS.Timeout>();
 
   // ドラッグ&ドロップの設定
@@ -180,10 +275,9 @@ export default function EstimateEditorV2Page({
     }),
   );
 
-  // 初期データの生成
+  // 初期データの生成（空の状態からスタート）
   useEffect(() => {
     const initialItems: EstimateItem[] = [];
-    let itemNo = 1;
 
     CATEGORIES.forEach((category) => {
       // カテゴリヘッダー
@@ -200,34 +294,6 @@ export default function EstimateEditorV2Page({
         remarks: '',
         isCategory: true,
       });
-
-      // サンプルデータ
-      if (category === 'キッチン工事') {
-        initialItems.push({
-          id: String(itemNo++),
-          no: itemNo,
-          category: category,
-          itemName: 'システムキッチン本体',
-          specification: 'LIXIL リシェルSI I型2550',
-          quantity: 1,
-          unit: '台',
-          unitPrice: 650000,
-          amount: 650000,
-          remarks: '食洗機付き',
-        });
-        initialItems.push({
-          id: String(itemNo++),
-          no: itemNo,
-          category: category,
-          itemName: 'キッチン取付工事',
-          specification: '既存撤去・新規設置',
-          quantity: 1,
-          unit: '式',
-          unitPrice: 80000,
-          amount: 80000,
-          remarks: '',
-        });
-      }
 
       // カテゴリ小計
       initialItems.push({
@@ -359,17 +425,61 @@ export default function EstimateEditorV2Page({
     });
   };
 
-  // 行追加
+  // 行追加（マスター選択モーダルを開く）
   const addRow = (category: string) => {
+    setMasterCategory(category);
+    setShowMasterModal(true);
+  };
+
+  // マスターから項目を追加
+  const addItemFromMaster = (masterItem: MasterItem) => {
     const categoryIndex = items.findIndex(
-      (item) => item.isSubtotal && item.category === category,
+      (item) => item.isSubtotal && item.category === masterCategory,
     );
     if (categoryIndex === -1) return;
 
     const newRow: EstimateItem = {
       id: String(Date.now()),
       no: items.filter((i) => !i.isCategory && !i.isSubtotal).length + 1,
-      category: category,
+      category: masterCategory,
+      itemName: masterItem.name,
+      specification: masterItem.specification,
+      quantity: 1,
+      unit: masterItem.unit,
+      unitPrice: masterItem.unitPrice,
+      amount: masterItem.unitPrice,
+      remarks: masterItem.maker ? `メーカー: ${masterItem.maker}` : '',
+    };
+
+    const newItems = [...items];
+    newItems.splice(categoryIndex, 0, newRow);
+
+    // 番号を振り直し
+    let itemNo = 1;
+    newItems.forEach((item) => {
+      if (!item.isCategory && !item.isSubtotal) {
+        item.no = itemNo++;
+      }
+    });
+
+    const updatedItems = updateCategorySubtotals(newItems);
+    setItems(updatedItems);
+    setSaveStatus('unsaved');
+    addToHistory(updatedItems);
+    setShowMasterModal(false);
+  };
+
+  // 手動で項目追加（マスターを使わない場合）
+  const addManualRow = () => {
+    const categoryIndex = items.findIndex(
+      (item) => item.isSubtotal && item.category === masterCategory,
+    );
+    if (categoryIndex === -1) return;
+
+    const newRow: EstimateItem = {
+      id: String(Date.now()),
+      no: items.filter((i) => !i.isCategory && !i.isSubtotal).length + 1,
+      category: masterCategory,
       itemName: '',
       specification: '',
       quantity: 1,
@@ -390,9 +500,11 @@ export default function EstimateEditorV2Page({
       }
     });
 
-    setItems(newItems);
+    const updatedItems = updateCategorySubtotals(newItems);
+    setItems(updatedItems);
     setSaveStatus('unsaved');
-    addToHistory(newItems);
+    addToHistory(updatedItems);
+    setShowMasterModal(false);
   };
 
   // 選択行を削除
@@ -460,14 +572,14 @@ export default function EstimateEditorV2Page({
               </div>
             </div>
 
-            {/* アクションボタン */}
-            <div className="flex items-center gap-3">
+            {/* スマートなアクションボタン配置 */}
+            <div className="flex items-center gap-2">
               {/* 保存状態インジケーター */}
-              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100">
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 text-sm">
                 {saveStatus === 'saved' && (
                   <>
                     <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span className="text-sm text-green-600">保存済み</span>
+                    <span className="text-green-600">保存済み</span>
                   </>
                 )}
                 {saveStatus === 'saving' && (
@@ -482,92 +594,55 @@ export default function EstimateEditorV2Page({
                     >
                       <AlertCircle className="w-4 h-4 text-yellow-600" />
                     </motion.div>
-                    <span className="text-sm text-yellow-600">保存中...</span>
+                    <span className="text-yellow-600">保存中...</span>
                   </>
                 )}
                 {saveStatus === 'unsaved' && (
                   <>
                     <AlertCircle className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">未保存</span>
+                    <span className="text-gray-600">未保存</span>
                   </>
                 )}
               </div>
 
-              <button
-                onClick={undo}
-                disabled={historyIndex <= 0}
-                className="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                title="元に戻す (Ctrl+Z)"
-              >
-                <Undo className="w-4 h-4" />
-              </button>
-              <button
-                onClick={redo}
-                disabled={historyIndex >= history.length - 1}
-                className="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                title="やり直し (Ctrl+Y)"
-              >
-                <Redo className="w-4 h-4" />
-              </button>
+              {/* 履歴操作 */}
+              <div className="flex items-center">
+                <button
+                  onClick={undo}
+                  disabled={historyIndex <= 0}
+                  className="p-2 bg-gray-100 text-gray-700 rounded-l-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  title="元に戻す (Ctrl+Z)"
+                >
+                  <Undo className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={redo}
+                  disabled={historyIndex >= history.length - 1}
+                  className="p-2 bg-gray-100 text-gray-700 rounded-r-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border-l border-gray-300"
+                  title="やり直し (Ctrl+Y)"
+                >
+                  <Redo className="w-4 h-4" />
+                </button>
+              </div>
 
-              <div className="border-l border-gray-300 h-8" />
-
-              <button
-                onClick={() => setBatchEditMode(!batchEditMode)}
-                className={`px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${
-                  batchEditMode
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {batchEditMode ? (
-                  <CheckSquare className="w-4 h-4" />
-                ) : (
-                  <Square className="w-4 h-4" />
-                )}
-                一括編集
-              </button>
-
-              <button
-                onClick={() => setShowDiscount(!showDiscount)}
-                className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
-              >
-                <Percent className="w-4 h-4" />
-                値引き
-              </button>
-
-              <button
-                onClick={() => setShowImportModal(true)}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
-              >
-                <Upload className="w-4 h-4" />
-                インポート
-              </button>
-
-              <button
-                onClick={() => setShowPrintPreview(true)}
-                className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
-              >
-                <Printer className="w-4 h-4" />
-                印刷プレビュー
-              </button>
-
-              <button
-                onClick={() => setShowMasterSearch(true)}
-                className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors flex items-center gap-2"
-              >
-                <Database className="w-4 h-4" />
-                マスター検索
-              </button>
-
+              {/* ツール */}
               <button
                 onClick={() => setShowTemplates(!showTemplates)}
-                className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors flex items-center gap-2"
+                className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors flex items-center gap-2 text-sm"
               >
                 <Package className="w-4 h-4" />
                 テンプレート
               </button>
 
+              <button
+                onClick={() => setShowImportModal(true)}
+                className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm"
+              >
+                <Upload className="w-4 h-4" />
+                インポート
+              </button>
+
+              {/* メイン機能 */}
               <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
                 <Save className="w-4 h-4" />
                 保存
@@ -822,33 +897,16 @@ export default function EstimateEditorV2Page({
                     ¥{calculateTotal().toLocaleString()}
                   </span>
                 </div>
-                {discountRate > 0 && (
-                  <div className="text-sm text-red-600 font-medium">
-                    <span>値引き ({discountRate}%):</span>
-                    <span className="ml-4 font-mono font-medium">
-                      -¥
-                      {Math.floor(
-                        (calculateTotal() * discountRate) / 100,
-                      ).toLocaleString()}
-                    </span>
-                  </div>
-                )}
                 <div className="text-sm text-gray-700 font-medium">
                   <span>消費税 (10%):</span>
                   <span className="ml-4 font-mono font-medium">
-                    ¥
-                    {Math.floor(
-                      calculateTotal() * (1 - discountRate / 100) * 0.1,
-                    ).toLocaleString()}
+                    ¥{Math.floor(calculateTotal() * 0.1).toLocaleString()}
                   </span>
                 </div>
                 <div className="text-lg font-bold text-blue-600">
                   <span>合計:</span>
                   <span className="ml-4 font-mono">
-                    ¥
-                    {Math.floor(
-                      calculateTotal() * (1 - discountRate / 100) * 1.1,
-                    ).toLocaleString()}
+                    ¥{Math.floor(calculateTotal() * 1.1).toLocaleString()}
                   </span>
                 </div>
               </div>
@@ -856,97 +914,6 @@ export default function EstimateEditorV2Page({
           </div>
         </div>
       </div>
-
-      {/* 値引き設定モーダル */}
-      <AnimatePresence>
-        {showDiscount && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-            onClick={() => setShowDiscount(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h2 className="text-xl font-bold text-gray-900 mb-4">
-                値引き設定
-              </h2>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    値引き率 (%)
-                  </label>
-                  <input
-                    type="number"
-                    value={discountRate}
-                    onChange={(e) =>
-                      setDiscountRate(parseFloat(e.target.value) || 0)
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    min="0"
-                    max="100"
-                    step="0.1"
-                  />
-                </div>
-
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="text-sm space-y-2">
-                    <div className="flex justify-between">
-                      <span>小計:</span>
-                      <span className="font-mono">
-                        ¥{calculateTotal().toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-red-600">
-                      <span>値引き額:</span>
-                      <span className="font-mono">
-                        -¥
-                        {Math.floor(
-                          (calculateTotal() * discountRate) / 100,
-                        ).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between font-bold text-blue-600 pt-2 border-t">
-                      <span>値引き後:</span>
-                      <span className="font-mono">
-                        ¥
-                        {Math.floor(
-                          calculateTotal() * (1 - discountRate / 100),
-                        ).toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-3">
-                  <button
-                    onClick={() => setShowDiscount(false)}
-                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                  >
-                    キャンセル
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSaveStatus('unsaved');
-                      setShowDiscount(false);
-                    }}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    適用
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* インポートモーダル */}
       <AnimatePresence>
@@ -1186,125 +1153,6 @@ export default function EstimateEditorV2Page({
         )}
       </AnimatePresence>
 
-      {/* マスター検索モーダル */}
-      <AnimatePresence>
-        {showMasterSearch && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-            onClick={() => setShowMasterSearch(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-gray-900">
-                    マスターデータ検索
-                  </h2>
-                  <button
-                    onClick={() => setShowMasterSearch(false)}
-                    className="p-2 hover:bg-gray-100 rounded-lg"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                <div className="mt-4 flex items-center gap-4">
-                  <div className="flex-1 flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg">
-                    <Search className="w-5 h-5 text-gray-500" />
-                    <input
-                      type="text"
-                      placeholder="メーカー名、品番、商品名で検索..."
-                      className="flex-1 outline-none"
-                      autoFocus
-                    />
-                  </div>
-                  <select className="px-4 py-2 border border-gray-300 rounded-lg">
-                    <option value="">全メーカー</option>
-                    <option value="lixil">LIXIL</option>
-                    <option value="toto">TOTO</option>
-                    <option value="panasonic">Panasonic</option>
-                    <option value="ykk">YKK AP</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="p-6 overflow-y-auto max-h-[60vh]">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[
-                    {
-                      maker: 'LIXIL',
-                      name: 'リシェルSI',
-                      model: 'I型2550',
-                      price: 650000,
-                      category: 'キッチン',
-                    },
-                    {
-                      maker: 'TOTO',
-                      name: 'サザナ',
-                      model: '1616サイズ',
-                      price: 850000,
-                      category: '浴室',
-                    },
-                    {
-                      maker: 'Panasonic',
-                      name: 'アラウーノL150',
-                      model: 'タイプ2',
-                      price: 280000,
-                      category: 'トイレ',
-                    },
-                    {
-                      maker: 'YKK AP',
-                      name: 'APW330',
-                      model: '引違い窓 1650×1170',
-                      price: 45000,
-                      category: 'サッシ',
-                    },
-                  ].map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition-all"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="text-xs text-gray-500 mb-1">
-                            {item.maker}
-                          </div>
-                          <h3 className="font-semibold text-gray-900">
-                            {item.name}
-                          </h3>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {item.model}
-                          </p>
-                          <div className="mt-2 flex items-center gap-2">
-                            <span className="text-xs px-2 py-1 bg-gray-100 rounded">
-                              {item.category}
-                            </span>
-                            <span className="text-sm font-bold text-blue-600">
-                              ¥{item.price.toLocaleString()}
-                            </span>
-                          </div>
-                        </div>
-                        <button className="p-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors">
-                          <Plus className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* テンプレートパネル */}
       <AnimatePresence>
         {showTemplates && (
@@ -1433,6 +1281,106 @@ export default function EstimateEditorV2Page({
                 </div>
               </div>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* マスター選択モーダル */}
+      <AnimatePresence>
+        {showMasterModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+            onClick={() => setShowMasterModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-gradient-to-r from-blue-500 to-cyan-500 px-6 py-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-bold text-white">
+                    {masterCategory} - マスター商品選択
+                  </h3>
+                  <button
+                    onClick={() => setShowMasterModal(false)}
+                    className="text-white hover:text-gray-200 text-2xl"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 overflow-y-auto max-h-[60vh]">
+                <div className="mb-4">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg">
+                    <Search className="w-4 h-4 text-gray-500" />
+                    <input
+                      type="text"
+                      placeholder="商品名、仕様で検索..."
+                      className="bg-transparent outline-none flex-1"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2 mb-6">
+                  {MASTER_DATA.filter(
+                    (item) => item.category === masterCategory,
+                  ).map((masterItem) => (
+                    <button
+                      key={masterItem.id}
+                      onClick={() => addItemFromMaster(masterItem)}
+                      className="w-full p-4 text-left bg-gray-50 hover:bg-blue-50 rounded-lg transition-colors border hover:border-blue-300"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-medium text-gray-900">
+                              {masterItem.name}
+                            </h4>
+                            {masterItem.maker && (
+                              <span className="text-xs px-2 py-1 bg-gray-200 rounded text-gray-600">
+                                {masterItem.maker}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-600 mb-2">
+                            {masterItem.specification}
+                          </p>
+                          <div className="flex items-center gap-4 text-sm">
+                            <span className="font-mono font-bold text-blue-600">
+                              ¥{masterItem.unitPrice.toLocaleString()} /{' '}
+                              {masterItem.unit}
+                            </span>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-gray-400" />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="border-t pt-4">
+                  <button
+                    onClick={addManualRow}
+                    className="w-full p-4 text-left border-2 border-dashed border-gray-300 hover:border-blue-300 rounded-lg transition-colors"
+                  >
+                    <div className="text-center text-gray-600">
+                      <Plus className="w-6 h-6 mx-auto mb-2" />
+                      <p className="font-medium">手動で項目を追加</p>
+                      <p className="text-sm">
+                        マスターにない商品を追加する場合
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
