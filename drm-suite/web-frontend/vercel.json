@@ -1,9 +1,16 @@
 {
-  "framework": "nextjs",
-  "regions": ["hnd1"],
+  "functions": {
+    "src/app/api/pdf/simple/[id]/route.ts": {
+      "maxDuration": 30
+    },
+    "src/app/api/pdf/guaranteed/[id]/route.ts": {
+      "maxDuration": 30
+    },
+    "src/app/api/pdf/estimate/[id]/route.ts": {
+      "maxDuration": 30
+    }
+  },
   "env": {
-    "NEXT_PUBLIC_CUSTOMER_SERVICE_URL": "http://localhost:3001",
-    "NEXT_PUBLIC_ESTIMATE_SERVICE_URL": "http://localhost:3003",
-    "DATABASE_URL": "file:./prisma/dev.db"
+    "PUPPETEER_SKIP_CHROMIUM_DOWNLOAD": "true"
   }
 }
