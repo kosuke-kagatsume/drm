@@ -1,11 +1,10 @@
 // src/app/api/pdf/guaranteed/[id]/route.ts
 import { NextRequest } from 'next/server';
-import chromium from '@sparticuz/chromium';
 import puppeteer from 'puppeteer-core';
-import fs from 'fs/promises';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30; // Vercel timeout設定
 
 // 開発環境用の設定
 const isDev = process.env.NODE_ENV === 'development';
@@ -194,25 +193,60 @@ th{background:#2196F3;color:white;text-align:left;font-weight:500;}
 </body></html>`;
 
     // Puppeteerの設定
-    const browserConfig = isDev
-      ? {
-          executablePath:
-            '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    let browserConfig;
+
+    if (isDev) {
+      browserConfig = {
+        executablePath:
+          '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-background-timer-throttling',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-renderer-backgrounding',
+        ],
+      };
+    } else {
+      // Vercel環境用の設定 - @sparticuz/chromiumを動的インポート
+      try {
+        const chromium = await import('@sparticuz/chromium');
+        chromium.default.setHeadlessMode = true;
+        chromium.default.setGraphicsMode = false;
+
+        const executablePath = await chromium.default.executablePath();
+        console.log(`🔍 Chromium path: ${executablePath}`);
+
+        browserConfig = {
+          args: [
+            ...chromium.default.args,
+            '--font-render-hinting=none',
+            '--lang=ja-JP',
+          ],
+          executablePath: executablePath,
+          headless: chromium.default.headless,
+        };
+      } catch (e) {
+        console.error('⚠️ Chromium import/execution error:', e);
+        // フォールバック設定
+        browserConfig = {
           headless: true,
           args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',
-            '--disable-background-timer-throttling',
-            '--disable-backgrounding-occluded-windows',
-            '--disable-renderer-backgrounding',
+            '--disable-gpu',
+            '--disable-web-security',
+            '--disable-features=IsolateOrigins',
+            '--disable-site-isolation-trials',
+            '--font-render-hinting=none',
+            '--lang=ja-JP',
           ],
-        }
-      : {
-          args: chromium.args,
-          executablePath: await chromium.executablePath(),
-          headless: chromium.headless,
         };
+      }
+    }
 
     const browser = await puppeteer.launch({
       ...browserConfig,
