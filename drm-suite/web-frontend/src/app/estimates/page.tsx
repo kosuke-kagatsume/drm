@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { PDFClientService } from '@/services/pdf-client.service';
+import { getConstructionMasters } from '@/data/construction-masters';
+import { Download, FileText } from 'lucide-react';
 
 interface Estimate {
   id: string;

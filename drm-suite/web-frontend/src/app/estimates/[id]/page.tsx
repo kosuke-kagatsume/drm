@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { getConstructionMasters } from '@/data/construction-masters';
+import EstimatePDFPreview from '@/components/EstimatePDFPreview';
+import { PDFClientService } from '@/services/pdf-client.service';
 import {
   ArrowLeft,
   Eye,
@@ -25,6 +27,7 @@ import {
   MapPin,
   Package,
   Wrench,
+  Printer,
 } from 'lucide-react';
 
 interface Estimate {
@@ -56,6 +59,7 @@ export default function EstimateDetailPage() {
     'approve',
   );
   const [approvalComment, setApprovalComment] = useState('');
+  const [showPDFPreview, setShowPDFPreview] = useState(false);
 
   useEffect(() => {
     const data = getConstructionMasters();
@@ -124,6 +128,31 @@ export default function EstimateDetailPage() {
     setEstimate(updatedEstimate);
     setShowApprovalModal(false);
     setApprovalComment('');
+  };
+
+  // PDF出力処理
+  const handlePDFExport = () => {
+    console.log('PDF出力ボタンがクリックされました');
+    console.log('現在の estimate:', estimate);
+    console.log('現在の showPDFPreview:', showPDFPreview);
+    setShowPDFPreview(true);
+  };
+
+  // PDFダウンロード（直接）
+  const handleQuickPDFDownload = async () => {
+    console.log('PDF即ダウンロードボタンがクリックされました');
+    try {
+      const estimateData = {
+        ...estimate,
+        customer,
+        paymentTerm,
+      };
+      console.log('PDFダウンロード開始:', estimateData);
+      await PDFClientService.downloadEstimatePDF(estimateData);
+    } catch (error) {
+      console.error('PDFダウンロードエラー:', error);
+      alert('PDFダウンロード中にエラーが発生しました');
+    }
   };
 
   // ステータス表示
@@ -595,9 +624,23 @@ export default function EstimateDetailPage() {
                   <Copy className="h-4 w-4" />
                   複製
                 </button>
-                <button className="w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition flex items-center gap-2 justify-center">
+                <button
+                  onClick={() => {
+                    console.log('PDF出力ボタン直接クリック');
+                    alert('PDF出力ボタンがクリックされました！');
+                    handlePDFExport();
+                  }}
+                  className="w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition flex items-center gap-2 justify-center"
+                >
                   <FileText className="h-4 w-4" />
                   PDF出力
+                </button>
+                <button
+                  onClick={handleQuickPDFDownload}
+                  className="w-full bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600 transition flex items-center gap-2 justify-center"
+                >
+                  <Download className="h-4 w-4" />
+                  PDF即ダウンロード
                 </button>
                 <button className="w-full bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition flex items-center gap-2 justify-center">
                   <Send className="h-4 w-4" />
@@ -733,6 +776,43 @@ export default function EstimateDetailPage() {
                 }`}
               >
                 {approvalAction === 'approve' ? '承認する' : '却下する'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PDF プレビューモーダル */}
+      {showPDFPreview && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md">
+            <h2 className="text-xl font-bold mb-4">PDF機能テスト</h2>
+            <p className="mb-4">PDFプレビューモーダルが開きました！</p>
+            <div className="space-y-2 mb-4">
+              <p className="text-sm">見積ID: {estimate.id}</p>
+              <p className="text-sm">顧客名: {estimate.customerName}</p>
+              <p className="text-sm">
+                合計: ¥{estimate.totals?.total?.toLocaleString()}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={async () => {
+                  console.log('PDFダウンロード実行');
+                  await handleQuickPDFDownload();
+                }}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                PDFダウンロード
+              </button>
+              <button
+                onClick={() => {
+                  console.log('モーダルを閉じる');
+                  setShowPDFPreview(false);
+                }}
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+              >
+                閉じる
               </button>
             </div>
           </div>

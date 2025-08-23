@@ -5,6 +5,10 @@
 html {
   -webkit-text-size-adjust: 100%;
   font-family:
+    'Noto Sans JP',
+    'Hiragino Kaku Gothic ProN',
+    'ヒラギノ角ゴ ProN W3',
+    Meiryo,
     ui-sans-serif,
     system-ui,
     -apple-system,
