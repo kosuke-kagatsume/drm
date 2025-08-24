@@ -451,6 +451,12 @@ export default function InvoicesPage() {
                 📄 テンプレート
               </button>
               <button
+                onClick={() => router.push('/invoices/management')}
+                className="px-4 py-2 border border-purple-300 text-purple-700 rounded-lg hover:bg-purple-50 transition flex items-center gap-2"
+              >
+                🏗️ 分割請求管理
+              </button>
+              <button
                 onClick={() => router.push('/invoices/create')}
                 className="px-6 py-2.5 bg-gradient-to-r from-dandori-blue to-dandori-sky text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
               >

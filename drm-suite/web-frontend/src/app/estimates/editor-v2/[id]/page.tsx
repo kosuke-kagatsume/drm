@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   DndContext,
@@ -93,6 +93,42 @@ const CATEGORIES = [
   '電気工事',
   '給排水工事',
   '諸経費',
+];
+
+// 顧客データ（create-v2と同じ）
+const SAMPLE_CUSTOMERS = [
+  {
+    id: '1',
+    name: '田中太郎',
+    company: '田中建設株式会社',
+    phone: '090-1234-5678',
+    email: 'tanaka@example.com',
+    lastContact: '2024-01-15',
+  },
+  {
+    id: '2',
+    name: '佐藤花子',
+    company: '佐藤工務店',
+    phone: '080-9876-5432',
+    email: 'sato@example.com',
+    lastContact: '2024-01-10',
+  },
+  {
+    id: '3',
+    name: '山田次郎',
+    company: '',
+    phone: '070-1111-2222',
+    email: 'yamada@example.com',
+    lastContact: '2023-12-20',
+  },
+  {
+    id: '4',
+    name: '鈴木三郎',
+    company: 'すずきホーム',
+    phone: '090-3333-4444',
+    email: 'suzuki@example.com',
+    lastContact: '2024-01-05',
+  },
 ];
 
 // マスターデータ
@@ -245,6 +281,12 @@ export default function EstimateEditorV2Page({
   params: { id: string };
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const customerId = searchParams.get('customer');
+  const customerInfo = customerId
+    ? SAMPLE_CUSTOMERS.find((c) => c.id === customerId)
+    : null;
+
   const [items, setItems] = useState<EstimateItem[]>([]);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [editingCell, setEditingCell] = useState<{
@@ -264,6 +306,7 @@ export default function EstimateEditorV2Page({
   const [showPrintPreview, setShowPrintPreview] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showMasterModal, setShowMasterModal] = useState(false);
+  const [showCategorySelector, setShowCategorySelector] = useState(false);
   const [masterCategory, setMasterCategory] = useState<string>('');
   const autoSaveTimer = useRef<NodeJS.Timeout>();
 
@@ -275,42 +318,9 @@ export default function EstimateEditorV2Page({
     }),
   );
 
-  // 初期データの生成（空の状態からスタート）
+  // 初期データの生成（完全に空の状態からスタート）
   useEffect(() => {
     const initialItems: EstimateItem[] = [];
-
-    CATEGORIES.forEach((category) => {
-      // カテゴリヘッダー
-      initialItems.push({
-        id: `cat-${category}`,
-        no: 0,
-        category: category,
-        itemName: category,
-        specification: '',
-        quantity: 0,
-        unit: '',
-        unitPrice: 0,
-        amount: 0,
-        remarks: '',
-        isCategory: true,
-      });
-
-      // カテゴリ小計
-      initialItems.push({
-        id: `subtotal-${category}`,
-        no: 0,
-        category: category,
-        itemName: `${category} 小計`,
-        specification: '',
-        quantity: 0,
-        unit: '',
-        unitPrice: 0,
-        amount: 0,
-        remarks: '',
-        isSubtotal: true,
-      });
-    });
-
     setItems(initialItems);
     addToHistory(initialItems);
   }, []);
@@ -423,6 +433,47 @@ export default function EstimateEditorV2Page({
       }
       return item;
     });
+  };
+
+  // 大項目追加
+  const addCategory = (categoryName: string) => {
+    const newItems = [...items];
+
+    // カテゴリヘッダー
+    const categoryHeader: EstimateItem = {
+      id: `cat-${categoryName}-${Date.now()}`,
+      no: 0,
+      category: categoryName,
+      itemName: categoryName,
+      specification: '',
+      quantity: 0,
+      unit: '',
+      unitPrice: 0,
+      amount: 0,
+      remarks: '',
+      isCategory: true,
+    };
+
+    // カテゴリ小計
+    const categorySubtotal: EstimateItem = {
+      id: `subtotal-${categoryName}-${Date.now()}`,
+      no: 0,
+      category: categoryName,
+      itemName: `${categoryName} 小計`,
+      specification: '',
+      quantity: 0,
+      unit: '',
+      unitPrice: 0,
+      amount: 0,
+      remarks: '',
+      isSubtotal: true,
+    };
+
+    newItems.push(categoryHeader, categorySubtotal);
+    const updatedItems = updateCategorySubtotals(newItems);
+    setItems(updatedItems);
+    setSaveStatus('unsaved');
+    addToHistory(updatedItems);
   };
 
   // 行追加（マスター選択モーダルを開く）
@@ -568,7 +619,22 @@ export default function EstimateEditorV2Page({
                 <h1 className="text-2xl font-bold text-gray-900">
                   詳細見積編集 Pro
                 </h1>
-                <p className="text-sm text-gray-600">見積番号: {params.id}</p>
+                <div className="flex items-center gap-4">
+                  <p className="text-sm text-gray-600">見積番号: {params.id}</p>
+                  {customerInfo && (
+                    <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 rounded-full">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <span className="text-sm font-medium text-blue-900">
+                        {customerInfo.name}
+                      </span>
+                      {customerInfo.company && (
+                        <span className="text-xs text-blue-700">
+                          ({customerInfo.company})
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -709,6 +775,60 @@ export default function EstimateEditorV2Page({
             </div>
           </div>
         </div>
+
+        {/* 大項目追加エリア（空の状態の時または追加時に表示） */}
+        {items.length === 0 || showCategorySelector ? (
+          <div className="mb-4 bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                大項目を選択して追加
+              </h3>
+              {items.length > 0 && (
+                <button
+                  onClick={() => setShowCategorySelector(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {CATEGORIES.map((category) => {
+                const hasCategory = items.some(
+                  (item) => item.category === category && item.isCategory,
+                );
+                return (
+                  <button
+                    key={category}
+                    onClick={() => {
+                      addCategory(category);
+                      setShowCategorySelector(false);
+                    }}
+                    disabled={hasCategory}
+                    className={`p-3 rounded-lg text-sm font-medium transition-colors ${
+                      hasCategory
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                    }`}
+                  >
+                    {category}
+                    {hasCategory && ' (追加済み)'}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="mb-4 flex justify-end">
+            <button
+              onClick={() => setShowCategorySelector(true)}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              大項目追加
+            </button>
+          </div>
+        )}
 
         {/* スプレッドシート */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">

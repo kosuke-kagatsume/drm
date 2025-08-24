@@ -19,7 +19,9 @@ import {
   ChevronRight,
   Activity,
   BarChart3,
+  Receipt,
 } from 'lucide-react';
+import { invoiceService } from '@/services/invoice.service';
 
 // モックデータ
 const mockSites = [
@@ -100,6 +102,42 @@ export default function ConstructionDashboard() {
   const [selectedSite, setSelectedSite] = useState<any>(null);
   const [showSiteModal, setShowSiteModal] = useState(false);
   const [showSafetyModal, setShowSafetyModal] = useState(false);
+
+  // 工事進捗更新と請求書生成
+  const handleProgressUpdate = async (
+    siteId: number,
+    newProgress: number,
+    milestones: string[],
+  ) => {
+    try {
+      // 実際の実装では、契約IDを取得する
+      const contractId = `contract_${siteId}`;
+
+      // 工事進捗に基づいて請求書を自動生成
+      const generatedInvoices = await invoiceService.generateProgressInvoice(
+        contractId,
+        newProgress,
+        milestones,
+      );
+
+      if (generatedInvoices.length > 0) {
+        alert(
+          `工事進捗の更新により、${generatedInvoices.length}件の請求書が生成されました。`,
+        );
+        // 請求書管理画面への遷移を提案
+        if (confirm('生成された請求書を確認しますか？')) {
+          router.push('/invoices/management');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to generate progress invoice:', error);
+    }
+  };
+
+  // 請求書生成ボタンのハンドラー
+  const handleGenerateInvoice = async (site: any) => {
+    await handleProgressUpdate(site.id, site.progress, []);
+  };
   const [showMaterialModal, setShowMaterialModal] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -163,6 +201,42 @@ export default function ConstructionDashboard() {
                 className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded transition"
               >
                 ログアウト
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 工事管理メニュー */}
+        <div className="bg-white/10 border-t border-white/20">
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex space-x-6">
+              <button
+                onClick={() => router.push('/construction/ledger')}
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
+              >
+                <FileText className="h-4 w-4" />
+                <span>工事台帳</span>
+              </button>
+              <button
+                onClick={() => router.push('/construction/analysis')}
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
+              >
+                <BarChart3 className="h-4 w-4" />
+                <span>原価分析</span>
+              </button>
+              <button
+                onClick={() => router.push('/construction/materials')}
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
+              >
+                <Package className="h-4 w-4" />
+                <span>材料・労務</span>
+              </button>
+              <button
+                onClick={() => router.push('/construction/monitoring')}
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
+              >
+                <Activity className="h-4 w-4" />
+                <span>収益性監視</span>
               </button>
             </div>
           </div>
@@ -783,6 +857,14 @@ export default function ConstructionDashboard() {
                 </button>
                 <button className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:shadow-lg transition">
                   写真アップロード
+                </button>
+                <button
+                  onClick={() => handleGenerateInvoice(selectedSite)}
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:shadow-lg transition flex items-center justify-center gap-1"
+                  title="進捗に基づいて請求書を生成"
+                >
+                  <Receipt className="w-4 h-4" />
+                  請求書生成
                 </button>
                 <button
                   onClick={() => {

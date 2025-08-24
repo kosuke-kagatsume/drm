@@ -632,7 +632,7 @@ export default function MapDashboard() {
         {/* Floating Action Buttons */}
         <div className="absolute bottom-8 right-8 space-y-3">
           <button
-            onClick={() => router.push('/estimates/create')}
+            onClick={() => router.push('/estimates/create-v2')}
             className="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition"
           >
             <span className="text-2xl">📝</span>

@@ -549,6 +549,34 @@ export default function AccountingDashboard({
           <h2 className="text-lg font-semibold">💰 会計ダッシュボード</h2>
           <div className="flex space-x-2">
             <button
+              onClick={() => router.push('/construction/ledger')}
+              className="bg-orange-600 text-white px-3 py-2 rounded hover:bg-orange-700 flex items-center space-x-1"
+            >
+              <span>📋</span>
+              <span>工事台帳</span>
+            </button>
+            <button
+              onClick={() => router.push('/construction/analysis')}
+              className="bg-purple-600 text-white px-3 py-2 rounded hover:bg-purple-700 flex items-center space-x-1"
+            >
+              <span>📊</span>
+              <span>原価分析</span>
+            </button>
+            <button
+              onClick={() => router.push('/accounting/chart')}
+              className="bg-indigo-600 text-white px-3 py-2 rounded hover:bg-indigo-700 flex items-center space-x-1"
+            >
+              <span>⚙️</span>
+              <span>勘定科目</span>
+            </button>
+            <button
+              onClick={() => router.push('/accounting/project')}
+              className="bg-emerald-600 text-white px-3 py-2 rounded hover:bg-emerald-700 flex items-center space-x-1"
+            >
+              <span>🏗️</span>
+              <span>管理会計</span>
+            </button>
+            <button
               onClick={() => handleExport('financial-summary')}
               className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
             >

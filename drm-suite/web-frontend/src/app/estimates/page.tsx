@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { PDFClientService } from '@/services/pdf-client.service';
 import { getConstructionMasters } from '@/data/construction-masters';
 import { Download, FileText } from 'lucide-react';
+import { invoiceService } from '@/services/invoice.service';
 
 interface Estimate {
   id: string;
@@ -15,13 +16,32 @@ interface Estimate {
   projectName: string;
   projectType: string;
   totalAmount: number;
-  status: 'draft' | 'pending' | 'approved' | 'rejected' | 'expired';
+  status:
+    | 'draft'
+    | 'submitted'
+    | 'negotiating'
+    | 'won'
+    | 'lost'
+    | 'expired'
+    | 'cancelled';
   createdAt: string;
   validUntil: string;
   createdBy: string;
   lastModified: string;
   version: number;
   tags: string[];
+  // 新規追加フィールド
+  proposalType?: 'A' | 'B' | 'C'; // 提案タイプ（A案/B案/C案）
+  parentEstimateId?: string; // 親見積ID（複数案の場合）
+  childEstimateIds?: string[]; // 子見積ID（複数案の場合）
+  lostReason?: 'price' | 'spec' | 'delivery' | 'competitor' | 'other'; // 失注理由
+  lostReasonDetail?: string; // 失注理由詳細
+  competitorName?: string; // 競合他社名
+  wonDate?: string; // 受注日
+  lostDate?: string; // 失注日
+  contractAmount?: number; // 契約金額（受注時）
+  profitRate?: number; // 粗利率（%）
+  orderProbability?: number; // 受注確度（%）
 }
 
 export default function EstimatesPage() {
@@ -32,6 +52,14 @@ export default function EstimatesPage() {
   const [filterType, setFilterType] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'date' | 'amount' | 'customer'>('date');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [selectedEstimate, setSelectedEstimate] = useState<Estimate | null>(
+    null,
+  );
+  const [showLostReasonModal, setShowLostReasonModal] = useState(false);
+  const [lostReason, setLostReason] = useState<string>('price');
+  const [lostReasonDetail, setLostReasonDetail] = useState('');
+  const [competitorName, setCompetitorName] = useState('');
 
   const [estimates, setEstimates] = useState<Estimate[]>([]);
 
@@ -77,7 +105,7 @@ export default function EstimatesPage() {
             projectName: '田中様邸新築工事',
             projectType: '新築住宅',
             totalAmount: 15500000,
-            status: 'pending',
+            status: 'submitted',
             createdAt: '2024-08-01',
             validUntil: '2024-08-31',
             createdBy: '佐藤次郎',
@@ -93,7 +121,7 @@ export default function EstimatesPage() {
             projectName: '山田ビル外壁改修',
             projectType: '外壁塗装',
             totalAmount: 3200000,
-            status: 'approved',
+            status: 'won',
             createdAt: '2024-08-03',
             validUntil: '2024-09-03',
             createdBy: '鈴木一郎',
@@ -125,7 +153,7 @@ export default function EstimatesPage() {
             projectName: '高橋様邸増築工事',
             projectType: '増築',
             totalAmount: 12000000,
-            status: 'rejected',
+            status: 'lost',
             createdAt: '2024-07-20',
             validUntil: '2024-08-20',
             createdBy: '山田太郎',
@@ -161,7 +189,7 @@ export default function EstimatesPage() {
             projectName: '田中様邸新築工事',
             projectType: '新築住宅',
             totalAmount: 15500000,
-            status: 'pending',
+            status: 'submitted',
             createdAt: '2024-08-01',
             validUntil: '2024-08-31',
             createdBy: '佐藤次郎',
@@ -177,7 +205,7 @@ export default function EstimatesPage() {
             projectName: '山田ビル外壁改修',
             projectType: '外壁塗装',
             totalAmount: 3200000,
-            status: 'approved',
+            status: 'won',
             createdAt: '2024-08-03',
             validUntil: '2024-09-03',
             createdBy: '鈴木一郎',
@@ -200,29 +228,60 @@ export default function EstimatesPage() {
         label: '下書き',
         icon: '📋',
       },
-      pending: {
-        bg: 'bg-dandori-yellow/20',
-        text: 'text-dandori-orange',
-        label: '承認待ち',
-        icon: '⏳',
+      submitted: {
+        bg: 'bg-blue-100',
+        text: 'text-blue-800',
+        label: '提出済み',
+        icon: '📤',
       },
-      approved: {
+      negotiating: {
+        bg: 'bg-yellow-100',
+        text: 'text-yellow-800',
+        label: '交渉中',
+        icon: '🤝',
+      },
+      won: {
         bg: 'bg-green-100',
         text: 'text-green-800',
-        label: '承認済み',
-        icon: '✅',
+        label: '受注',
+        icon: '🎉',
       },
-      rejected: {
+      lost: {
         bg: 'bg-red-100',
         text: 'text-red-800',
-        label: '却下',
-        icon: '❌',
+        label: '失注',
+        icon: '😢',
       },
       expired: {
         bg: 'bg-gray-200',
         text: 'text-gray-600',
         label: '期限切れ',
         icon: '⏰',
+      },
+      cancelled: {
+        bg: 'bg-gray-300',
+        text: 'text-gray-700',
+        label: 'キャンセル',
+        icon: '🚫',
+      },
+      // pendingも互換性のため残す
+      pending: {
+        bg: 'bg-blue-100',
+        text: 'text-blue-800',
+        label: '提出済み',
+        icon: '📤',
+      },
+      approved: {
+        bg: 'bg-green-100',
+        text: 'text-green-800',
+        label: '受注',
+        icon: '🎉',
+      },
+      rejected: {
+        bg: 'bg-red-100',
+        text: 'text-red-800',
+        label: '失注',
+        icon: '😢',
       },
     };
     const config = statusConfig[status as keyof typeof statusConfig];
@@ -269,19 +328,45 @@ export default function EstimatesPage() {
     });
 
   // 統計情報
-  // 見積複製
+  // 見積複製（A案/B案/C案として複製可能）
   const handleDuplicate = (estimate: Estimate) => {
+    // 提案タイプを選択
+    const proposalType = prompt(
+      '提案タイプを選択してください（A/B/C）\n※同一顧客への別提案として管理されます',
+      'B',
+    );
+    if (
+      !proposalType ||
+      !['A', 'B', 'C'].includes(proposalType.toUpperCase())
+    ) {
+      return;
+    }
+
     const newEstimate = {
       ...estimate,
       id: `EST-${Date.now()}`,
-      estimateNo: `EST-${new Date().getFullYear()}-${String(estimates.length + 1).padStart(3, '0')}`,
+      estimateNo: `${estimate.estimateNo}-${proposalType.toUpperCase()}`,
       status: 'draft' as const,
       createdAt: new Date().toISOString().split('T')[0],
       lastModified: new Date().toISOString().split('T')[0],
       version: 1,
-      projectName: `${estimate.projectName}（複製）`,
+      projectName: `${estimate.projectName}（${proposalType.toUpperCase()}案）`,
+      proposalType: proposalType.toUpperCase() as 'A' | 'B' | 'C',
+      parentEstimateId: estimate.parentEstimateId || estimate.id,
     };
-    const newEstimates = [newEstimate, ...estimates];
+
+    // 親見積の子見積リストを更新
+    const updatedEstimates = estimates.map((e) => {
+      if (e.id === (estimate.parentEstimateId || estimate.id)) {
+        return {
+          ...e,
+          childEstimateIds: [...(e.childEstimateIds || []), newEstimate.id],
+        };
+      }
+      return e;
+    });
+
+    const newEstimates = [newEstimate, ...updatedEstimates];
     setEstimates(newEstimates);
 
     // LocalStorageも更新
@@ -296,7 +381,7 @@ export default function EstimatesPage() {
       localStorage.setItem('estimates', JSON.stringify(parsed));
     }
 
-    alert('見積を複製しました');
+    alert(`${proposalType.toUpperCase()}案として複製しました`);
   };
 
   // 見積削除
@@ -317,16 +402,199 @@ export default function EstimatesPage() {
     }
   };
 
+  // 契約書作成
+  const handleCreateContract = async (estimate: Estimate) => {
+    const options = [
+      { value: 'traditional', label: '通常の契約書作成' },
+      { value: 'electronic', label: '電子契約で作成' },
+    ];
+
+    const choice = prompt(
+      `${estimate.projectName}の契約書を作成します。\n\n1: 通常の契約書作成\n2: 電子契約で作成\n\n選択してください (1 または 2):`,
+    );
+
+    if (choice === '1') {
+      // 通常の契約書作成
+      const contractData = {
+        id: `CON-${Date.now()}`,
+        estimateId: estimate.id,
+        projectName: estimate.projectName,
+        customer: estimate.customerName,
+        customerCompany: estimate.companyName,
+        contractDate: new Date().toISOString().split('T')[0],
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0], // 3ヶ月後
+        amount: estimate.contractAmount || estimate.totalAmount,
+        status: 'draft',
+        paymentStatus: 'pending',
+        paymentProgress: 0,
+        projectType: estimate.projectType,
+        contractType: 'lump_sum',
+        manager: user?.name || '未割当',
+        createdFrom: estimate.estimateNo,
+      };
+
+      // LocalStorageに保存
+      const existingContracts = localStorage.getItem('contracts');
+      const contracts = existingContracts ? JSON.parse(existingContracts) : [];
+      contracts.push(contractData);
+      localStorage.setItem('contracts', JSON.stringify(contracts));
+
+      // 請求スケジュールを自動作成
+      try {
+        await invoiceService.createBillingScheduleFromContract(
+          contractData.id,
+          contractData.amount,
+          contractData.projectName,
+          contractData.startDate,
+          contractData.endDate,
+        );
+        console.log('請求スケジュールを作成しました');
+      } catch (error) {
+        console.error('請求スケジュール作成に失敗:', error);
+      }
+
+      // 契約書ページへ遷移
+      router.push(`/contracts?id=${contractData.id}`);
+    } else if (choice === '2') {
+      // 電子契約作成画面へ遷移（見積データを引き継ぎ）
+      const estimateParams = new URLSearchParams({
+        estimateId: estimate.id,
+        projectName: estimate.projectName,
+        customer: estimate.customerName,
+        amount: estimate.totalAmount.toString(),
+      });
+      router.push(`/contracts/electronic?${estimateParams.toString()}`);
+    }
+  };
+
   const stats = {
     total: estimates.length,
     totalAmount: estimates.reduce((sum, e) => sum + e.totalAmount, 0),
-    pending: estimates.filter((e) => e.status === 'pending').length,
-    approved: estimates.filter((e) => e.status === 'approved').length,
+    submitted: estimates.filter(
+      (e) =>
+        e.status === 'submitted' ||
+        e.status === 'negotiating' ||
+        e.status === 'pending',
+    ).length,
+    won: estimates.filter((e) => e.status === 'won' || e.status === 'approved')
+      .length,
+    lost: estimates.filter(
+      (e) => e.status === 'lost' || e.status === 'rejected',
+    ).length,
+    winRate:
+      estimates.filter(
+        (e) =>
+          e.status === 'won' ||
+          e.status === 'lost' ||
+          e.status === 'approved' ||
+          e.status === 'rejected',
+      ).length > 0
+        ? (
+            (estimates.filter(
+              (e) => e.status === 'won' || e.status === 'approved',
+            ).length /
+              estimates.filter(
+                (e) =>
+                  e.status === 'won' ||
+                  e.status === 'lost' ||
+                  e.status === 'approved' ||
+                  e.status === 'rejected',
+              ).length) *
+            100
+          ).toFixed(1)
+        : 0,
     averageAmount:
       estimates.length > 0
         ? estimates.reduce((sum, e) => sum + e.totalAmount, 0) /
           estimates.length
         : 0,
+  };
+
+  // ステータス変更処理
+  const handleStatusChange = (newStatus: string) => {
+    if (!selectedEstimate) return;
+
+    if (newStatus === 'lost') {
+      setShowStatusModal(false);
+      setShowLostReasonModal(true);
+      return;
+    }
+
+    const updatedEstimate = {
+      ...selectedEstimate,
+      status: newStatus as any,
+      lastModified: new Date().toISOString().split('T')[0],
+    };
+
+    if (newStatus === 'won') {
+      updatedEstimate.wonDate = new Date().toISOString().split('T')[0];
+      updatedEstimate.contractAmount = selectedEstimate.totalAmount;
+    }
+
+    const updatedEstimates = estimates.map((e) =>
+      e.id === selectedEstimate.id ? updatedEstimate : e,
+    );
+    setEstimates(updatedEstimates);
+
+    // LocalStorageも更新
+    const savedEstimates = localStorage.getItem('estimates');
+    if (savedEstimates) {
+      const parsed = JSON.parse(savedEstimates);
+      const updated = parsed.map((e: any) =>
+        e.id === selectedEstimate.id ? { ...e, status: newStatus } : e,
+      );
+      localStorage.setItem('estimates', JSON.stringify(updated));
+    }
+
+    setShowStatusModal(false);
+    setSelectedEstimate(null);
+  };
+
+  // 失注理由を保存
+  const handleLostReasonSave = () => {
+    if (!selectedEstimate) return;
+
+    const updatedEstimate = {
+      ...selectedEstimate,
+      status: 'lost' as any,
+      lostDate: new Date().toISOString().split('T')[0],
+      lostReason: lostReason as any,
+      lostReasonDetail,
+      competitorName,
+      lastModified: new Date().toISOString().split('T')[0],
+    };
+
+    const updatedEstimates = estimates.map((e) =>
+      e.id === selectedEstimate.id ? updatedEstimate : e,
+    );
+    setEstimates(updatedEstimates);
+
+    // LocalStorageも更新
+    const savedEstimates = localStorage.getItem('estimates');
+    if (savedEstimates) {
+      const parsed = JSON.parse(savedEstimates);
+      const updated = parsed.map((e: any) =>
+        e.id === selectedEstimate.id
+          ? {
+              ...e,
+              status: 'lost',
+              lostReason,
+              lostReasonDetail,
+              competitorName,
+            }
+          : e,
+      );
+      localStorage.setItem('estimates', JSON.stringify(updated));
+    }
+
+    setShowLostReasonModal(false);
+    setSelectedEstimate(null);
+    setLostReason('price');
+    setLostReasonDetail('');
+    setCompetitorName('');
   };
 
   if (isLoading || !user) {
@@ -361,6 +629,12 @@ export default function EstimatesPage() {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => router.push('/estimates/analytics')}
+                className="px-4 py-2 border border-purple-300 text-purple-700 rounded-lg hover:bg-purple-50 transition flex items-center gap-2"
+              >
+                📊 営業分析
+              </button>
               <button
                 onClick={() => router.push('/estimates/templates')}
                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition flex items-center gap-2"
@@ -411,26 +685,29 @@ export default function EstimatesPage() {
           <div className="bg-white rounded-xl shadow-sm p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">承認待ち</p>
+                <p className="text-sm text-gray-600">提出中</p>
                 <p className="text-2xl font-bold text-dandori-orange">
-                  {stats.pending}
+                  {stats.submitted}
                 </p>
               </div>
               <div className="w-12 h-12 bg-dandori-yellow/20 rounded-lg flex items-center justify-center">
-                <span className="text-2xl">⏳</span>
+                <span className="text-2xl">📤</span>
               </div>
             </div>
           </div>
           <div className="bg-white rounded-xl shadow-sm p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">平均額</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  ¥{Math.round(stats.averageAmount).toLocaleString()}
+                <p className="text-sm text-gray-600">受注率</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {stats.winRate}%
+                </p>
+                <p className="text-xs text-gray-500">
+                  受注{stats.won}/失注{stats.lost}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <span className="text-2xl">📊</span>
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">📈</span>
               </div>
             </div>
           </div>
@@ -456,10 +733,12 @@ export default function EstimatesPage() {
               >
                 <option value="all">全てのステータス</option>
                 <option value="draft">下書き</option>
-                <option value="pending">承認待ち</option>
-                <option value="approved">承認済み</option>
-                <option value="rejected">却下</option>
+                <option value="submitted">提出済み</option>
+                <option value="negotiating">交渉中</option>
+                <option value="won">受注</option>
+                <option value="lost">失注</option>
                 <option value="expired">期限切れ</option>
+                <option value="cancelled">キャンセル</option>
               </select>
               <select
                 value={filterType}
@@ -539,6 +818,11 @@ export default function EstimatesPage() {
                           <p className="text-sm font-bold text-gray-900">
                             {estimate.estimateNo}
                           </p>
+                          {estimate.proposalType && (
+                            <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded font-bold">
+                              {estimate.proposalType}案
+                            </span>
+                          )}
                           <span className="text-xs bg-dandori-blue/10 text-dandori-blue px-2 py-0.5 rounded">
                             v{estimate.version}
                           </span>
@@ -595,6 +879,17 @@ export default function EstimatesPage() {
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-2">
                         <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedEstimate(estimate);
+                            setShowStatusModal(true);
+                          }}
+                          className="p-1.5 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded transition-colors"
+                          title="ステータス変更"
+                        >
+                          🔄
+                        </button>
+                        <button
                           onClick={() =>
                             router.push(`/estimates/${estimate.id}`)
                           }
@@ -605,7 +900,7 @@ export default function EstimatesPage() {
                         </button>
                         <button
                           onClick={() =>
-                            router.push(`/estimates/editor-v2/${estimate.id}`)
+                            router.push(`/estimates/editor-v3/${estimate.id}`)
                           }
                           className="p-1.5 text-gray-600 hover:text-dandori-blue hover:bg-dandori-blue/10 rounded transition-colors"
                           title="編集"
@@ -632,6 +927,16 @@ export default function EstimatesPage() {
                         >
                           🗑
                         </button>
+                        {(estimate.status === 'won' ||
+                          estimate.status === 'approved') && (
+                          <button
+                            onClick={() => handleCreateContract(estimate)}
+                            className="p-1.5 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
+                            title="契約書作成"
+                          >
+                            📑
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -653,12 +958,21 @@ export default function EstimatesPage() {
                 <div className="p-4 border-b">
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                      <p className="text-sm font-bold text-gray-900">
-                        {estimate.estimateNo}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        v{estimate.version}
-                      </p>
+                      <div>
+                        <p className="text-sm font-bold text-gray-900">
+                          {estimate.estimateNo}
+                        </p>
+                        <div className="flex items-center gap-1 mt-1">
+                          {estimate.proposalType && (
+                            <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-bold">
+                              {estimate.proposalType}案
+                            </span>
+                          )}
+                          <span className="text-xs text-gray-500">
+                            v{estimate.version}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                     {getStatusBadge(estimate.status)}
                   </div>
@@ -708,7 +1022,7 @@ export default function EstimatesPage() {
                 >
                   <button
                     onClick={() =>
-                      router.push(`/estimates/editor-v2/${estimate.id}`)
+                      router.push(`/estimates/editor-v3/${estimate.id}`)
                     }
                     className="flex-1 py-1.5 bg-dandori-blue text-white text-sm rounded hover:bg-dandori-blue-dark transition-colors"
                   >
@@ -729,11 +1043,151 @@ export default function EstimatesPage() {
             <div className="text-6xl mb-4">📂</div>
             <p className="text-gray-600 mb-4">該当する見積書がありません</p>
             <button
-              onClick={() => router.push('/estimates/create-v2')}
+              onClick={() => router.push('/estimates/editor-v3/new')}
               className="px-4 py-2 bg-dandori-blue text-white rounded-lg hover:bg-dandori-blue-dark"
             >
               新規見積を作成
             </button>
+          </div>
+        )}
+
+        {/* ステータス変更モーダル */}
+        {showStatusModal && selectedEstimate && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 p-6">
+              <h3 className="text-xl font-bold mb-4">ステータス変更</h3>
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">
+                  見積番号: {selectedEstimate.estimateNo}
+                </p>
+                <p className="text-sm text-gray-600 mb-2">
+                  案件名: {selectedEstimate.projectName}
+                </p>
+                <p className="text-sm text-gray-600">
+                  現在のステータス: {getStatusBadge(selectedEstimate.status)}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <button
+                  onClick={() => handleStatusChange('submitted')}
+                  className="w-full py-2 border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition flex items-center justify-center gap-2"
+                >
+                  📤 提出済みにする
+                </button>
+                <button
+                  onClick={() => handleStatusChange('negotiating')}
+                  className="w-full py-2 border border-yellow-300 text-yellow-700 rounded-lg hover:bg-yellow-50 transition flex items-center justify-center gap-2"
+                >
+                  🤝 交渉中にする
+                </button>
+                <button
+                  onClick={() => handleStatusChange('won')}
+                  className="w-full py-2 border border-green-300 text-green-700 rounded-lg hover:bg-green-50 transition flex items-center justify-center gap-2"
+                >
+                  🎉 受注にする
+                </button>
+                <button
+                  onClick={() => handleStatusChange('lost')}
+                  className="w-full py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition flex items-center justify-center gap-2"
+                >
+                  😢 失注にする
+                </button>
+                <button
+                  onClick={() => handleStatusChange('cancelled')}
+                  className="w-full py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition flex items-center justify-center gap-2"
+                >
+                  🚫 キャンセルにする
+                </button>
+              </div>
+              <button
+                onClick={() => {
+                  setShowStatusModal(false);
+                  setSelectedEstimate(null);
+                }}
+                className="w-full mt-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+              >
+                閉じる
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 失注理由入力モーダル */}
+        {showLostReasonModal && selectedEstimate && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 p-6">
+              <h3 className="text-xl font-bold mb-4">失注理由の記録</h3>
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">
+                  見積番号: {selectedEstimate.estimateNo}
+                </p>
+                <p className="text-sm text-gray-600">
+                  案件名: {selectedEstimate.projectName}
+                </p>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    失注理由
+                  </label>
+                  <select
+                    value={lostReason}
+                    onChange={(e) => setLostReason(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="price">価格</option>
+                    <option value="spec">仕様</option>
+                    <option value="delivery">納期</option>
+                    <option value="competitor">競合他社</option>
+                    <option value="other">その他</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    競合他社名（分かれば）
+                  </label>
+                  <input
+                    type="text"
+                    value={competitorName}
+                    onChange={(e) => setCompetitorName(e.target.value)}
+                    placeholder="例: ○○建設"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    詳細（任意）
+                  </label>
+                  <textarea
+                    value={lostReasonDetail}
+                    onChange={(e) => setLostReasonDetail(e.target.value)}
+                    rows={3}
+                    placeholder="詳細な理由や今後の改善点など"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2 mt-6">
+                <button
+                  onClick={handleLostReasonSave}
+                  className="flex-1 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                >
+                  失注として記録
+                </button>
+                <button
+                  onClick={() => {
+                    setShowLostReasonModal(false);
+                    setSelectedEstimate(null);
+                    setLostReason('price');
+                    setLostReasonDetail('');
+                    setCompetitorName('');
+                  }}
+                  className="flex-1 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+                >
+                  キャンセル
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

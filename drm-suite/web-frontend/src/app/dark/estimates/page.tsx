@@ -233,7 +233,7 @@ export default function EstimatesPage() {
               </div>
             </div>
             <button
-              onClick={() => router.push('/dark/estimates/create')}
+              onClick={() => router.push('/estimates/create-v2')}
               className="px-6 py-3 bg-white text-black text-xs tracking-wider hover:bg-zinc-200 transition-colors"
             >
               + NEW ESTIMATE
@@ -616,7 +616,7 @@ export default function EstimatesPage() {
               NO MATCHING ESTIMATES FOUND
             </p>
             <button
-              onClick={() => router.push('/dark/estimates/create')}
+              onClick={() => router.push('/estimates/create-v2')}
               className="px-6 py-3 bg-white text-black text-xs tracking-wider hover:bg-zinc-200 transition-colors"
             >
               CREATE NEW ESTIMATE

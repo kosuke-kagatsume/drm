@@ -709,7 +709,7 @@ export default function MapDashboard() {
         {/* Floating Action Buttons */}
         <div className="absolute bottom-8 right-8 space-y-3">
           <button
-            onClick={() => router.push('/dark/estimates/create')}
+            onClick={() => router.push('/estimates/create-v2')}
             className="w-12 h-12 bg-blue-500 border border-zinc-800 flex items-center justify-center hover:bg-blue-400 transition-colors"
           >
             <span className="text-white text-xs tracking-widest">EST</span>

@@ -96,7 +96,7 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
             <div className="mt-2 text-xs text-zinc-400 tracking-wider">
               <p>TANAKA RESIDENCE ESTIMATE SUBMISSION DUE IN 4 HOURS.</p>
               <button
-                onClick={() => router.push('/dark/estimates/create')}
+                onClick={() => router.push('/estimates/create-v2')}
                 className="mt-3 bg-white text-black px-4 py-2 text-xs tracking-wider hover:bg-zinc-200 transition-colors"
               >
                 CREATE ESTIMATE →
@@ -385,7 +385,7 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
             <p className="text-xs text-white/80">CRM</p>
           </button>
           <button
-            onClick={() => router.push('/estimates/create')}
+            onClick={() => router.push('/estimates/editor-v3/new')}
             className="bg-white/20 backdrop-blur-sm p-4 rounded-xl hover:bg-white/30 transform hover:scale-105 transition-all duration-200 border border-white/30"
           >
             <span className="text-3xl">📝</span>
