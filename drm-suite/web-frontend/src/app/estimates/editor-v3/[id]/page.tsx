@@ -1,7 +1,20 @@
 'use client';
 
 import { useState, useEffect, useRef, Suspense } from 'react';
+import { flushSync } from 'react-dom';
+import GlobalMasterAddModal from './GlobalMasterAddModal';
 import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  calcRow,
+  legacyToCore,
+  coreToUi,
+  getCoreKey,
+  FEATURE_FLAGS,
+  nanoid,
+  normalizeNumber,
+  LineRow,
+  MasterItem as CoreMasterItem,
+} from '@/features/estimate-core';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   DndContext,
@@ -46,6 +59,27 @@ import {
   FileSpreadsheet,
   ChevronLeft,
 } from 'lucide-react';
+
+// === DEBUG HOOK (一時) ===============================
+declare global {
+  interface Window {
+    __est?: any;
+  }
+}
+if (typeof window !== 'undefined') {
+  window.__est ??= {};
+  window.__est.debug = false; // デバッグモード フラグ
+  window.__est.enableDebug = () => {
+    window.__est.debug = true;
+    console.log('[estimate] Debug mode enabled');
+  };
+  window.__est.disableDebug = () => {
+    window.__est.debug = false;
+    console.log('[estimate] Debug mode disabled');
+  };
+  window.__est.ping = () => console.log('[estimate] debug hook alive');
+}
+// =====================================================
 
 // 型定義
 interface EstimateItem {
@@ -1054,6 +1088,18 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
     null,
   );
   const [selectedMaker, setSelectedMaker] = useState<string | null>(null);
+  const [showGlobalMasterModal, setShowGlobalMasterModal] = useState(false);
+  const [activeRowId, setActiveRowId] = useState<string | null>(null);
+
+  // モーダル用のref（外側クリック検知用）
+  const panelRef = useRef<HTMLDivElement>(null);
+  const ignoreOutsideRef = useRef(false);
+
+  // masterSearchRowの最新値を保持するref（stale closure対策）
+  const rowRef = useRef<string | null>(null);
+  useEffect(() => {
+    rowRef.current = masterSearchRow ?? null;
+  }, [masterSearchRow]);
 
   // マスタデータが存在するカテゴリ
   const categoriesWithMaster = [
@@ -1186,10 +1232,42 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [history, historyIndex]);
 
+  // モーダルの外側クリック処理（一時的に無効化して原因切り分け）
+  // useEffect(() => {
+  //   if (!showMasterSearch) return;
+
+  //   const onDocPointerDown = (ev: PointerEvent) => {
+  //     if (ignoreOutsideRef.current) {      // 選択直後は閉じない
+  //       ignoreOutsideRef.current = false;
+  //       return;
+  //     }
+  //     const t = ev.target as Node;
+  //     if (panelRef.current && !panelRef.current.contains(t)) {
+  //       setShowMasterSearch(false);        // 既存のクローズ処理
+  //       setSearchStep('productType');
+  //       setSelectedCategory(null);
+  //       setSelectedProductType(null);
+  //       setSelectedMaker(null);
+  //       setMasterSearchTerm('');
+  //     }
+  //   };
+
+  //   document.addEventListener('pointerdown', onDocPointerDown, true); // capture
+  //   return () => document.removeEventListener('pointerdown', onDocPointerDown, true);
+  // }, [showMasterSearch]);
+
   // セル変更ハンドラー（0削除問題の修正）
   const handleCellChange = (rowId: string, colKey: string, value: string) => {
-    // 項目名入力時にマスタ検索を開く
-    if (colKey === 'itemName' && value.length > 0) {
+    // 旧UIを完全に無効化
+    const ENABLE_LEGACY_NAMECELL_MASTER_PICKER =
+      FEATURE_FLAGS.ENABLE_LEGACY_NAMECELL_MASTER_PICKER;
+
+    // 項目名入力時にマスタ検索を開く（旧UI - 無効化）
+    if (
+      ENABLE_LEGACY_NAMECELL_MASTER_PICKER &&
+      colKey === 'itemName' &&
+      value.length > 0
+    ) {
       setMasterSearchTerm(value);
       setMasterSearchRow(rowId);
       setShowMasterSearch(true);
@@ -1204,53 +1282,77 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
       }
     }
 
-    const newItems = items.map((item) => {
-      if (item.id === rowId) {
-        const updatedItem = { ...item };
+    // 既存行を取得
+    const legacyRow = items.find((item) => item.id === rowId);
+    if (!legacyRow) return;
 
-        // 数値フィールドの処理
-        if (
-          colKey === 'quantity' ||
-          colKey === 'unitPrice' ||
-          colKey === 'costPrice'
-        ) {
-          // 空文字の場合はそのまま保持（後で表示時に処理）
-          if (value === '') {
-            (updatedItem as any)[colKey] = '';
-          } else {
-            // 文字列のまま保存（入力中の"0"や"0."を保持）
-            (updatedItem as any)[colKey] = value;
-          }
+    // カテゴリ行や小計行は編集不可
+    if (legacyRow.isCategory || legacyRow.isSubtotal) return;
 
-          // 金額・粗利の再計算
-          const qty = parseFloat(updatedItem.quantity as any) || 0;
-          const sellPrice = parseFloat(updatedItem.unitPrice as any) || 0;
-          const costPrice = parseFloat(updatedItem.costPrice as any) || 0;
+    // 値を正規化（数値フィールドの場合）
+    let normalizedValue: any = value;
+    if (
+      [
+        'quantity',
+        'qty',
+        'unitPrice',
+        'sellUnitPrice',
+        'costPrice',
+        'costUnitPrice',
+      ].includes(colKey)
+    ) {
+      normalizedValue = normalizeNumber(value);
+    }
 
-          updatedItem.amount = qty * sellPrice;
-          updatedItem.costAmount = qty * costPrice;
-          updatedItem.grossProfit = updatedItem.amount - updatedItem.costAmount;
-          updatedItem.grossProfitRate =
-            updatedItem.amount > 0
-              ? Math.round((updatedItem.grossProfit / updatedItem.amount) * 100)
-              : 0;
-        } else if (colKey === 'no') {
-          // No.フィールドも数値として扱う
-          const numValue = parseInt(value, 10);
-          updatedItem.no = isNaN(numValue) ? 0 : numValue;
-        } else {
-          // テキストフィールドはそのまま
-          (updatedItem as any)[colKey] = value;
-        }
+    // UIキーから正規キーに変換
+    const coreKey = getCoreKey(colKey);
 
-        return updatedItem;
-      }
-      return item;
+    // 両方のキーで更新（互換性のため）
+    const patch = withBothKeys({
+      [colKey]: normalizedValue,
+      [coreKey]: normalizedValue,
     });
 
+    // 既存データとマージ
+    const mergedData = { ...legacyRow, ...patch };
+
+    // レガシー → コア変換
+    const coreRow = legacyToCore(mergedData);
+
+    // 再計算（純関数）
+    const recalcedCore = calcRow(coreRow);
+
+    // コア → UI変換し、両方のキーを持つようにする
+    const uiRow = coreToUi(recalcedCore);
+    const updatedUiRow = withBothKeys({ ...mergedData, ...uiRow });
+
+    // 1行更新
+    const newItems = items.map((item) =>
+      item.id === rowId ? updatedUiRow : item,
+    );
+
+    // 小計/合計の再計算
     const updatedItems = updateCategorySubtotals(newItems);
     setItems(updatedItems);
     setSaveStatus('unsaved');
+    addToHistory(updatedItems);
+
+    // デバッグログ
+    if (FEATURE_FLAGS.ENABLE_DEBUG_LOGGING) {
+      if (typeof window !== 'undefined' && window.__est?.debug)
+        console.log('[handleCellChange]', {
+          rowId,
+          uiKey: colKey,
+          coreKey,
+          value: normalizedValue,
+          recalcedCore: {
+            sellAmount: recalcedCore.sellAmount,
+            costAmount: recalcedCore.costAmount,
+            grossProfit: recalcedCore.grossProfit,
+            grossProfitRate: recalcedCore.grossProfitRate,
+          },
+        });
+    }
   };
 
   // カテゴリ小計の更新
@@ -1275,18 +1377,65 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
     return updatedItems;
   };
 
+  // rowIdをセットしてマスタ選択を開く
+  const openRowMasterSelector = (rowId: string) => {
+    if (typeof window !== 'undefined' && window.__est?.debug)
+      console.log('[openRowMasterSelector] Setting activeRowId:', rowId);
+    setActiveRowId(rowId); // props で直渡しするために保持
+    setMasterSearchRow(rowId); // 後方互換のため残す
+    setShowMasterSearch(true);
+  };
+
+  // 安全にRowIdを確保するヘルパー
+  const ensureRowIdForMaster = (categoryHint?: string) => {
+    // 既存の選択行を最優先
+    const existing = rowRef.current ?? masterSearchRow ?? null;
+    if (existing) return existing;
+
+    // 行が無い場合はカテゴリに1行追加してIDを使う
+    const fallbackCategory =
+      categoryHint ??
+      (Array.isArray(categoriesWithMaster) && categoriesWithMaster.length > 0
+        ? categoriesWithMaster[0]
+        : 'キッチン工事'); // 最低限のフォールバック
+
+    const newId = addRow(fallbackCategory);
+    if (typeof window !== 'undefined' && window.__est?.debug)
+      console.log('[ensureRowIdForMaster] created row', {
+        fallbackCategory,
+        newId,
+      });
+    return newId;
+  };
+
+  // === マスタ選択の単一路線 ===
+  const routeMasterSelect = (master: MasterItem, categoryHint?: string) => {
+    const rowId = ensureRowIdForMaster(categoryHint);
+    if (typeof window !== 'undefined' && window.__est?.debug)
+      console.log('[routeMasterSelect]', {
+        rowId,
+        categoryHint,
+        masterId: master?.id,
+      });
+    selectMasterItem(master, rowId); // ← ここに一本化
+  };
+
   // カテゴリを追加
-  const addCategory = (category: string) => {
-    // すでにカテゴリが存在する場合は何もしない
-    if (items.some((item) => item.isCategory && item.category === category)) {
-      return;
+  const addCategory = (category: string): string | null => {
+    // すでにカテゴリが存在する場合はそのIDを返す
+    const existingCategory = items.find(
+      (item) => item.isCategory && item.category === category,
+    );
+    if (existingCategory) {
+      return existingCategory.id;
     }
 
     const newItems = [...items];
+    const categoryId = `cat-${category}-${Date.now()}`;
 
     // カテゴリヘッダー
     newItems.push({
-      id: `cat-${category}-${Date.now()}`,
+      id: categoryId,
       no: 0,
       category,
       itemName: category,
@@ -1317,17 +1466,125 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
     setItems(newItems);
     setSaveStatus('unsaved');
     addToHistory(newItems);
+
+    return categoryId;
+  };
+
+  // 正規キーとUIキーの両方を持つオブジェクトを作成するヘルパー
+  const withBothKeys = (data: any) => {
+    const result: any = { ...data };
+
+    // 正規キー → UIキーのマッピング
+    const mappings = {
+      name: 'itemName',
+      spec: 'specification',
+      qty: 'quantity',
+      unit: 'unit',
+      sellUnitPrice: 'unitPrice',
+      costUnitPrice: 'costPrice',
+      sellAmount: 'amount',
+      costAmount: 'costAmount',
+      grossProfit: 'grossProfit',
+      grossProfitRate: 'grossProfitRate',
+      remarks: 'remarks',
+    };
+
+    // 正規キーが存在する場合、UIキーも設定
+    Object.entries(mappings).forEach(([coreKey, uiKey]) => {
+      if (coreKey in result && !(uiKey in result)) {
+        result[uiKey] = result[coreKey];
+      }
+      // UIキーが存在する場合、正規キーも設定
+      else if (uiKey in result && !(coreKey in result)) {
+        result[coreKey] = result[uiKey];
+      }
+    });
+
+    return result;
+  };
+
+  // 行を更新
+  const updateRow = (
+    lineId: string,
+    patch: Partial<EstimateItem> & Record<string, unknown>,
+  ) => {
+    if (typeof window !== 'undefined' && window.__est?.debug)
+      console.log('[updateRow] IN', lineId, patch);
+
+    setItems((prev: any[]) => {
+      // 1) ID一致行を withBothKeys でマージ
+      const merged = prev.map((it: any) =>
+        it.id === lineId ? withBothKeys({ ...it, ...patch }) : it,
+      );
+
+      // 2) 行ごと再計算（カテゴリ/小計はスキップ）
+      const recalced = merged.map((it: any) => {
+        if (it.isCategory || it.isSubtotal) return it;
+        try {
+          const core = legacyToCore(it);
+          const r = calcRow(core);
+          const ui = coreToUi(r);
+          return withBothKeys({ ...it, ...ui });
+        } catch {
+          // コア未結線でも落ちないフォールバック
+          const qty = Number(it.qty ?? it.quantity ?? 0);
+          const sp = Number(it.sellUnitPrice ?? it.unitPrice ?? 0);
+          const cp = Number(it.costUnitPrice ?? it.costPrice ?? 0);
+          const amount = Math.round(qty * sp);
+          const costAmount = Math.round(qty * cp);
+          const grossProfit = amount - costAmount;
+          const grossProfitRate =
+            amount > 0 ? Math.round((grossProfit / amount) * 100) : 0;
+          return withBothKeys({
+            ...it,
+            sellAmount: amount,
+            amount,
+            costAmount,
+            grossProfit,
+            grossProfitRate,
+          });
+        }
+      });
+
+      // 3) カテゴリ小計の更新（関数が返すならその値、内部更新ならそのまま）
+      let after = recalced;
+      try {
+        if (typeof updateCategorySubtotals === 'function') {
+          const ret = updateCategorySubtotals(recalced);
+          if (ret) after = ret;
+        }
+      } catch (e) {
+        console.warn('[updateRow] updateCategorySubtotals error', e);
+      }
+
+      if (typeof window !== 'undefined' && window.__est?.debug)
+        console.log(
+          '[updateRow] OUT',
+          lineId,
+          after.find((x: any) => x.id === lineId),
+        );
+      return after;
+    });
+
+    // 4) 履歴/保存状態などがあればここで
+    try {
+      setSaveStatus?.('unsaved');
+    } catch {}
+    try {
+      addToHistory?.(items);
+    } catch {}
   };
 
   // 行追加
-  const addRow = (category: string) => {
+  const addRow = (category: string): string => {
     const categoryIndex = items.findIndex(
       (item) => item.isSubtotal && item.category === category,
     );
-    if (categoryIndex === -1) return;
+    if (categoryIndex === -1) return '';
 
+    const newRowId = nanoid(); // nanoidを使用
     const newRow: EstimateItem = {
-      id: String(Date.now()),
+      id: newRowId,
       no: items.filter((i) => !i.isCategory && !i.isSubtotal).length + 1,
       category,
       itemName: '',
@@ -1337,6 +1594,7 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
       unitPrice: 0,
       amount: 0,
       remarks: '',
+      visible: true, // 追加
     };
 
     const newItems = [...items];
@@ -1353,6 +1611,8 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
     setItems(updatedItems);
     setSaveStatus('unsaved');
     addToHistory(updatedItems);
+
+    return newRowId; // 新しい行のIDを返す
   };
 
   // 行削除
@@ -1742,47 +2002,49 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
     'その他',
   ];
 
-  // マスタアイテムを選択して自動入力
-  const selectMasterItem = (master: MasterItem) => {
-    if (!masterSearchRow) return;
+  // マスタアイテムを選択して自動入力（rowIdを直接受け取る）
+  const selectMasterItem = (master: MasterItem, rowId?: string) => {
+    if (typeof window !== 'undefined' && window.__est?.debug)
+      console.log('[selectMasterItem] start', { rowId, masterId: master?.id });
+    if (!rowId) {
+      console.error('[selectMasterItem] missing rowId');
+      return; // 行ID無しは親で ensureRowIdForMaster を通す前提にする
+    }
 
-    const newItems = items.map((item) => {
-      if (item.id === masterSearchRow) {
-        // マスタデータから各フィールドを自動入力
-        return {
-          ...item,
-          itemName: master.itemName,
-          specification: master.specification,
-          unit: master.unit,
-          unitPrice: master.standardPrice,
-          costPrice: master.costPrice,
-          quantity: item.quantity || 1, // 数量は既存値を保持、なければ1
-          amount: (item.quantity || 1) * master.standardPrice,
-          costAmount: (item.quantity || 1) * master.costPrice,
-          grossProfit:
-            (item.quantity || 1) * master.standardPrice -
-            (item.quantity || 1) * master.costPrice,
-          grossProfitRate:
-            master.standardPrice > 0
-              ? Math.round(
-                  ((master.standardPrice - master.costPrice) /
-                    master.standardPrice) *
-                    100,
-                )
-              : 0,
-          costType: 'master' as const,
-          masterCostRate: 1.0,
-        };
-      }
-      return item;
-    });
+    // payload（coreキー＋UIキー両方）
+    const payload = {
+      // 正規キー
+      name: master.itemName,
+      spec: master.specification || '',
+      unit: master.unit || '式',
+      qty: 1,
+      sellUnitPrice: normalizeNumber(master.standardPrice),
+      costUnitPrice: normalizeNumber(master.costPrice),
+      visible: true,
+      masterItemId: master.id,
 
-    const updatedItems = updateCategorySubtotals(newItems);
-    setItems(updatedItems);
-    setSaveStatus('unsaved');
-    setShowMasterSearch(false);
-    setMasterSearchTerm('');
-    setMasterSearchRow(null);
+      // UIキー
+      itemName: master.itemName,
+      specification: master.specification || '',
+      quantity: 1,
+      qty: 1, // コアキーも設定
+      unitPrice: normalizeNumber(master.standardPrice),
+      costPrice: normalizeNumber(master.costPrice),
+    };
+
+    // 再計算→UI変換
+    const coreLine = calcRow(legacyToCore({ id: rowId, ...payload }));
+    const uiPatch = coreToUi(coreLine);
+
+    // 両キーで最終パッチ
+    const finalPatch = withBothKeys({ ...payload, ...uiPatch });
+
+    // 反映
+    if (typeof window !== 'undefined' && window.__est?.debug)
+      console.log('[selectMasterItem] updateRow', rowId, finalPatch);
+    updateRow(rowId, finalPatch);
+    if (typeof window !== 'undefined' && window.__est?.debug)
+      console.log('[selectMasterItem] done', rowId);
   };
 
   // 掛率調整機能
@@ -2178,6 +2440,25 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
                     <Plus className="w-4 h-4" />
                     大項目追加
                   </button>
+                  <button
+                    data-testid="add-from-master"
+                    onClick={() => {
+                      const targetRowId =
+                        rowRef.current /* 直近の行を覚えている場合 */ ??
+                        masterSearchRow /* state に保持している場合 */ ??
+                        null;
+
+                      setSearchStep('productType'); // 初期ステップ
+                      setMasterSearchRow(targetRowId); // 選択対象行（nullでもOK）
+                      setShowGlobalMasterModal(true); // モーダルを開く
+                      if (typeof window !== 'undefined' && window.__est?.debug)
+                        console.log('[ui] open master modal', { targetRowId });
+                    }}
+                    className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors flex items-center gap-2 text-sm"
+                  >
+                    <Package className="w-4 h-4" />
+                    マスタから項目追加
+                  </button>
                 </div>
               </div>
             </div>
@@ -2334,20 +2615,11 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
 
         {/* 階層マスタ検索ポップアップ */}
         {showMasterSearch && (
-          <div
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-            onClick={() => {
-              setShowMasterSearch(false);
-              setSearchStep('productType');
-              setSelectedCategory(null);
-              setSelectedProductType(null);
-              setSelectedMaker(null);
-              setMasterSearchTerm('');
-            }}
-          >
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div
+              ref={panelRef}
+              role="listbox"
               className="bg-white rounded-lg shadow-2xl border border-gray-200 max-h-96 overflow-y-auto w-full max-w-2xl"
-              onClick={(e) => e.stopPropagation()}
             >
               <div className="sticky top-0 bg-blue-50 px-4 py-2 border-b border-blue-200">
                 <div className="flex items-center justify-between">
@@ -2463,7 +2735,31 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
                     {filteredMasterItems.slice(0, 10).map((master) => (
                       <button
                         key={master.id}
-                        onClick={() => selectMasterItem(master)}
+                        type="button"
+                        role="option"
+                        onPointerDown={(e) => {
+                          console.debug('[mousedown]', {
+                            id: master.id,
+                            activeRowId,
+                          });
+                          e.preventDefault();
+                          e.stopPropagation();
+                          (e.nativeEvent as any).stopImmediatePropagation?.();
+
+                          // ★ モーダルが閉じる前に状態更新を同期反映
+                          flushSync(() => {
+                            routeMasterSelect(master, selectedCategory);
+                          });
+
+                          // その後に明示的に閉じる
+                          setShowMasterSearch(false);
+                          setSearchStep('productType');
+                          setSelectedCategory(null);
+                          setSelectedProductType(null);
+                          setSelectedMaker(null);
+                          setMasterSearchTerm('');
+                        }}
+                        onClick={(e) => e.stopPropagation()}
                         className="w-full px-4 py-3 hover:bg-blue-50 transition-colors text-left group"
                       >
                         <div className="flex items-start justify-between">
@@ -2837,9 +3133,50 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
           )}
         </AnimatePresence>
       </div>
+
+      {/* グローバルマスタ追加モーダル */}
+      <GlobalMasterAddModal
+        open={showGlobalMasterModal}
+        categories={CATEGORIES}
+        onClose={() => setShowGlobalMasterModal(false)}
+        onConfirm={(category) => {
+          // カテゴリ行を追加または既存のIDを取得
+          const categoryId = addCategory(category);
+          if (categoryId) {
+            // カテゴリと関連状態をセット
+            setSelectedCategory(category);
+            setSelectedProductType(null); // 前回値リセット
+            setSelectedMaker(null); // メーカーもリセット
+            setSearchStep('productType'); // ステップを最初へ
+            setShowGlobalMasterModal(false);
+
+            // openRowMasterSelectorでactiveRowIdをセットしてモーダルを開く
+            setTimeout(() => openRowMasterSelector(categoryId), 0);
+          }
+        }}
+        // ▼ 追加：ユーザーが商品を選んだら呼ばれる
+        onSelect={(master, categoryFromModal) => {
+          routeMasterSelect(master, categoryFromModal);
+          setShowGlobalMasterModal(false);
+        }}
+      />
     </div>
   );
 }
+
+// 表示フォーマット用のキーセット（グローバル定義）
+const MONEY_KEYS = new Set([
+  'unitPrice',
+  'sellUnitPrice',
+  'amount',
+  'sellAmount',
+  'costPrice',
+  'costAmount',
+  'grossProfit',
+]);
+const PERCENT_KEYS = new Set(['grossProfitRate']);
+const PLAIN_NUMBER_KEYS = new Set(['no', 'quantity', 'qty']); // NO列と数量は通貨フォーマットなし
+const formatPrice = (n: number) => `¥${Number(n || 0).toLocaleString('ja-JP')}`;
 
 // ソート可能な見積行コンポーネント
 function SortableEstimateRow({
@@ -3020,7 +3357,34 @@ function SortableEstimateRow({
       {columns.map((col) => {
         const isEditing =
           editingCell?.row === item.id && editingCell?.col === col.key;
-        const value = (item as any)[col.key];
+
+        // 両対応：正規キーと旧キーの両方をチェック
+        let value: any;
+        if (col.key === 'no') {
+          value = (item as any).no ?? (item as any).index ?? 0; // NO列の値
+        } else if (col.key === 'itemName') {
+          value = (item as any).name ?? (item as any).itemName ?? '';
+        } else if (col.key === 'quantity') {
+          value = (item as any).qty ?? (item as any).quantity ?? 0;
+        } else if (col.key === 'unitPrice') {
+          value = (item as any).sellUnitPrice ?? (item as any).unitPrice ?? 0;
+          // デバッグ: unitPriceの値を確認
+          if (typeof window !== 'undefined' && window.__est?.debug) {
+            console.log('[SortableEstimateRow] unitPrice value:', {
+              itemId: item.id,
+              sellUnitPrice: (item as any).sellUnitPrice,
+              unitPrice: (item as any).unitPrice,
+              finalValue: value,
+              item,
+            });
+          }
+        } else if (col.key === 'costPrice') {
+          value = (item as any).costUnitPrice ?? (item as any).costPrice ?? 0;
+        } else if (col.key === 'amount') {
+          value = (item as any).sellAmount ?? (item as any).amount ?? 0;
+        } else {
+          value = (item as any)[col.key];
+        }
 
         // 数値表示の処理（空の場合は0を表示）
         const displayValue =
@@ -3037,9 +3401,14 @@ function SortableEstimateRow({
             {col.readonly ? (
               <div className="text-right font-medium">
                 {col.type === 'number'
-                  ? `¥${(value || 0).toLocaleString()}`
+                  ? PERCENT_KEYS.has(col.key)
+                    ? `${value || 0}%`
+                    : PLAIN_NUMBER_KEYS.has(col.key)
+                      ? (value || 0).toString() // NO列と数量は通貨フォーマットなし
+                      : MONEY_KEYS.has(col.key)
+                        ? formatPrice(value || 0)
+                        : (value || 0).toString() // その他の数値もプレーン表示
                   : value || ''}
-                {col.key === 'grossProfitRate' && '%'}
               </div>
             ) : isEditing ? (
               <input
@@ -3067,9 +3436,13 @@ function SortableEstimateRow({
               >
                 {col.type === 'number'
                   ? displayValue
-                    ? col.key.includes('Rate')
+                    ? PERCENT_KEYS.has(col.key)
                       ? `${displayValue}%`
-                      : `¥${Number(displayValue).toLocaleString()}`
+                      : PLAIN_NUMBER_KEYS.has(col.key)
+                        ? Number(displayValue).toString() // NO列と数量は通貨フォーマットなし
+                        : MONEY_KEYS.has(col.key)
+                          ? formatPrice(Number(displayValue))
+                          : Number(displayValue).toString() // その他の数値もプレーン表示
                     : ''
                   : displayValue}
               </div>
