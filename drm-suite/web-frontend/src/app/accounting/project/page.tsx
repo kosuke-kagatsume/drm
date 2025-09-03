@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -69,7 +69,7 @@ interface ProjectFinancialSummary {
   }[];
 }
 
-export default function ProjectAccountingPage() {
+function ProjectAccountingPageContent() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -706,5 +706,13 @@ export default function ProjectAccountingPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProjectAccountingPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ProjectAccountingPageContent />
+    </Suspense>
   );
 }
