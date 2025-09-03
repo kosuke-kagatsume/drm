@@ -18,6 +18,8 @@ export interface Customer {
   // 営業関連情報
   lastContact?: string;
   nextAction?: string;
+  nextActionDate?: string; // 次回アクション予定日
+  priority?: number; // 優先度 (1-5: 5が最高)
   value: number; // 顧客価値（見込み金額）
   source?: string; // 獲得チャネル（web, referral, direct等）
 

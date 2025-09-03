@@ -4,6 +4,14 @@ import { useState, useEffect, useRef, Suspense } from 'react';
 import { flushSync } from 'react-dom';
 import GlobalMasterAddModal from './GlobalMasterAddModal';
 import { useRouter, useSearchParams } from 'next/navigation';
+import TemplateSelectModal from '@/components/estimates/TemplateSelectModal';
+import VersionManager from '@/components/estimates/VersionManager';
+import ApprovalWorkflowComponent from '@/components/estimates/ApprovalWorkflow';
+import { EstimateVersion } from '@/features/estimate-versions/types';
+import {
+  ApprovalWorkflow as ApprovalWorkflowType,
+  ApprovalAction,
+} from '@/features/estimate-workflow/types';
 import {
   calcRow,
   legacyToCore,
@@ -1070,6 +1078,26 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
   const [selectedTemplateItems, setSelectedTemplateItems] = useState<
     Set<string>
   >(new Set());
+
+  // 見積有効期限の状態管理
+  const [validUntil, setValidUntil] = useState<string>(() => {
+    // デフォルトは30日後
+    const date = new Date();
+    date.setDate(date.getDate() + 30);
+    return date.toISOString().split('T')[0];
+  });
+  const [showValidUntilEditor, setShowValidUntilEditor] = useState(false);
+
+  // 新機能用のステート
+  const [showNewTemplateModal, setShowNewTemplateModal] = useState(false);
+  const [showVersionManager, setShowVersionManager] = useState(false);
+  const [showApprovalWorkflow, setShowApprovalWorkflow] = useState(false);
+  const [estimateVersions, setEstimateVersions] = useState<EstimateVersion[]>(
+    [],
+  );
+  const [currentVersionId, setCurrentVersionId] = useState<string>('');
+  const [approvalWorkflow, setApprovalWorkflow] =
+    useState<ApprovalWorkflowType | null>(null);
   const [previewTemplate, setPreviewTemplate] =
     useState<EstimateTemplate | null>(null);
   const [showTemplatePreview, setShowTemplatePreview] = useState(false);
@@ -1189,14 +1217,63 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
     }),
   );
 
-  // 初期化（完全に空の状態からスタート）
+  // 初期化
   useEffect(() => {
-    const initialItems: EstimateItem[] = [];
-    setItems(initialItems);
-    setHistory([initialItems]);
-    setShowCategorySelector(true); // 最初は大項目選択を表示
+    // URLパラメータをチェック（新規作成か編集か）
+    const isNewEstimate =
+      params.id === 'new' ||
+      params.id === 'create' ||
+      params.id.startsWith('new-');
+
+    if (isNewEstimate) {
+      // 新規作成モード - 空の状態から開始
+      console.log('新規見積作成モード');
+      const initialItems: EstimateItem[] = [];
+      setItems(initialItems);
+      setHistory([initialItems]);
+      setShowCategorySelector(true); // 大項目選択を表示
+    } else {
+      // 既存見積の編集モード
+      console.log(`見積編集モード: ID=${params.id}`);
+      const savedEstimate = localStorage.getItem(`estimate_${params.id}`);
+
+      if (savedEstimate) {
+        try {
+          // 保存済みデータがある場合
+          const estimateData = JSON.parse(savedEstimate);
+          console.log('保存済みデータを読み込み:', estimateData);
+          const loadedItems = estimateData.items || [];
+          setItems(loadedItems);
+          setHistory([loadedItems]);
+          setShowCategorySelector(false);
+
+          // その他のデータも復元
+          if (estimateData.validUntil) {
+            setValidUntil(estimateData.validUntil);
+          }
+          if (estimateData.customerName && customerInfo) {
+            // 顧客情報の整合性チェック
+            console.log(`顧客: ${estimateData.customerName}`);
+          }
+        } catch (error) {
+          console.error('保存データの読み込みエラー:', error);
+          // エラー時は空の編集モードで開始
+          setItems([]);
+          setHistory([[]]);
+          setShowCategorySelector(true);
+        }
+      } else {
+        // 保存済みデータがない場合は空の編集モードで開始
+        console.log('保存済みデータなし - 空の編集モード');
+        const initialItems: EstimateItem[] = [];
+        setItems(initialItems);
+        setHistory([initialItems]);
+        setShowCategorySelector(true); // データがないので大項目選択を表示
+      }
+    }
+
     loadTemplates();
-  }, []);
+  }, [params.id]);
 
   // テンプレート読み込み
   const loadTemplates = () => {
@@ -1720,6 +1797,7 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
       id: params.id,
       items,
       customer: customerInfo,
+      validUntil, // 有効期限を追加
       updatedAt: new Date().toISOString(),
     };
 
@@ -1729,7 +1807,7 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     setSaveStatus('saved');
-    console.log('Saved successfully');
+    console.log('Saved successfully with validUntil:', validUntil);
   };
 
   // 履歴管理
@@ -2224,6 +2302,56 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
                       )}
                     </div>
                   )}
+
+                  {/* 見積有効期限 */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600">有効期限:</span>
+                    {!showValidUntilEditor ? (
+                      <button
+                        onClick={() => setShowValidUntilEditor(true)}
+                        className="px-3 py-1 bg-yellow-100 rounded-full hover:bg-yellow-200 transition-colors"
+                        title="クリックして編集"
+                      >
+                        <span className="text-sm font-medium text-yellow-900">
+                          {new Date(validUntil).toLocaleDateString('ja-JP', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          })}
+                        </span>
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="date"
+                          value={validUntil}
+                          onChange={(e) => setValidUntil(e.target.value)}
+                          min={new Date().toISOString().split('T')[0]}
+                          className="px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <button
+                          onClick={() => setShowValidUntilEditor(false)}
+                          className="p-1 text-green-600 hover:bg-green-100 rounded"
+                          title="保存"
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            // 30日後にリセット
+                            const date = new Date();
+                            date.setDate(date.getDate() + 30);
+                            setValidUntil(date.toISOString().split('T')[0]);
+                            setShowValidUntilEditor(false);
+                          }}
+                          className="p-1 text-gray-600 hover:bg-gray-100 rounded"
+                          title="キャンセル"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -2281,11 +2409,21 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
                 </button>
               </div>
 
+              {/* 保存ボタン */}
+              <button
+                onClick={handleSave}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm font-medium"
+                disabled={saveStatus === 'saving'}
+              >
+                <Save className="w-4 h-4" />
+                保存
+              </button>
+
               {/* ツール */}
               <button
                 onClick={() => {
-                  setTemplateMode('load');
-                  setShowTemplateModal(true);
+                  // 新しいテンプレート選択モーダルを開く
+                  setShowNewTemplateModal(true);
                 }}
                 className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors flex items-center gap-2 text-sm"
               >
@@ -2345,6 +2483,32 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
               >
                 <MessageSquare className="w-4 h-4" />
                 コメント
+              </button>
+
+              {/* バージョン管理 */}
+              <button
+                onClick={() => setShowVersionManager(!showVersionManager)}
+                className={`px-3 py-2 ${
+                  showVersionManager
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-purple-100 text-purple-700'
+                } rounded-lg hover:opacity-80 transition-all flex items-center gap-2 text-sm`}
+              >
+                <GitBranch className="w-4 h-4" />
+                バージョン
+              </button>
+
+              {/* 承認ワークフロー */}
+              <button
+                onClick={() => setShowApprovalWorkflow(!showApprovalWorkflow)}
+                className={`px-3 py-2 ${
+                  showApprovalWorkflow
+                    ? 'bg-green-600 text-white'
+                    : 'bg-green-100 text-green-700'
+                } rounded-lg hover:opacity-80 transition-all flex items-center gap-2 text-sm`}
+              >
+                <CheckCircle className="w-4 h-4" />
+                承認申請
               </button>
 
               <button
@@ -3160,6 +3324,155 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
           setShowGlobalMasterModal(false);
         }}
       />
+
+      {/* 新しいテンプレート選択モーダル */}
+      {showNewTemplateModal && (
+        <TemplateSelectModal
+          isOpen={showNewTemplateModal}
+          onClose={() => setShowNewTemplateModal(false)}
+          onApply={(template, options) => {
+            // テンプレートのアイテムを現在の見積に適用
+            const newItems: EstimateItem[] = [];
+            template.sections.forEach((section) => {
+              section.items.forEach((item) => {
+                newItems.push({
+                  id: nanoid(),
+                  no: newItems.length + 1,
+                  category: section.name,
+                  itemName: item.itemName,
+                  specification: item.specification || '',
+                  quantity: item.defaultQuantity,
+                  unit: item.unit,
+                  unitPrice: item.unitPrice,
+                  amount: item.unitPrice * item.defaultQuantity,
+                  remarks: '',
+                  costPrice: item.costPrice,
+                  costAmount: item.costPrice * item.defaultQuantity,
+                  grossProfit:
+                    (item.unitPrice - item.costPrice) * item.defaultQuantity,
+                  grossProfitRate:
+                    ((item.unitPrice - item.costPrice) / item.unitPrice) * 100,
+                });
+              });
+            });
+            if (options.keepExistingItems) {
+              setItems((prevItems) => [...prevItems, ...newItems]);
+            } else {
+              setItems(newItems);
+            }
+            setShowNewTemplateModal(false);
+          }}
+        />
+      )}
+
+      {/* バージョン管理 */}
+      {showVersionManager && (
+        <div className="fixed bottom-4 right-4 z-40 w-96">
+          <VersionManager
+            estimateId={params.id}
+            currentVersionId={currentVersionId}
+            versions={estimateVersions}
+            onCreateVersion={(options) => {
+              // バージョン作成処理
+              const newVersion: EstimateVersion = {
+                id: nanoid(),
+                estimateId: params.id,
+                versionNumber: `${estimateVersions.length + 1}.0`,
+                versionType: options.versionType || 'minor',
+                title: options.title,
+                description: options.description || '',
+                changeLog: options.changeLog || '',
+                status: options.autoActivate ? 'active' : 'draft',
+                snapshot: {
+                  items: items,
+                  totals: {
+                    amount: calculateTotal(),
+                    costAmount: 0,
+                    grossProfit: 0,
+                  },
+                  customer: customerInfo || {},
+                  projectInfo: { projectName: customerInfo?.company || '' },
+                  taxRate: 0.1,
+                  validUntil: new Date(
+                    Date.now() + 30 * 24 * 60 * 60 * 1000,
+                  ).toISOString(),
+                },
+                createdAt: new Date(),
+                createdBy: 'current-user',
+                createdByName: 'システム管理者',
+              };
+              setEstimateVersions([...estimateVersions, newVersion]);
+              if (options.autoActivate) {
+                setCurrentVersionId(newVersion.id);
+              }
+            }}
+            onSwitchVersion={(versionId) => {
+              const version = estimateVersions.find((v) => v.id === versionId);
+              if (version && version.snapshot) {
+                setItems(version.snapshot.items || []);
+                setCurrentVersionId(versionId);
+              }
+            }}
+            onCompareVersions={(versionAId, versionBId) => {
+              // バージョン比較機能の実装
+              console.log('Compare versions:', versionAId, versionBId);
+            }}
+          />
+        </div>
+      )}
+
+      {/* 承認ワークフロー */}
+      {showApprovalWorkflow && (
+        <div className="fixed top-20 right-4 z-40 w-96">
+          <ApprovalWorkflowComponent
+            workflow={
+              approvalWorkflow || {
+                id: nanoid(),
+                estimateId: params.id,
+                estimateNumber: `EST-${params.id}`,
+                estimateTitle: customerInfo?.company || '見積書',
+                totalAmount: calculateTotal().amount,
+                status: 'draft',
+                currentStep: 0,
+                totalSteps: 3,
+                steps: [],
+                requestedBy: 'current-user',
+                requestedByName: 'システム管理者',
+                requestedAt: new Date(),
+                customerId: customerInfo?.id || '',
+                customerName: customerInfo?.name || '',
+                projectName: customerInfo?.company || '',
+                urgency: 'normal',
+              }
+            }
+            onSubmitForApproval={() => {
+              // 承認申請処理
+              if (approvalWorkflow) {
+                setApprovalWorkflow({
+                  ...approvalWorkflow,
+                  status: 'pending',
+                });
+                console.log('Submit for approval');
+              }
+            }}
+            onApprove={(action: ApprovalAction) => {
+              // 承認処理
+              console.log('Approve:', action);
+            }}
+            onReject={(action: ApprovalAction) => {
+              // 却下処理
+              console.log('Reject:', action);
+            }}
+            onDelegate={(action: ApprovalAction) => {
+              // 委任処理
+              console.log('Delegate:', action);
+            }}
+            currentUserId="current-user"
+            canSubmit={true}
+            canApprove={true}
+          />
+        </div>
+      )}
     </div>
   );
 }

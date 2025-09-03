@@ -80,30 +80,67 @@ class CustomerService {
   }> {
     // Return mock data if API is not configured
     if (!process.env.NEXT_PUBLIC_CUSTOMER_API_URL) {
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const nextWeek = new Date(today);
+      nextWeek.setDate(nextWeek.getDate() + 7);
+
       return Promise.resolve({
         customers: [
           {
             id: '1',
             name: '田中太郎',
+            company: '田中建設株式会社',
             email: 'tanaka@example.com',
             phone: '090-1234-5678',
             status: 'customer' as CustomerStatus,
+            tags: ['高額顧客', 'リピーター'],
             assignee: filter?.assignee || 'sales@test.com',
+            value: 8500000,
+            nextAction: '修正見積もりを送付',
+            nextActionDate: today.toISOString(),
+            priority: 5,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
+            createdBy: 'system',
           },
           {
             id: '2',
             name: '佐藤花子',
+            company: '佐藤工務店',
             email: 'sato@example.com',
             phone: '090-2345-6789',
             status: 'lead' as CustomerStatus,
+            tags: ['新規', '紹介'],
             assignee: filter?.assignee || 'sales@test.com',
+            value: 3500000,
+            nextAction: '初回見積もり作成',
+            nextActionDate: tomorrow.toISOString(),
+            priority: 4,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
+            createdBy: 'system',
+          },
+          {
+            id: '3',
+            name: '山田次郎',
+            company: '山田リフォーム',
+            email: 'yamada@example.com',
+            phone: '090-3456-7890',
+            status: 'prospect' as CustomerStatus,
+            tags: ['検討中'],
+            assignee: filter?.assignee || 'sales@test.com',
+            value: 5200000,
+            nextAction: '現地調査の日程調整',
+            nextActionDate: nextWeek.toISOString(),
+            priority: 3,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            createdBy: 'system',
           },
         ],
-        total: 2,
+        total: 3,
         hasMore: false,
       });
     }

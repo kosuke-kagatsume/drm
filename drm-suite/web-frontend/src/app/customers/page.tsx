@@ -428,14 +428,16 @@ export default function CustomersPage() {
                               </div>
                             )}
                             <div className="flex flex-wrap gap-1 mt-1">
-                              {customer.tags.slice(0, 2).map((tag, i) => (
-                                <span
-                                  key={i}
-                                  className="px-2 py-0.5 bg-dandori-blue/10 text-dandori-blue text-xs rounded-full"
-                                >
-                                  {tag}
-                                </span>
-                              ))}
+                              {(customer.tags || [])
+                                .slice(0, 2)
+                                .map((tag, i) => (
+                                  <span
+                                    key={i}
+                                    className="px-2 py-0.5 bg-dandori-blue/10 text-dandori-blue text-xs rounded-full"
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
                             </div>
                           </div>
                         </div>

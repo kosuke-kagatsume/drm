@@ -109,22 +109,28 @@ class EstimateService {
   }> {
     // Return mock data if API is not configured
     if (!process.env.NEXT_PUBLIC_ESTIMATE_API_URL) {
+      const today = new Date();
+      const nextWeek = new Date(today);
+      nextWeek.setDate(nextWeek.getDate() + 7);
+      const nextMonth = new Date(today);
+      nextMonth.setDate(nextMonth.getDate() + 30);
+
       return Promise.resolve({
         estimates: [
           {
             id: '1',
             estimateNumber: 'EST-2024-001',
+            customerName: '田中太郎',
+            customerCompany: '田中建設株式会社',
             customerId: '1',
-            customerName: '田中様邸',
             projectName: '田中様邸 外壁塗装工事',
-            projectType: '外壁塗装',
+            projectType: 'reform',
+            validUntil: nextWeek.toISOString(),
             status: 'pending' as EstimateStatus,
-            totalAmount: 2500000,
-            validUntil: new Date(
-              Date.now() + 7 * 24 * 60 * 60 * 1000,
-            ).toISOString(),
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
+            createdBy: 'system',
+            version: 1,
             sections: [],
             expenses: {
               siteManagementRate: 10,
@@ -132,29 +138,34 @@ class EstimateService {
               profitRate: 12,
               discountAmount: 0,
               taxRate: 10,
-              subtotal: 2000000,
-              siteManagementCost: 200000,
-              generalManagementCost: 160000,
+            },
+            totals: {
+              directCost: 2000000,
+              siteManagement: 200000,
+              generalManagement: 160000,
               profit: 240000,
-              totalBeforeTax: 2500000,
-              tax: 250000,
-              totalAmount: 2750000,
+              subtotal: 2600000,
+              tax: 260000,
+              total: 2860000,
+              totalCost: 1800000,
+              grossProfitAmount: 800000,
+              grossProfitRate: 30.8,
             },
           },
           {
             id: '2',
             estimateNumber: 'EST-2024-002',
+            customerName: '佐藤花子',
+            customerCompany: '佐藤工務店',
             customerId: '2',
-            customerName: '佐藤ビル',
-            projectName: '佐藤ビル改修工事',
-            projectType: 'ビル改修',
+            projectName: 'キッチンリフォーム工事',
+            projectType: 'reform',
             status: 'draft' as EstimateStatus,
-            totalAmount: 8000000,
-            validUntil: new Date(
-              Date.now() + 14 * 24 * 60 * 60 * 1000,
-            ).toISOString(),
+            validUntil: nextMonth.toISOString(),
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
+            createdBy: 'system',
+            version: 1,
             sections: [],
             expenses: {
               siteManagementRate: 10,
@@ -162,13 +173,18 @@ class EstimateService {
               profitRate: 12,
               discountAmount: 0,
               taxRate: 10,
-              subtotal: 6400000,
-              siteManagementCost: 640000,
-              generalManagementCost: 512000,
-              profit: 768000,
-              totalBeforeTax: 8000000,
-              tax: 800000,
-              totalAmount: 8800000,
+            },
+            totals: {
+              directCost: 3000000,
+              siteManagement: 300000,
+              generalManagement: 240000,
+              profit: 360000,
+              subtotal: 3900000,
+              tax: 390000,
+              total: 4290000,
+              totalCost: 2700000,
+              grossProfitAmount: 1200000,
+              grossProfitRate: 30.8,
             },
           },
         ],

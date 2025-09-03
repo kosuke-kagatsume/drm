@@ -27,101 +27,108 @@ interface Communication {
   status: 'unread' | 'read' | 'replied';
 }
 
-export default function CustomerDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default function CustomerDetailPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [showActionModal, setShowActionModal] = useState(false);
   const [showVoiceModal, setShowVoiceModal] = useState(false);
+  const [editingNextAction, setEditingNextAction] = useState(false);
 
-  // Sample customer data
-  const customer = {
-    id: params.id,
+  // 顧客データを管理するstateに変更
+  const [customer, setCustomer] = useState({
+    id: '1',
     name: '田中太郎',
     company: '田中建設株式会社',
     email: 'tanaka@example.com',
     phone: '090-1234-5678',
-    address: '東京都渋谷区○○1-2-3',
-    status: 'customer',
-    value: 2500000,
-    createdAt: '2023-06-15',
-    tags: ['外壁塗装', 'リピーター', 'VIP'],
+    address: '東京都渋谷区〇〇1-2-3',
+    tags: ['高額顧客', 'リピーター', '紹介あり'],
+    status: '商談中',
     assignee: '山田花子',
-    notes: '定期的なメンテナンスを重視する顧客。品質重視。',
-  };
+    value: 8500000,
+    createdAt: '2024-01-15T09:00:00',
+    lastContact: '2024-02-10',
+    nextAction: '修正見積もりを送付',
+    nextActionDate: '2024-02-15',
+    priority: 4, // 1-5 (5が最高)
+  });
 
-  const actions: CustomerAction[] = [
+  const actions = [
     {
       id: '1',
-      type: 'meeting',
-      content: '見積もり内容について打ち合わせ。予算調整の相談あり。',
-      date: '2024-02-10 14:00',
-      by: '山田花子',
-      duration: '60分',
-      aiSummary:
-        '・予算を200万円以内に調整希望\n・工期は3週間程度を希望\n・色選びについて再検討',
+      date: '2024-02-10',
+      type: 'call',
+      content: '見積もりについての相談。予算調整を検討中。',
+      user: '山田花子',
+      duration: '15分',
+      result: '修正見積もりを2/15までに送付',
       sentiment: 'positive',
       nextAction: '修正見積もりを2/15までに送付',
     },
     {
       id: '2',
-      type: 'voice',
-      content: '電話での相談内容',
-      date: '2024-02-09 11:30',
-      by: '山田花子',
-      duration: '15分',
-      aiSummary:
-        '・工事開始時期の確認\n・近隣への挨拶について相談\n・足場設置のタイミング',
+      date: '2024-02-08',
+      type: 'email',
+      content: '初回見積書を送付',
+      user: '山田花子',
+      attachments: ['見積書_田中様.pdf'],
       sentiment: 'neutral',
-      attachments: ['audio_20240209.mp3'],
     },
     {
       id: '3',
-      type: 'email',
-      content: '見積書を送付しました。',
-      date: '2024-02-08 09:00',
-      by: '山田花子',
-      sentiment: 'neutral',
+      date: '2024-02-05',
+      type: 'meeting',
+      content: '初回商談。リフォーム内容のヒアリング。',
+      user: '山田花子',
+      duration: '60分',
+      location: '弊社会議室',
+      participants: ['田中太郎', '田中花子（奥様）'],
+      result: '見積もり作成へ',
+      sentiment: 'positive',
     },
     {
       id: '4',
+      date: '2024-02-01',
+      type: 'line',
+      content: 'LINE公式アカウントから問い合わせ',
+      user: 'システム',
+      platform: 'LINE',
+      sentiment: 'neutral',
+    },
+    {
+      id: '5',
+      date: '2024-01-30',
       type: 'chat',
-      content: 'チャットワークで工期について質問あり。',
-      date: '2024-02-07 16:45',
-      by: '山田花子',
-      sentiment: 'positive',
+      content: 'ウェブサイトのチャットから初回問い合わせ',
+      user: 'システム',
+      sentiment: 'neutral',
     },
   ];
 
-  const communications: Communication[] = [
+  const communications = [
+    { type: 'call', count: 5, lastDate: '2024-02-10' },
+    { type: 'email', count: 12, lastDate: '2024-02-08' },
+    { type: 'meeting', count: 2, lastDate: '2024-02-05' },
+    { type: 'line', count: 8, lastDate: '2024-02-09' },
+  ];
+
+  const projects = [
     {
       id: '1',
-      platform: 'chatwork',
-      content: '見積もりありがとうございます。内容確認させていただきます。',
-      date: '2024-02-10 10:30',
-      direction: 'inbound',
-      status: 'replied',
+      name: 'キッチンリフォーム',
+      status: '見積中',
+      budget: 3500000,
+      startDate: '2024-03-01',
+      progress: 20,
     },
     {
       id: '2',
-      platform: 'email',
-      subject: '見積書送付の件',
-      content: 'お世話になっております。見積書を送付させていただきます。',
-      date: '2024-02-08 09:00',
-      direction: 'outbound',
-      status: 'read',
-    },
-    {
-      id: '3',
-      platform: 'line',
-      content: '工事の進捗はいかがでしょうか？',
-      date: '2024-02-05 14:20',
-      direction: 'inbound',
-      status: 'replied',
+      name: '外壁塗装',
+      status: '検討中',
+      budget: 2000000,
+      startDate: '2024-04-01',
+      progress: 10,
     },
   ];
 
@@ -132,51 +139,57 @@ export default function CustomerDetailPage({
       case 'email':
         return '📧';
       case 'meeting':
-        return '🤝';
-      case 'chat':
-        return '💬';
+        return '👥';
       case 'line':
-        return '📱';
-      case 'voice':
-        return '🎙️';
-      case 'note':
-        return '📝';
+        return '💬';
+      case 'chat':
+        return '💭';
+      case 'visit':
+        return '🏠';
       default:
-        return '📌';
+        return '📝';
     }
   };
 
   const getSentimentColor = (sentiment?: string) => {
     switch (sentiment) {
       case 'positive':
-        return 'text-green-600';
+        return 'bg-green-50 border-green-200';
       case 'negative':
-        return 'text-red-600';
+        return 'bg-red-50 border-red-200';
       default:
-        return 'text-gray-600';
+        return 'bg-gray-50 border-gray-200';
     }
   };
 
-  const getPlatformIcon = (platform: string) => {
+  const getPlatformIcon = (platform?: string) => {
     switch (platform) {
-      case 'email':
-        return '📧';
-      case 'chatwork':
-        return '💼';
-      case 'line':
-        return '📱';
-      case 'slack':
-        return '💬';
+      case 'LINE':
+        return '🟢';
+      case 'Instagram':
+        return '📷';
+      case 'Twitter':
+        return '🐦';
       default:
-        return '📨';
+        return '💬';
     }
+  };
+
+  const handleSaveNextAction = () => {
+    setEditingNextAction(false);
+    // ここで実際のデータ保存処理を行う
+    console.log('次回アクション保存:', {
+      nextAction: customer.nextAction,
+      nextActionDate: customer.nextActionDate,
+      priority: customer.priority,
+    });
   };
 
   if (isLoading || !user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dandori-blue mx-auto"></div>
           <p className="mt-4 text-gray-600">読み込み中...</p>
         </div>
       </div>
@@ -184,86 +197,83 @@ export default function CustomerDetailPage({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header with Gradient */}
-      <div className="bg-gradient-dandori text-white shadow-xl">
-        <div className="max-w-full-hd mx-auto px-4 lg:px-6 xl:px-8 2xl:px-12 py-6">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-4">
+    <div className="min-h-screen bg-gray-50">
+      {/* Navigation */}
+      <nav className="bg-white border-b sticky top-0 z-40">
+        <div className="max-w-full-hd mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-4">
               <button
                 onClick={() => router.push('/customers')}
-                className="text-white/80 hover:text-white transition-colors"
+                className="text-gray-600 hover:text-gray-900 transition"
               >
-                ← 顧客一覧
+                ← 戻る
               </button>
-              <div>
-                <h1 className="text-3xl font-bold flex items-center">
-                  <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-2xl mr-3">
-                    {customer.name.charAt(0)}
-                  </div>
-                  {customer.name}
-                </h1>
-                {customer.company && (
-                  <span className="text-dandori-yellow/80 text-sm ml-14">
-                    {customer.company}
-                  </span>
-                )}
-              </div>
+              <h1 className="text-xl font-bold">顧客詳細</h1>
             </div>
-
-            <div className="flex space-x-3">
-              <button
-                onClick={() => router.push(`/customers/${params.id}/detailed`)}
-                className="bg-gradient-to-r from-emerald-500 to-green-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-              >
-                <span className="text-lg mr-2">📋</span>
-                詳細情報
-              </button>
-              <button
-                onClick={() => setShowActionModal(true)}
-                className="bg-white text-dandori-blue px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-              >
-                <span className="text-lg mr-2">+</span>
-                アクション追加
-              </button>
-              <button
-                onClick={() => setShowVoiceModal(true)}
-                className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-              >
-                <span className="text-lg mr-2">🎙️</span>
-                音声メモ取込
-              </button>
-            </div>
+            <button
+              onClick={() =>
+                setCustomer({
+                  ...customer,
+                  priority:
+                    customer.priority === 5 ? 1 : (customer.priority || 0) + 1,
+                })
+              }
+              className="bg-gradient-dandori text-white px-4 py-2 rounded-lg hover:shadow-lg transition"
+            >
+              編集
+            </button>
           </div>
         </div>
-      </div>
+      </nav>
 
-      <div className="max-w-full-hd mx-auto px-4 lg:px-6 xl:px-8 2xl:px-12 py-8">
-        {/* Quick Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transform hover:scale-105 transition-all duration-200">
-            <div className="text-3xl mb-2">🤝</div>
-            <h4 className="text-2xl font-bold text-gray-900">
-              {actions.length}
-            </h4>
-            <p className="text-sm text-gray-600">総アクション</p>
-          </div>
-          <div className="bg-gradient-to-br from-green-500 to-emerald-500 text-white rounded-2xl shadow-lg p-6 hover:shadow-xl transform hover:scale-105 transition-all duration-200">
-            <div className="text-3xl mb-2">💰</div>
-            <h4 className="text-2xl font-bold">
-              ¥{(customer.value / 1000000).toFixed(1)}M
-            </h4>
-            <p className="text-sm text-white/90">顧客価値</p>
-          </div>
-          <div className="bg-gradient-to-br from-dandori-blue to-dandori-sky text-white rounded-2xl shadow-lg p-6 hover:shadow-xl transform hover:scale-105 transition-all duration-200">
-            <div className="text-3xl mb-2">📅</div>
-            <h4 className="text-2xl font-bold">72%</h4>
-            <p className="text-sm text-white/90">成約確率</p>
-          </div>
-          <div className="bg-gradient-to-br from-purple-500 to-indigo-500 text-white rounded-2xl shadow-lg p-6 hover:shadow-xl transform hover:scale-105 transition-all duration-200">
-            <div className="text-3xl mb-2">⭐</div>
-            <h4 className="text-2xl font-bold">VIP</h4>
-            <p className="text-sm text-white/90">顧客ランク</p>
+      <div className="max-w-full-hd mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Customer Header Card - Enhanced */}
+        <div className="bg-gradient-to-r from-dandori-blue to-dandori-sky rounded-2xl shadow-xl p-8 mb-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-4 mb-3">
+                <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                  <span className="text-3xl font-bold text-white">
+                    {customer.name.charAt(0)}
+                  </span>
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold">{customer.name}</h1>
+                  <p className="text-lg opacity-90">{customer.company}</p>
+                  <div className="flex gap-2 mt-2">
+                    {customer.tags.map((tag, i) => (
+                      <span
+                        key={i}
+                        className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-sm opacity-90">顧客価値</p>
+              <p className="text-3xl font-bold">
+                ¥{customer.value.toLocaleString()}
+              </p>
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={() => setShowActionModal(true)}
+                  className="bg-white text-dandori-blue px-4 py-2 rounded-lg hover:shadow-lg transition font-medium"
+                >
+                  📝 アクション記録
+                </button>
+                <button
+                  onClick={() => setShowVoiceModal(true)}
+                  className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg hover:bg-white/30 transition"
+                >
+                  🎤 音声メモ
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -344,526 +354,608 @@ export default function CustomerDetailPage({
 
               <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-4 rounded-xl border border-purple-200">
                 <h3 className="text-sm font-bold text-purple-800 mb-3">
-                  タグ・メモ
+                  次回アクション
                 </h3>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {customer.tags.map((tag, idx) => (
-                    <span
-                      key={idx}
-                      className="px-3 py-1 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs rounded-full font-medium shadow-sm"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <div className="bg-white/70 p-3 rounded-lg">
-                  <p className="text-sm text-gray-700 italic">
-                    "{customer.notes}"
-                  </p>
-                </div>
+                {!editingNextAction ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">内容</span>
+                      <button
+                        onClick={() => setEditingNextAction(true)}
+                        className="text-purple-600 hover:text-purple-700 text-xs"
+                      >
+                        編集
+                      </button>
+                    </div>
+                    <p className="text-sm font-medium text-gray-900">
+                      {customer.nextAction || '未設定'}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">期限</span>
+                      <span className="text-sm font-medium text-purple-700">
+                        {customer.nextActionDate
+                          ? new Date(
+                              customer.nextActionDate,
+                            ).toLocaleDateString('ja-JP')
+                          : '未設定'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">優先度</span>
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <span
+                            key={star}
+                            className={`text-lg ${
+                              star <= (customer.priority || 0)
+                                ? 'text-yellow-500'
+                                : 'text-gray-300'
+                            }`}
+                          >
+                            ★
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs text-gray-600">内容</label>
+                      <textarea
+                        value={customer.nextAction}
+                        onChange={(e) =>
+                          setCustomer({
+                            ...customer,
+                            nextAction: e.target.value,
+                          })
+                        }
+                        className="w-full mt-1 p-2 text-sm border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        rows={2}
+                        placeholder="次回アクション内容を入力"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-600">期限</label>
+                      <input
+                        type="date"
+                        value={customer.nextActionDate}
+                        onChange={(e) =>
+                          setCustomer({
+                            ...customer,
+                            nextActionDate: e.target.value,
+                          })
+                        }
+                        className="w-full mt-1 p-2 text-sm border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-600">優先度</label>
+                      <div className="flex gap-2 mt-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            onClick={() =>
+                              setCustomer({ ...customer, priority: star })
+                            }
+                            className={`text-2xl transition-all ${
+                              star <= (customer.priority || 0)
+                                ? 'text-yellow-500'
+                                : 'text-gray-300 hover:text-yellow-300'
+                            }`}
+                          >
+                            ★
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSaveNextAction}
+                        className="flex-1 bg-purple-600 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-purple-700 transition"
+                      >
+                        保存
+                      </button>
+                      <button
+                        onClick={() => setEditingNextAction(false)}
+                        className="flex-1 bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-xs hover:bg-gray-300 transition"
+                      >
+                        キャンセル
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Tabs - Enhanced */}
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-          <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-2">
-            <div className="flex space-x-2">
-              {[
-                { id: 'overview', label: '概要', icon: '📊' },
-                { id: 'actions', label: 'アクション履歴', icon: '📝' },
-                {
-                  id: 'communications',
-                  label: 'コミュニケーション',
-                  icon: '💬',
-                },
-                { id: 'documents', label: '資料', icon: '📁' },
-                { id: 'analysis', label: '分析', icon: '📈' },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200 ${
-                    activeTab === tab.id
-                      ? 'bg-gradient-dandori text-white shadow-lg transform scale-105'
-                      : 'text-gray-600 hover:bg-white hover:shadow-md'
-                  }`}
-                >
-                  <span className="text-lg mr-2">{tab.icon}</span>
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+        {/* Tabs */}
+        <div className="bg-white rounded-xl shadow-md mb-6 p-1">
+          <div className="flex space-x-1">
+            {[
+              { id: 'overview', label: '概要', icon: '📊' },
+              { id: 'actions', label: 'アクション履歴', icon: '📋' },
+              { id: 'projects', label: 'プロジェクト', icon: '🏗️' },
+              { id: 'documents', label: '書類', icon: '📄' },
+              { id: 'notes', label: 'メモ', icon: '📝' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 px-4 py-3 rounded-lg font-medium transition ${
+                  activeTab === tab.id
+                    ? 'bg-gradient-dandori text-white shadow-lg'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <span className="mr-2">{tab.icon}</span>
+                {tab.label}
+              </button>
+            ))}
           </div>
+        </div>
 
-          <div className="p-6">
-            {/* Overview Tab - Enhanced */}
-            {activeTab === 'overview' && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-bold text-lg mb-4 flex items-center">
-                    <span className="text-2xl mr-2">📝</span>
-                    最近のアクション
-                  </h3>
-                  <div className="space-y-3">
-                    {actions.slice(0, 3).map((action) => (
-                      <div
-                        key={action.id}
-                        className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 hover:shadow-md transition-all duration-200"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start space-x-3">
-                            <div className="w-10 h-10 bg-gradient-dandori rounded-full flex items-center justify-center text-white text-xl shadow-sm">
-                              {getActionIcon(action.type)}
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-sm text-gray-700 font-medium">
-                                {action.content}
-                              </p>
-                              {action.aiSummary && (
-                                <div className="mt-3 p-3 bg-gradient-to-r from-dandori-blue/10 to-dandori-sky/10 rounded-lg border border-dandori-blue/20">
-                                  <p className="font-bold text-xs text-dandori-blue mb-1">
-                                    🤖 AI要約
-                                  </p>
-                                  <p className="whitespace-pre-line text-xs text-gray-700">
-                                    {action.aiSummary}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <span className="text-xs text-gray-500 font-medium">
-                            {action.date}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="font-bold text-lg mb-4 flex items-center">
-                    <span className="text-2xl mr-2">🎯</span>
-                    次のアクション
-                  </h3>
-                  <div className="bg-gradient-to-br from-dandori-yellow/20 to-dandori-orange/20 p-5 rounded-xl border border-dandori-orange/30">
-                    <div className="flex items-start space-x-3">
-                      <div className="w-10 h-10 bg-gradient-warm rounded-full flex items-center justify-center text-white animate-pulse">
-                        ⚡
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-bold text-dandori-orange mb-2">
-                          修正見積もりを2/15までに送付
-                        </p>
-                        <p className="text-sm text-gray-700">
-                          前回の打ち合わせで予算調整の要望があったため、修正版を作成して送付する。
-                        </p>
-                        <button className="mt-3 bg-gradient-warm text-white px-4 py-2 rounded-lg text-sm font-bold hover:shadow-lg transform hover:scale-105 transition-all duration-200">
-                          ✓ 完了にする
-                        </button>
-                      </div>
+        {/* Tab Content */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          {activeTab === 'overview' && (
+            <div>
+              <h3 className="text-lg font-bold mb-6 text-gray-900 flex items-center">
+                <span className="mr-2">📈</span>
+                コミュニケーション統計
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                {communications.map((comm) => (
+                  <div
+                    key={comm.type}
+                    className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-2xl">
+                        {getActionIcon(comm.type)}
+                      </span>
+                      <span className="text-2xl font-bold text-dandori-blue">
+                        {comm.count}
+                      </span>
                     </div>
+                    <p className="text-sm text-gray-600">
+                      最終:{' '}
+                      {new Date(comm.lastDate).toLocaleDateString('ja-JP')}
+                    </p>
                   </div>
-
-                  <h3 className="font-bold text-lg mt-6 mb-4 flex items-center">
-                    <span className="text-2xl mr-2">📊</span>
-                    スコアリング
-                  </h3>
-                  <div className="bg-white rounded-xl p-4 border border-gray-200">
-                    <div className="space-y-4">
-                      <div>
-                        <div className="flex justify-between mb-2">
-                          <span className="text-sm font-medium text-gray-700">
-                            エンゲージメント
-                          </span>
-                          <span className="text-sm font-bold text-green-600">
-                            85%
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                          <div
-                            className="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full transition-all duration-500"
-                            style={{ width: '85%' }}
-                          ></div>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex justify-between mb-2">
-                          <span className="text-sm font-medium text-gray-700">
-                            成約確率
-                          </span>
-                          <span className="text-sm font-bold text-dandori-blue">
-                            72%
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                          <div
-                            className="bg-gradient-dandori h-3 rounded-full transition-all duration-500"
-                            style={{ width: '72%' }}
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                ))}
               </div>
-            )}
 
-            {/* Actions Tab */}
-            {activeTab === 'actions' && (
-              <div className="space-y-4">
-                {actions.map((action) => (
-                  <div key={action.id} className="border rounded-lg p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center space-x-3">
+              <h3 className="text-lg font-bold mb-4 text-gray-900 flex items-center">
+                <span className="mr-2">📅</span>
+                最近のアクティビティ
+              </h3>
+              <div className="space-y-3">
+                {actions.slice(0, 3).map((action) => (
+                  <div
+                    key={action.id}
+                    className={`p-4 rounded-xl border transition hover:shadow-md ${getSentimentColor(
+                      action.sentiment,
+                    )}`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start space-x-3">
                         <span className="text-2xl">
                           {getActionIcon(action.type)}
                         </span>
                         <div>
-                          <div className="flex items-center space-x-2">
-                            <span className="font-medium">{action.by}</span>
-                            <span className="text-sm text-gray-500">
-                              {action.date}
+                          <p className="font-medium text-gray-900">
+                            {action.content}
+                          </p>
+                          {action.result && (
+                            <p className="text-sm text-green-700 mt-1">
+                              結果: {action.result}
+                            </p>
+                          )}
+                          {action.nextAction && (
+                            <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg p-2">
+                              <p className="text-xs font-medium text-yellow-800">
+                                次回アクション
+                              </p>
+                              <p className="text-sm">{action.nextAction}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-gray-500">
+                          {new Date(action.date).toLocaleDateString('ja-JP')}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {action.user}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'actions' && (
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-bold text-gray-900">
+                  📋 アクション履歴
+                </h3>
+                <button
+                  onClick={() => setShowActionModal(true)}
+                  className="bg-gradient-dandori text-white px-4 py-2 rounded-lg hover:shadow-lg transition"
+                >
+                  新規アクション
+                </button>
+              </div>
+              <div className="space-y-4">
+                {actions.map((action) => (
+                  <div
+                    key={action.id}
+                    className={`p-5 rounded-xl border transition hover:shadow-lg ${getSentimentColor(
+                      action.sentiment,
+                    )}`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start space-x-4">
+                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
+                          <span className="text-2xl">
+                            {getActionIcon(action.type)}
+                          </span>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="font-bold text-gray-900">
+                              {action.type === 'call'
+                                ? '電話'
+                                : action.type === 'email'
+                                  ? 'メール'
+                                  : action.type === 'meeting'
+                                    ? '商談'
+                                    : action.type === 'line'
+                                      ? 'LINE'
+                                      : action.type === 'chat'
+                                        ? 'チャット'
+                                        : 'その他'}
                             </span>
                             {action.duration && (
                               <span className="text-sm text-gray-500">
                                 ({action.duration})
                               </span>
                             )}
+                            {action.platform && (
+                              <span className="text-sm">
+                                {getPlatformIcon(action.platform)}
+                              </span>
+                            )}
                           </div>
-                          {action.sentiment && (
-                            <span
-                              className={`text-xs ${getSentimentColor(action.sentiment)}`}
-                            >
-                              {action.sentiment === 'positive'
-                                ? '😊 ポジティブ'
-                                : action.sentiment === 'negative'
-                                  ? '😟 ネガティブ'
-                                  : '😐 ニュートラル'}
-                            </span>
+                          <p className="text-gray-700 mb-2">{action.content}</p>
+                          {action.location && (
+                            <p className="text-sm text-gray-600 mb-1">
+                              📍 場所: {action.location}
+                            </p>
+                          )}
+                          {action.participants && (
+                            <p className="text-sm text-gray-600 mb-1">
+                              👥 参加者: {action.participants.join(', ')}
+                            </p>
+                          )}
+                          {action.attachments && (
+                            <div className="flex gap-2 mt-2">
+                              {action.attachments.map((file, i) => (
+                                <span
+                                  key={i}
+                                  className="inline-flex items-center gap-1 bg-gray-100 px-2 py-1 rounded text-xs"
+                                >
+                                  📎 {file}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          {action.result && (
+                            <div className="mt-3 bg-green-50 border border-green-200 rounded-lg p-3">
+                              <p className="text-sm font-medium text-green-800">
+                                結果・成果
+                              </p>
+                              <p className="text-sm text-green-700">
+                                {action.result}
+                              </p>
+                            </div>
+                          )}
+                          {action.nextAction && (
+                            <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                              <p className="text-sm font-medium text-yellow-800">
+                                次回アクション
+                              </p>
+                              <p className="text-sm text-yellow-700">
+                                {action.nextAction}
+                              </p>
+                            </div>
                           )}
                         </div>
                       </div>
-                    </div>
-
-                    <p className="text-gray-700 mb-3">{action.content}</p>
-
-                    {action.aiSummary && (
-                      <div className="bg-blue-50 p-3 rounded-lg mb-3">
-                        <h4 className="font-medium text-sm mb-2">🤖 AI要約</h4>
-                        <p className="text-sm whitespace-pre-line">
-                          {action.aiSummary}
+                      <div className="text-right ml-4">
+                        <p className="text-sm font-medium text-gray-900">
+                          {new Date(action.date).toLocaleDateString('ja-JP')}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {new Date(action.date).toLocaleTimeString('ja-JP', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-2">
+                          {action.user}
                         </p>
                       </div>
-                    )}
-
-                    {action.nextAction && (
-                      <div className="bg-yellow-50 p-3 rounded-lg">
-                        <h4 className="font-medium text-sm mb-1">
-                          ➡️ 次のアクション
-                        </h4>
-                        <p className="text-sm">{action.nextAction}</p>
-                      </div>
-                    )}
-
-                    {action.attachments && (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {action.attachments.map((file, idx) => (
-                          <button
-                            key={idx}
-                            className="text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200"
-                          >
-                            📎 {file}
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                    </div>
                   </div>
                 ))}
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Communications Tab */}
-            {activeTab === 'communications' && (
-              <div>
-                <div className="mb-4 p-4 bg-blue-50 rounded-lg">
-                  <h4 className="font-medium mb-2">🔗 連携済みサービス</h4>
-                  <div className="flex space-x-4">
-                    <span className="px-3 py-1 bg-white rounded text-sm">
-                      💼 Chatwork
-                    </span>
-                    <span className="px-3 py-1 bg-white rounded text-sm">
-                      📱 LINE WORKS
-                    </span>
-                    <span className="px-3 py-1 bg-white rounded text-sm">
-                      📧 Gmail
-                    </span>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  {communications.map((comm) => (
-                    <div
-                      key={comm.id}
-                      className={`border rounded-lg p-4 ${
-                        comm.status === 'unread'
-                          ? 'bg-blue-50 border-blue-300'
-                          : ''
-                      }`}
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-xl">
-                            {getPlatformIcon(comm.platform)}
-                          </span>
-                          <span className="font-medium capitalize">
-                            {comm.platform}
-                          </span>
-                          {comm.direction === 'inbound' ? (
-                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                              受信
-                            </span>
-                          ) : (
-                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                              送信
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-sm text-gray-500">
-                          {comm.date}
+          {activeTab === 'projects' && (
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-bold text-gray-900">
+                  🏗️ プロジェクト一覧
+                </h3>
+                <button className="bg-gradient-dandori text-white px-4 py-2 rounded-lg hover:shadow-lg transition">
+                  新規プロジェクト
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {projects.map((project) => (
+                  <div
+                    key={project.id}
+                    className="bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl border border-gray-200 hover:shadow-lg transition"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <h4 className="font-bold text-gray-900">
+                        {project.name}
+                      </h4>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          project.status === '見積中'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-blue-100 text-blue-800'
+                        }`}
+                      >
+                        {project.status}
+                      </span>
+                    </div>
+                    <div className="space-y-2 mb-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">予算</span>
+                        <span className="font-medium">
+                          ¥{project.budget.toLocaleString()}
                         </span>
                       </div>
-                      {comm.subject && (
-                        <h4 className="font-medium mb-1">{comm.subject}</h4>
-                      )}
-                      <p className="text-sm text-gray-700">{comm.content}</p>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">開始予定</span>
+                        <span className="font-medium">
+                          {new Date(project.startDate).toLocaleDateString(
+                            'ja-JP',
+                          )}
+                        </span>
+                      </div>
                     </div>
-                  ))}
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">進捗</span>
+                        <span className="font-medium">{project.progress}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-gradient-dandori h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${project.progress}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'documents' && (
+            <div>
+              <h3 className="text-lg font-bold mb-4 text-gray-900">
+                📄 書類一覧
+              </h3>
+              <div className="border border-gray-200 rounded-lg">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                        書類名
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                        種類
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                        作成日
+                      </th>
+                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">
+                        アクション
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    <tr className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-sm">
+                        見積書_田中様_v1.pdf
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs">
+                          見積書
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        2024/02/08
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button className="text-dandori-blue hover:text-dandori-sky text-sm">
+                          ダウンロード
+                        </button>
+                      </td>
+                    </tr>
+                    <tr className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-sm">契約書_田中様.pdf</td>
+                      <td className="px-4 py-3">
+                        <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
+                          契約書
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        2024/02/10
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button className="text-dandori-blue hover:text-dandori-sky text-sm">
+                          ダウンロード
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'notes' && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900">📝 メモ</h3>
+                <button className="bg-gradient-dandori text-white px-4 py-2 rounded-lg hover:shadow-lg transition">
+                  新規メモ
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <span className="bg-yellow-200 text-yellow-800 px-2 py-1 rounded text-xs">
+                      重要
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      2024/02/10 14:30
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-700">
+                    予算の上限は400万円。キッチンのグレードアップを希望されているが、予算内で収まるよう調整が必要。
+                  </p>
+                </div>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs">
+                      一般
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      2024/02/08 10:15
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-700">
+                    奥様が主に決定権を持っている。デザイン面での提案を重視すること。
+                  </p>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
-      </div>
 
-      {/* Add Action Modal */}
-      {showActionModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold mb-4">新規アクション追加</h3>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  アクションタイプ
-                </label>
-                <select className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="call">📞 電話</option>
-                  <option value="email">📧 メール</option>
-                  <option value="meeting">🤝 打ち合わせ</option>
-                  <option value="chat">💬 チャット</option>
-                  <option value="note">📝 メモ</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  内容
-                </label>
-                <textarea
-                  rows={4}
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="アクションの詳細を入力..."
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+        {/* Action Modal */}
+        {showActionModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl max-w-2xl w-full p-6">
+              <h2 className="text-xl font-bold mb-4">新規アクション記録</h2>
+              <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    日時
+                    アクションタイプ
                   </label>
-                  <input
-                    type="datetime-local"
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    <option>電話</option>
+                    <option>メール</option>
+                    <option>商談</option>
+                    <option>LINE</option>
+                    <option>訪問</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    内容
+                  </label>
+                  <textarea
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    rows={4}
+                    placeholder="アクションの詳細を入力..."
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    所要時間
+                    結果・成果
+                  </label>
+                  <textarea
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    rows={2}
+                    placeholder="結果や成果を入力..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    次回アクション
                   </label>
                   <input
                     type="text"
-                    placeholder="例: 30分"
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="次回のアクション内容"
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  次のアクション
-                </label>
-                <input
-                  type="text"
-                  placeholder="次に必要なアクションを入力..."
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  センチメント
-                </label>
-                <div className="flex space-x-4">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="sentiment"
-                      value="positive"
-                      className="mr-2"
-                    />
-                    <span>😊 ポジティブ</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="sentiment"
-                      value="neutral"
-                      className="mr-2"
-                      defaultChecked
-                    />
-                    <span>😐 ニュートラル</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="sentiment"
-                      value="negative"
-                      className="mr-2"
-                    />
-                    <span>😟 ネガティブ</span>
-                  </label>
+                <div className="flex gap-2 pt-4">
+                  <button className="flex-1 bg-gradient-dandori text-white px-4 py-2 rounded-lg hover:shadow-lg transition">
+                    保存
+                  </button>
+                  <button
+                    onClick={() => setShowActionModal(false)}
+                    className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition"
+                  >
+                    キャンセル
+                  </button>
                 </div>
               </div>
-            </div>
-
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                onClick={() => setShowActionModal(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
-              >
-                キャンセル
-              </button>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                保存
-              </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Voice Memo Import Modal */}
-      {showVoiceModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-lg">
-            <h3 className="text-lg font-semibold mb-4">🎙️ 音声メモ取り込み</h3>
-
-            <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-6 rounded-xl border border-purple-200 mb-6">
-              <h4 className="font-bold text-purple-800 mb-3">対応サービス</h4>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white p-3 rounded-lg flex items-center space-x-2">
-                  <span className="text-2xl">🎙️</span>
-                  <div>
-                    <p className="font-medium">PLAUD</p>
-                    <p className="text-xs text-gray-600">AI録音デバイス</p>
-                  </div>
+        {/* Voice Modal */}
+        {showVoiceModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl max-w-md w-full p-6">
+              <h2 className="text-xl font-bold mb-4">🎤 音声メモ</h2>
+              <div className="text-center py-8">
+                <div className="w-24 h-24 bg-red-500 rounded-full mx-auto mb-4 flex items-center justify-center animate-pulse">
+                  <span className="text-white text-4xl">🎤</span>
                 </div>
-                <div className="bg-white p-3 rounded-lg flex items-center space-x-2">
-                  <span className="text-2xl">📱</span>
-                  <div>
-                    <p className="font-medium">Notta</p>
-                    <p className="text-xs text-gray-600">音声文字起こし</p>
-                  </div>
-                </div>
-                <div className="bg-white p-3 rounded-lg flex items-center space-x-2">
-                  <span className="text-2xl">🎤</span>
-                  <div>
-                    <p className="font-medium">Otter.ai</p>
-                    <p className="text-xs text-gray-600">会議記録AI</p>
-                  </div>
-                </div>
-                <div className="bg-white p-3 rounded-lg flex items-center space-x-2">
-                  <span className="text-2xl">📝</span>
-                  <div>
-                    <p className="font-medium">その他</p>
-                    <p className="text-xs text-gray-600">テキスト形式</p>
-                  </div>
-                </div>
+                <p className="text-gray-600 mb-2">録音中...</p>
+                <p className="text-2xl font-bold">00:12</p>
               </div>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  データ形式
-                </label>
-                <select className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                  <option value="plaud">PLAUD - AI要約付き</option>
-                  <option value="notta">Notta - 文字起こしテキスト</option>
-                  <option value="otter">Otter.ai - 議事録形式</option>
-                  <option value="text">テキスト貼り付け</option>
-                </select>
+              <div className="flex gap-2">
+                <button className="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition">
+                  停止
+                </button>
+                <button
+                  onClick={() => setShowVoiceModal(false)}
+                  className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition"
+                >
+                  キャンセル
+                </button>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  音声メモの内容
-                </label>
-                <textarea
-                  rows={6}
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  placeholder="外部サービスから取得した文字起こしデータやAI要約をここに貼り付けてください..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  タイトル（任意）
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  placeholder="例: 予算調整の打ち合わせ"
-                />
-              </div>
-
-              <div className="bg-blue-50 p-3 rounded-lg">
-                <h4 className="font-medium text-blue-800 text-sm mb-1">
-                  💡 使い方のヒント
-                </h4>
-                <ul className="text-xs text-gray-700 space-y-1">
-                  <li>• PLAUDなどの外部録音デバイスで会話を録音</li>
-                  <li>• アプリで自動生成されたAI要約をコピー</li>
-                  <li>• このフォームに貼り付けて保存</li>
-                </ul>
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                onClick={() => setShowVoiceModal(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
-              >
-                キャンセル
-              </button>
-              <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg font-medium">
-                取り込み
-              </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

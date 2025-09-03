@@ -11,9 +11,17 @@ interface TodoItem {
   title: string;
   deadline: string;
   priority: 'high' | 'medium' | 'low';
-  type: 'estimate' | 'contract' | 'visit';
+  type:
+    | 'estimate'
+    | 'contract'
+    | 'visit'
+    | 'create-estimate'
+    | 'follow-estimate';
   customer: string;
   amount?: number;
+  customerId?: string;
+  estimateId?: string;
+  contractId?: string;
 }
 
 interface SalesDashboardProps {
@@ -65,6 +73,12 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
           nextDate.getTime() - today.getTime() < 7 * 24 * 60 * 60 * 1000;
 
         if (isToday || isSoon) {
+          // 見積作成タスクかフォローアップタスクかを判定
+          const isCreateEstimate =
+            customer.nextAction?.includes('初回見積') ||
+            customer.nextAction?.includes('見積もり作成') ||
+            customer.nextAction?.includes('見積作成');
+
           todos.push({
             id: `customer-${customer.id}`,
             title: customer.nextAction || '顧客フォローアップ',
@@ -77,8 +91,9 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
                 : customer.priority > 1
                   ? 'medium'
                   : 'low',
-            type: 'visit',
-            customer: customer.companyName || customer.name,
+            type: isCreateEstimate ? 'create-estimate' : 'visit',
+            customer: customer.company || customer.name,
+            customerId: customer.id,
           });
         }
       }
@@ -98,9 +113,10 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
           title: `${estimate.projectName} 見積フォロー`,
           deadline: `あと${daysLeft}日`,
           priority: daysLeft <= 3 ? 'high' : 'medium',
-          type: 'estimate',
+          type: 'follow-estimate',
           customer: estimate.customerName,
-          amount: estimate.totalAmount,
+          amount: estimate.totals?.total || 0,
+          estimateId: estimate.id,
         });
       }
     });
@@ -118,8 +134,8 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
   useEffect(() => {
     const monthlyRevenue =
       estimates
-        ?.filter((e) => e.status === 'approved')
-        ?.reduce((sum, e) => sum + e.totalAmount, 0) || 0;
+        ?.filter((e) => e.status === 'accepted')
+        ?.reduce((sum, e) => sum + (e.totals?.total || 0), 0) || 0;
 
     const newLeads =
       customers?.filter((c) => {
@@ -210,6 +226,10 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
     switch (type) {
       case 'estimate':
         return '📝';
+      case 'create-estimate':
+        return '✏️';
+      case 'follow-estimate':
+        return '📄';
       case 'contract':
         return '📋';
       case 'visit':
@@ -234,10 +254,10 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
             <div className="mt-2 text-sm text-red-700">
               <p>田中様邸の見積提出期限が4時間後です。</p>
               <button
-                onClick={() => router.push('/estimates/create-v2')}
+                onClick={() => router.push('/estimates')}
                 className="mt-2 bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
               >
-                見積作成へ →
+                見積一覧へ →
               </button>
             </div>
           </div>
@@ -266,7 +286,28 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
                 displayTodos.map((todo) => (
                   <div
                     key={todo.id}
-                    className={`border-l-4 p-4 rounded ${getPriorityColor(todo.priority)}`}
+                    className={`border-l-4 p-4 rounded cursor-pointer hover:shadow-md transition-shadow ${getPriorityColor(todo.priority)}`}
+                    onClick={() => {
+                      if (todo.type === 'visit' && todo.customerId) {
+                        router.push(`/customers/${todo.customerId}`);
+                      } else if (
+                        todo.type === 'create-estimate' &&
+                        todo.customerId
+                      ) {
+                        router.push(
+                          `/estimates/create-v2?customer=${todo.customerId}`,
+                        );
+                      } else if (
+                        todo.type === 'follow-estimate' &&
+                        todo.estimateId
+                      ) {
+                        router.push(`/estimates/editor-v3/${todo.estimateId}`);
+                      } else if (todo.type === 'estimate' && todo.estimateId) {
+                        router.push(`/estimates/editor-v3/${todo.estimateId}`);
+                      } else if (todo.type === 'contract' && todo.contractId) {
+                        router.push(`/contracts/${todo.contractId}`);
+                      }
+                    }}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -293,8 +334,55 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
                         <p className="text-sm font-medium text-gray-900">
                           {todo.deadline}
                         </p>
-                        <button className="mt-2 text-blue-600 hover:text-blue-800 text-sm">
-                          詳細 →
+                        <button
+                          className="mt-2 text-blue-600 hover:text-blue-800 text-sm inline-flex items-center gap-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (todo.type === 'visit' && todo.customerId) {
+                              router.push(`/customers/${todo.customerId}`);
+                            } else if (
+                              todo.type === 'create-estimate' &&
+                              todo.customerId
+                            ) {
+                              router.push(
+                                `/estimates/create-v2?customer=${todo.customerId}`,
+                              );
+                            } else if (
+                              todo.type === 'follow-estimate' &&
+                              todo.estimateId
+                            ) {
+                              router.push(
+                                `/estimates/editor-v3/${todo.estimateId}`,
+                              );
+                            } else if (
+                              todo.type === 'estimate' &&
+                              todo.estimateId
+                            ) {
+                              router.push(
+                                `/estimates/editor-v3/${todo.estimateId}`,
+                              );
+                            } else if (
+                              todo.type === 'contract' &&
+                              todo.contractId
+                            ) {
+                              router.push(`/contracts/${todo.contractId}`);
+                            }
+                          }}
+                        >
+                          詳細を見る
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5l7 7-7 7"
+                            />
+                          </svg>
                         </button>
                       </div>
                     </div>

@@ -24,6 +24,7 @@
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.539.0",
+    "nanoid": "^5.1.5",
     "next": "14.2.5",
     "puppeteer": "^24.17.0",
     "puppeteer-core": "^24.17.0",
