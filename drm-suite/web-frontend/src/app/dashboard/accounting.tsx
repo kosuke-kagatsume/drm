@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import RAGAssistant from '@/components/rag-assistant';
 
 interface AccountingDashboardProps {
   userEmail: string;
@@ -542,7 +543,9 @@ export default function AccountingDashboard({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="flex gap-6">
+      {/* メインコンテンツエリア - 請求書管理と最近の入金 */}
+      <div className="flex-1 space-y-6">
       {/* Header with Search and Actions */}
       <div className="bg-white rounded-lg shadow p-4">
         <div className="flex items-center justify-between mb-4">
@@ -685,9 +688,9 @@ export default function AccountingDashboard({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* 請求書管理 */}
-        <div className="lg:col-span-2">
+      {/* 請求書管理 - Full Width */}
+      <div className="mb-6">
+        <div>
           <div className="bg-white rounded-lg shadow">
             <div className="px-6 py-4 border-b bg-blue-50">
               <h2 className="text-lg font-semibold text-blue-800">
@@ -859,225 +862,6 @@ export default function AccountingDashboard({
           </div>
         </div>
 
-        {/* 右サイドバー */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* キャッシュフロー */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b">
-              <h3 className="font-semibold">📈 キャッシュフロー</h3>
-            </div>
-            <div className="p-4">
-              <div className="space-y-3">
-                {cashFlow.map((month, idx) => (
-                  <div key={idx} className="border-b pb-3">
-                    <p className="font-medium text-sm mb-2">{month.month}</p>
-                    <div className="space-y-1 text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">収入:</span>
-                        <span className="text-green-600 font-medium">
-                          {formatCurrency(month.income)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">支出:</span>
-                        <span className="text-red-600 font-medium">
-                          {formatCurrency(month.expense)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between pt-1 border-t">
-                        <span className="text-gray-600">収支:</span>
-                        <span
-                          className={`font-bold ${month.balance > 0 ? 'text-green-600' : 'text-red-600'}`}
-                        >
-                          {formatCurrency(month.balance)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* 今月の予定 */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b">
-              <h3 className="font-semibold">📅 今月の予定</h3>
-            </div>
-            <div className="p-4 space-y-2 text-sm">
-              <div className="flex justify-between py-2 border-b">
-                <span>請求書発行</span>
-                <span className="font-bold text-blue-600">12件</span>
-              </div>
-              <div className="flex justify-between py-2 border-b">
-                <span>支払予定</span>
-                <span className="font-bold text-orange-600">8件</span>
-              </div>
-              <div className="flex justify-between py-2 border-b">
-                <span>決算準備</span>
-                <span className="text-gray-500">2/15まで</span>
-              </div>
-              <div className="flex justify-between py-2">
-                <span>税務申告</span>
-                <span className="text-gray-500">2/28まで</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Expense Tracking */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b bg-red-50">
-              <h3 className="font-semibold text-red-800">💳 経費管理</h3>
-            </div>
-            <div className="p-4 space-y-3">
-              {expenses.slice(0, 3).map((expense) => (
-                <div
-                  key={expense.id}
-                  className="border rounded p-3 hover:bg-gray-50 cursor-pointer"
-                  onClick={() => handleMetricClick(`expense-${expense.id}`)}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <h5 className="font-medium text-sm">
-                      {expense.description}
-                    </h5>
-                    <span
-                      className={`px-2 py-1 rounded text-xs ${
-                        expense.status === 'approved'
-                          ? 'bg-green-100 text-green-800'
-                          : expense.status === 'pending'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {expense.status === 'approved'
-                        ? '承認済み'
-                        : expense.status === 'pending'
-                          ? '承認待ち'
-                          : '却下'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span
-                      className={`px-2 py-1 rounded ${getCategoryColor(expense.category)}`}
-                    >
-                      {getCategoryName(expense.category)}
-                    </span>
-                    <span className="font-bold">
-                      {formatCurrency(expense.amount)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>{expense.date}</span>
-                    <span>提出者: {expense.submittedBy}</span>
-                  </div>
-                </div>
-              ))}
-              <button
-                onClick={() => router.push('/expenses')}
-                className="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700 text-sm"
-              >
-                💳 経費管理
-              </button>
-            </div>
-          </div>
-
-          {/* Financial Reports */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b bg-indigo-50">
-              <h3 className="font-semibold text-indigo-800">📊 財務レポート</h3>
-            </div>
-            <div className="p-4 space-y-3">
-              {financialReports.map((report) => (
-                <div
-                  key={report.id}
-                  className="border rounded p-3 hover:bg-gray-50 cursor-pointer"
-                  onClick={() => handleMetricClick(`report-${report.id}`)}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <h5 className="font-medium text-sm">{report.name}</h5>
-                    <span
-                      className={`px-2 py-1 rounded text-xs ${
-                        report.status === 'ready'
-                          ? 'bg-green-100 text-green-800'
-                          : report.status === 'generating'
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      {report.status === 'ready'
-                        ? '準備完了'
-                        : report.status === 'generating'
-                          ? '生成中'
-                          : '予定済み'}
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-600">
-                    <p>期間: {report.period}</p>
-                    {report.generatedDate !== '-' && (
-                      <p>生成日: {report.generatedDate}</p>
-                    )}
-                  </div>
-                  {report.status === 'ready' && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleExport(report.name);
-                      }}
-                      className="mt-2 text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
-                    >
-                      ダウンロード
-                    </button>
-                  )}
-                </div>
-              ))}
-              <button
-                onClick={() => setActiveModal('financial-reports')}
-                className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 text-sm"
-              >
-                📈 レポート生成
-              </button>
-            </div>
-          </div>
-
-          {/* クイックアクション */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b">
-              <h3 className="font-semibold">⚡ クイックアクション</h3>
-            </div>
-            <div className="p-4 space-y-2">
-              <button
-                onClick={handleInvoiceCreate}
-                className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-              >
-                📄 新規請求書作成
-              </button>
-              <button
-                onClick={() => setActiveModal('payment-recording')}
-                className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
-              >
-                💰 入金記録
-              </button>
-              <button
-                onClick={handleExpenseCreate}
-                className="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700"
-              >
-                💳 経費入力
-              </button>
-              <button
-                onClick={() => handleExport('monthly-report')}
-                className="w-full bg-orange-600 text-white py-2 rounded hover:bg-orange-700"
-              >
-                📊 月次レポート
-              </button>
-              <button
-                onClick={() => setActiveModal('ar-aging')}
-                className="w-full bg-teal-600 text-white py-2 rounded hover:bg-teal-700"
-              >
-                📅 売掛金年齢表
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Advanced Financial Analytics Dashboard */}
@@ -3153,6 +2937,189 @@ export default function AccountingDashboard({
           </div>
         </div>
       )}
+      </div>
+      <div className="w-96 flex-shrink-0 space-y-6">
+        <RAGAssistant className="h-auto" userRole="経理担当" />
+        
+        {/* Cash Flow - 3 months */}
+        <div className="bg-white rounded-lg shadow p-4">
+          <h3 className="font-semibold text-green-800 mb-3">📈 キャッシュフロー</h3>
+          <div className="space-y-3">
+            <div className="border-b pb-2">
+              <div className="flex justify-between mb-1">
+                <span className="text-sm text-gray-600">11月</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm">収入</span>
+                <span className="text-sm font-bold text-green-600">¥12,500,000</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm">支出</span>
+                <span className="text-sm font-bold text-red-600">¥8,300,000</span>
+              </div>
+              <div className="flex justify-between border-t pt-1">
+                <span className="text-sm">収支</span>
+                <span className="text-sm font-bold">¥4,200,000</span>
+              </div>
+            </div>
+            
+            <div className="border-b pb-2">
+              <div className="flex justify-between mb-1">
+                <span className="text-sm text-gray-600">12月</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm">収入</span>
+                <span className="text-sm font-bold text-green-600">¥15,200,000</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm">支出</span>
+                <span className="text-sm font-bold text-red-600">¥10,500,000</span>
+              </div>
+              <div className="flex justify-between border-t pt-1">
+                <span className="text-sm">収支</span>
+                <span className="text-sm font-bold">¥4,700,000</span>
+              </div>
+            </div>
+            
+            <div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm text-gray-600">1月</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm">収入</span>
+                <span className="text-sm font-bold text-green-600">¥9,500,000</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm">支出</span>
+                <span className="text-sm font-bold text-red-600">¥7,800,000</span>
+              </div>
+              <div className="flex justify-between border-t pt-1">
+                <span className="text-sm">収支</span>
+                <span className="text-sm font-bold">¥1,700,000</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Expense Management */}
+        <div className="bg-white rounded-lg shadow p-4">
+          <h3 className="font-semibold text-red-800 mb-3">💳 経費管理</h3>
+          <div className="space-y-3">
+            {expenses.slice(0, 3).map((expense) => (
+              <div
+                key={expense.id}
+                className="border rounded p-3 hover:bg-gray-50 cursor-pointer"
+                onClick={() => handleMetricClick(`expense-${expense.id}`)}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <h5 className="font-medium text-sm">
+                    {expense.description}
+                  </h5>
+                  <span
+                    className={`px-2 py-1 rounded text-xs ${
+                      expense.status === 'approved'
+                        ? 'bg-green-100 text-green-800'
+                        : expense.status === 'pending'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
+                    }`}
+                  >
+                    {expense.status === 'approved'
+                      ? '承認済み'
+                      : expense.status === 'pending'
+                        ? '承認待ち'
+                        : '却下'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span
+                    className={`px-2 py-1 rounded ${getCategoryColor(expense.category)}`}
+                  >
+                    {getCategoryName(expense.category)}
+                  </span>
+                  <span className="font-bold">
+                    {formatCurrency(expense.amount)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>{expense.date}</span>
+                  <span>提出者: {expense.submittedBy}</span>
+                </div>
+              </div>
+            ))}
+            <button
+              onClick={() => router.push('/expenses')}
+              className="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700 text-sm"
+            >
+              💳 経費管理
+            </button>
+          </div>
+        </div>
+
+        {/* This Month's Schedule */}
+        <div className="bg-white rounded-lg shadow p-4">
+          <h3 className="font-semibold text-blue-800 mb-3">🗓️ 今月の予定</h3>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm">請求書発送</span>
+              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">12件</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm">支払予定</span>
+              <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">8件</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm">決算準備</span>
+              <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">2/15まで</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm">税務申告</span>
+              <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">2/28まで</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Financial Reports */}
+        <div className="bg-white rounded-lg shadow p-4">
+          <h3 className="font-semibold text-gray-800 mb-3">📊 財務レポート</h3>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm">1月度 損益計算書</span>
+              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">準備完了</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm">1月度 キャッシュフロー計算書</span>
+              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">準備完了</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm">2月度 損益計算書</span>
+              <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">作成中</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-white rounded-lg shadow p-4">
+          <h3 className="font-semibold text-gray-800 mb-3">⚡ クイックアクション</h3>
+          <div className="space-y-2">
+            <button className="w-full bg-blue-500 text-white py-2 px-3 rounded text-sm hover:bg-blue-600 transition">
+              🧾 新規請求書作成
+            </button>
+            <button className="w-full bg-green-500 text-white py-2 px-3 rounded text-sm hover:bg-green-600 transition">
+              💰 入金記録
+            </button>
+            <button className="w-full bg-purple-500 text-white py-2 px-3 rounded text-sm hover:bg-purple-600 transition">
+              📋 経費入力
+            </button>
+            <button className="w-full bg-orange-500 text-white py-2 px-3 rounded text-sm hover:bg-orange-600 transition">
+              📈 月次レポート
+            </button>
+            <button className="w-full bg-gray-500 text-white py-2 px-3 rounded text-sm hover:bg-gray-600 transition">
+              🗃️ 関連書類管理
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

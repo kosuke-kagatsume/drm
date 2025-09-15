@@ -177,23 +177,23 @@ export default function AftercareDashboard() {
     <div className="min-h-screen bg-gray-50">
       {/* ヘッダー */}
       <nav className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold">
-                アフターサービスダッシュボード
-              </h1>
-              <p className="text-sm opacity-90 mt-1">
-                {new Date().toLocaleDateString('ja-JP', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  weekday: 'long',
-                })}
-              </p>
-            </div>
+        <div className="max-w-full-hd mx-auto px-4 lg:px-6 xl:px-8 2xl:px-12 py-4">
+          <div className="flex justify-center items-center">
             <div className="flex items-center gap-4">
-              <div className="text-right">
+              <div className="text-center">
+                <h1 className="text-2xl font-bold">
+                  アフターサービスダッシュボード
+                </h1>
+                <p className="text-sm opacity-90 mt-1">
+                  {new Date().toLocaleDateString('ja-JP', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    weekday: 'long',
+                  })}
+                </p>
+              </div>
+              <div className="ml-8 text-right">
                 <p className="text-sm opacity-90">ログイン中</p>
                 <p className="font-medium">{user.name}</p>
               </div>
@@ -208,10 +208,10 @@ export default function AftercareDashboard() {
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* メインコンテンツ（左側3カラム） */}
-          <div className="lg:col-span-3">
+      <div className="max-w-full-hd mx-auto px-4 lg:px-6 xl:px-8 2xl:px-12 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          {/* メインコンテンツ（左側4カラム） */}
+          <div className="lg:col-span-4">
             {/* トップ統計 */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div className="bg-white rounded-lg shadow p-4">

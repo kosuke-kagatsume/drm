@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import RAGAssistant from '@/components/rag-assistant';
 
 interface MarketingDashboardProps {
   userEmail: string;
@@ -547,7 +548,9 @@ export default function MarketingDashboard({
   });
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col lg:flex-row gap-6">
+      {/* メインコンテンツ */}
+      <div className="flex-1 space-y-6">
       {/* Header with Search and Filters */}
       <div className="bg-white rounded-lg shadow p-4">
         <div className="flex items-center justify-between mb-4">
@@ -1000,6 +1003,9 @@ export default function MarketingDashboard({
 
         {/* Right Sidebar */}
         <div className="lg:col-span-1 space-y-6">
+          {/* RAG Assistant */}
+          <RAGAssistant className="mb-6" />
+
           {/* Today's Tasks */}
           <div className="bg-white rounded-lg shadow">
             <div className="px-6 py-4 border-b bg-orange-50">
@@ -1436,6 +1442,8 @@ export default function MarketingDashboard({
           </div>
         </div>
       </div>
+
+    </div>
 
       {/* Campaign Creation/Edit Modal */}
       {showCampaignForm && (
