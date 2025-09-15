@@ -4,10 +4,10 @@
 
 ### 最重要情報
 
-**最新URL**: https://web-frontend-efzpznpt7-kosukes-projects-c6ad92ba.vercel.app
-※2025年9月15日時点。新しいデプロイ後は必ず更新すること！
+**最新URL**: https://web-frontend-3r9q3quax-kosukes-projects-c6ad92ba.vercel.app
+※2025年9月15日 18:02デプロイ完了
 
-**安定版コミット**: eb7014d (ダッシュボードレイアウト改善版)
+**最新コミット**: 37a988b (マーケティング・営業ダッシュボード強化版)
 
 ### プロジェクト概要
 
