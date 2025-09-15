@@ -27,6 +27,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   DndContext,
   closestCenter,
+  DragEndEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -71,7 +72,10 @@ import {
 // === DEBUG HOOK (一時) ===============================
 declare global {
   interface Window {
-    __est?: any;
+    __est?: {
+      debug: boolean;
+      [key: string]: unknown;
+    };
   }
 }
 if (typeof window !== 'undefined') {
@@ -1208,7 +1212,7 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
   const columns =
     viewMode === 'internal'
       ? allColumns
-      : allColumns.filter((col) => !(col as any).internal);
+      : allColumns.filter((col) => !('internal' in col && col.internal));
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -1367,7 +1371,7 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
     if (legacyRow.isCategory || legacyRow.isSubtotal) return;
 
     // 値を正規化（数値フィールドの場合）
-    let normalizedValue: any = value;
+    let normalizedValue: string | number | boolean = value;
     if (
       [
         'quantity',
@@ -1548,8 +1552,8 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
   };
 
   // 正規キーとUIキーの両方を持つオブジェクトを作成するヘルパー
-  const withBothKeys = (data: any) => {
-    const result: any = { ...data };
+  const withBothKeys = (data: EstimateItem) => {
+    const result: EstimateItem & Record<string, unknown> = { ...data };
 
     // 正規キー → UIキーのマッピング
     const mappings = {
@@ -1588,14 +1592,14 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
     if (typeof window !== 'undefined' && window.__est?.debug)
       console.log('[updateRow] IN', lineId, patch);
 
-    setItems((prev: any[]) => {
+    setItems((prev: EstimateItem[]) => {
       // 1) ID一致行を withBothKeys でマージ
-      const merged = prev.map((it: any) =>
+      const merged = prev.map((it: EstimateItem) =>
         it.id === lineId ? withBothKeys({ ...it, ...patch }) : it,
       );
 
       // 2) 行ごと再計算（カテゴリ/小計はスキップ）
-      const recalced = merged.map((it: any) => {
+      const recalced = merged.map((it: EstimateItem) => {
         if (it.isCategory || it.isSubtotal) return it;
         try {
           const core = legacyToCore(it);
@@ -1638,7 +1642,7 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
         console.log(
           '[updateRow] OUT',
           lineId,
-          after.find((x: any) => x.id === lineId),
+          after.find((x: EstimateItem) => x.id === lineId),
         );
       return after;
     });
@@ -1712,7 +1716,7 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
   };
 
   // ドラッグ&ドロップ（カテゴリ移動時は小項目も一緒に移動）
-  const handleDragEnd = (event: any) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (active.id !== over.id) {

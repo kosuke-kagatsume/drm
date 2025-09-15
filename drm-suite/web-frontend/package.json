@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "clean": "rm -rf .next .turbo node_modules node_modules/.cache",
+    "reset": "npm run clean && npm install",
+    "dev:fresh": "npm run clean && npm run dev",
+    "preinstall": "node scripts/enforce-package-manager.js",
+    "analyze": "ANALYZE=true next build"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -43,7 +48,9 @@
     "tailwindcss": "^3.4.0",
     "typescript": "5.5.2"
   },
+  "packageManager": "npm@10",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0 <22.0.0",
+    "npm": ">=10.0.0"
   }
 }

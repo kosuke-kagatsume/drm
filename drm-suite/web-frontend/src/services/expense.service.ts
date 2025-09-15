@@ -1,4 +1,12 @@
 import axios from 'axios';
+import { UserSummary } from '@/types/user';
+import {
+  ExpenseMetadata,
+  ExpenseReportOptions,
+  BulkApprovalResult,
+  BudgetAnalysis,
+  ExpenseAnalytics
+} from '@/types/expense';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3007';
 
@@ -33,12 +41,12 @@ export interface Expense {
   projectId?: string;
   vendorId?: string;
   receiptUrl?: string;
-  metadata?: Record<string, any>;
+  metadata?: ExpenseMetadata;
   createdAt: string;
   updatedAt: string;
   category: ExpenseCategory;
-  user: any;
-  approver?: any;
+  user: UserSummary;
+  approver?: UserSummary;
   approvalHistory?: ExpenseApproval[];
   attachments?: ExpenseAttachment[];
 }
@@ -55,7 +63,7 @@ export interface CreateExpenseDto {
   expenseDate: string;
   projectId?: string;
   vendorId?: string;
-  metadata?: Record<string, any>;
+  metadata?: ExpenseMetadata;
 }
 
 export interface UpdateExpenseDto extends Partial<CreateExpenseDto> {
@@ -84,7 +92,7 @@ export interface ExpenseApproval {
   action: 'approve' | 'reject' | 'request_info';
   comment?: string;
   createdAt: string;
-  user: any;
+  user: UserSummary;
 }
 
 export interface CreateApprovalDto {
@@ -145,7 +153,7 @@ export interface PaymentMethod {
   companyId: string;
   name: string;
   type: string;
-  details: Record<string, any>;
+  details: Record<string, string | number | boolean>;
   isDefault: boolean;
   isActive: boolean;
   createdAt: string;
@@ -218,7 +226,7 @@ class ExpenseService {
     return response.data;
   }
 
-  async bulkApprove(expenseIds: string[], userId: string): Promise<any> {
+  async bulkApprove(expenseIds: string[], userId: string): Promise<BulkApprovalResult> {
     const response = await this.api.post('/expense-approvals/bulk', {
       expenseIds,
       userId,
@@ -240,7 +248,7 @@ class ExpenseService {
     return response.data;
   }
 
-  async getBudgetAnalysis(companyId: string, fiscal: string): Promise<any> {
+  async getBudgetAnalysis(companyId: string, fiscal: string): Promise<BudgetAnalysis> {
     const response = await this.api.get(`/budgets/analysis/${companyId}`, {
       params: { fiscal },
     });
@@ -252,7 +260,7 @@ class ExpenseService {
     companyId: string,
     startDate: string,
     endDate: string,
-    options?: any,
+    options?: ExpenseReportOptions,
   ): Promise<ExpenseReport> {
     const response = await this.api.get('/expense-reports/summary', {
       params: { companyId, startDate, endDate, ...options },
@@ -260,7 +268,7 @@ class ExpenseService {
     return response.data;
   }
 
-  async getExpenseAnalytics(companyId: string, period: string): Promise<any> {
+  async getExpenseAnalytics(companyId: string, period: string): Promise<ExpenseAnalytics> {
     const response = await this.api.get(
       `/expense-reports/analytics/${companyId}`,
       {

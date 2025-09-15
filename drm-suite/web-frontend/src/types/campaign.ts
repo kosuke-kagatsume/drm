@@ -67,7 +67,11 @@ export interface Campaign {
     area?: string[];
     ageRange?: { min: number; max: number };
     tags?: string[];
-    conditions?: any[];
+    conditions?: Array<{
+      field: string;
+      operator: 'equals' | 'contains' | 'gt' | 'lt' | 'between';
+      value: string | number | boolean;
+    }>;
   };
 
   // スケジュール設定

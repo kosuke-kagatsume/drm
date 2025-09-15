@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { getConstructionMasters } from '@/data/construction-masters';
+import type { ConstructionMasters, Product, Item, Customer, Supplier, Category } from '@/types/master';
 import {
   Package,
   Wrench,
@@ -27,8 +28,8 @@ export default function MastersManagement() {
   const [activeTab, setActiveTab] = useState('products');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [masters, setMasters] = useState<any>({});
-  const [editingItem, setEditingItem] = useState<any>(null);
+  const [masters, setMasters] = useState<ConstructionMasters>({} as ConstructionMasters);
+  const [editingItem, setEditingItem] = useState<Product | Item | Customer | Supplier | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
@@ -103,13 +104,13 @@ export default function MastersManagement() {
       selectedCategory !== 'all' &&
       (activeTab === 'products' || activeTab === 'items')
     ) {
-      data = data.filter((item: any) => item.categoryId === selectedCategory);
+      data = data.filter((item: Product | Item) => item.categoryId === selectedCategory);
     }
 
     // 検索フィルタ
     if (searchTerm) {
       data = data.filter(
-        (item: any) =>
+        (item: Product | Item | Customer | Supplier) =>
           item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           item.code?.toLowerCase().includes(searchTerm.toLowerCase()),
       );
@@ -118,7 +119,7 @@ export default function MastersManagement() {
     return data;
   };
 
-  const renderProductRow = (product: any) => (
+  const renderProductRow = (product: Product) => (
     <tr key={product.id} className="hover:bg-gray-50 transition-colors">
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
         {product.code}
@@ -128,7 +129,7 @@ export default function MastersManagement() {
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
         {
-          masters.categories?.find((c: any) => c.id === product.categoryId)
+          masters.categories?.find((c: Category) => c.id === product.categoryId)
             ?.name
         }
       </td>
@@ -171,7 +172,7 @@ export default function MastersManagement() {
     </tr>
   );
 
-  const renderItemRow = (item: any) => (
+  const renderItemRow = (item: Item) => (
     <tr key={item.id} className="hover:bg-gray-50 transition-colors">
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
         {item.code}
@@ -180,7 +181,7 @@ export default function MastersManagement() {
         {item.name}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-        {masters.categories?.find((c: any) => c.id === item.categoryId)?.name}
+        {masters.categories?.find((c: Category) => c.id === item.categoryId)?.name}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
         {item.unit}
@@ -208,7 +209,7 @@ export default function MastersManagement() {
     </tr>
   );
 
-  const renderCustomerRow = (customer: any) => (
+  const renderCustomerRow = (customer: Customer) => (
     <tr key={customer.id} className="hover:bg-gray-50 transition-colors">
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
         {customer.code}
@@ -254,7 +255,7 @@ export default function MastersManagement() {
     </tr>
   );
 
-  const renderSupplierRow = (supplier: any) => (
+  const renderSupplierRow = (supplier: Supplier) => (
     <tr key={supplier.id} className="hover:bg-gray-50 transition-colors">
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
         {supplier.code}
@@ -381,7 +382,7 @@ export default function MastersManagement() {
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
               >
                 <option value="all">全カテゴリ</option>
-                {masters.categories?.map((cat: any) => (
+                {masters.categories?.map((cat: Category) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}
                   </option>
@@ -531,7 +532,7 @@ export default function MastersManagement() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {getFilteredData().map((item: any) => {
+                {getFilteredData().map((item) => {
                   if (activeTab === 'products') return renderProductRow(item);
                   if (activeTab === 'items') return renderItemRow(item);
                   if (activeTab === 'customers') return renderCustomerRow(item);
@@ -552,7 +553,7 @@ export default function MastersManagement() {
             </p>
             <p className="text-sm text-gray-500 mt-2">
               有効:{' '}
-              {masters.products?.filter((p: any) => p.isActive).length || 0}
+              {masters.products?.filter((p: Product) => p.isActive).length || 0}
             </p>
           </div>
           <div className="bg-white rounded-lg shadow p-6">
@@ -573,10 +574,10 @@ export default function MastersManagement() {
             </p>
             <p className="text-sm text-gray-500 mt-2">
               個人:{' '}
-              {masters.customers?.filter((c: any) => c.type === 'individual')
+              {masters.customers?.filter((c: Customer) => c.type === 'individual')
                 .length || 0}{' '}
               / 法人:{' '}
-              {masters.customers?.filter((c: any) => c.type === 'corporate')
+              {masters.customers?.filter((c: Customer) => c.type === 'corporate')
                 .length || 0}
             </p>
           </div>
@@ -589,7 +590,7 @@ export default function MastersManagement() {
             </p>
             <p className="text-sm text-gray-500 mt-2">
               有効:{' '}
-              {masters.suppliers?.filter((s: any) => s.isActive).length || 0}
+              {masters.suppliers?.filter((s: Supplier) => s.isActive).length || 0}
             </p>
           </div>
         </div>

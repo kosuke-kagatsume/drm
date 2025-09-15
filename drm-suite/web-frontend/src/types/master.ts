@@ -319,3 +319,28 @@ export interface Supplier {
   memo?: string;
   isActive: boolean;
 }
+
+// マスタデータ全体の型
+export interface ConstructionMasters {
+  categories: Category[];
+  subCategories: SubCategory[];
+  products: Product[];
+  items: Item[];
+  customers: Customer[];
+  suppliers: Supplier[];
+  overheadCosts?: Array<{
+    id: string;
+    name: string;
+    rate: number;
+  }>;
+  profitMargins?: Array<{
+    id: string;
+    name: string;
+    rate: number;
+  }>;
+  paymentTerms?: Array<{
+    id: string;
+    name: string;
+    days: number;
+  }>;
+}

@@ -4,8 +4,8 @@
 
 ### 最重要情報
 
-**ローカル開発環境**: http://localhost:3003 ✅ **完全動作確認済み**
-**次回Vercelデプロイ予定**: 本日修復完了後
+**ローカル開発環境**: http://localhost:3001 ✅ **完全動作確認済み**
+**最終確認日時**: 2025年9月15日 23:11
 
 **重要**: Node.js v20を使用すること（v22では webpack chunk エラーが発生）
 
@@ -14,6 +14,38 @@
 - **場所**: `/Users/dw100/crm-monorepo/drm-suite/`
 - **内容**: 建設業界向けCRM「DRMスイート」完全統合システム
 - **技術**: Next.js 14 + TypeScript + Tailwind CSS
+
+---
+
+## 🔧 2025年9月15日（日）TypeScript any型除去作業
+
+### 作業内容：
+**目標**: 568箇所のany型を段階的に除去し、型安全性を向上
+
+### 完了した修正：
+1. **expense.service.ts** - 27箇所 → ✅ 完了
+   - `UserSummary`、`ExpenseMetadata`等の型定義を適用
+
+2. **型定義ファイル修正** → ✅ 完了
+   - `customer.ts`: `Partial<Customer>`型に変更
+   - `estimate.ts`: マーケットデータの型定義追加
+   - `campaign.ts`: 条件配列の型定義追加
+
+3. **見積エディタ(editor-v3)** - 13箇所 → ✅ 完了
+   - `EstimateItem`型の適用
+   - `DragEndEvent`型の追加
+
+4. **admin/masters/page.tsx** - 16箇所 → ✅ 完了
+   - `ConstructionMasters`型を新規作成
+   - `Product`, `Item`, `Customer`, `Supplier`型の適用
+
+### 現在の状況：
+- **残りのany型**: 66ファイル
+- **次の修正対象**:
+  - pdf.service.ts (11箇所)
+  - useFinancialMetrics.ts (8箇所)
+- **ビルドエラー**: なし
+- **アプリケーション**: 正常動作中
 
 ---
 
@@ -245,8 +277,8 @@ nvm use 20
 
 # 開発サーバー起動
 cd /Users/dw100/crm-monorepo/drm-suite/web-frontend
-export PORT=3003 && npm run dev
-# → http://localhost:3003 で起動
+npm run dev
+# → http://localhost:3001 で起動（3000が使用中の場合）
 ```
 
 ### トラブルシューティング
@@ -267,8 +299,23 @@ export PORT=3003 && npm run dev
 
 ---
 
-最終更新: 2025年9月15日 21:43 - 緊急修復作業完了
+## 📝 次回の作業予定
+
+### 継続中のタスク：TypeScript any型除去
+1. **pdf.service.ts** (11箇所) - 次回最優先
+2. **useFinancialMetrics.ts** (8箇所)
+3. その他66ファイルの段階的修正
+
+### 重要な注意事項：
+- **必ずNode.js v20を使用**（v22はwebpackエラー発生）
+- **開発サーバー**: http://localhost:3001
+- **ビルド確認**: 現在エラーなし
+- **型定義ファイル**: `/src/types/master.ts`に`ConstructionMasters`型を追加済み
+
+---
+
+最終更新: 2025年9月15日 23:11 - TypeScript any型修正作業
 作業者: Claude（AI）
 確認者: あなた！
 
-**安定版達成！次は営業機能開発へ** 🚀
+**型安全性向上中！残り66ファイル** 🚀

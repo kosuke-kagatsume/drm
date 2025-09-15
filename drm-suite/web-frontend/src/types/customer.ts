@@ -182,12 +182,12 @@ export interface CustomerImportResult {
   skipped: number;
   errors: Array<{
     row: number;
-    data: any;
+    data: Partial<Customer>;
     message: string;
   }>;
   warnings: Array<{
     row: number;
-    data: any;
+    data: Partial<Customer>;
     message: string;
   }>;
 }

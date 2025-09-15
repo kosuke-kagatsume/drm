@@ -294,14 +294,18 @@ export interface RAGSuggestion {
       currentPrice: number;
       suggestedPrice: number;
       reason: string;
-      marketData?: any;
+      marketData?: {
+        averagePrice?: number;
+        competitorPrices?: number[];
+        priceRange?: { min: number; max: number };
+      };
     };
   };
 
   actionable: boolean; // アクション可能かどうか
   action?: {
     type: 'add_item' | 'update_price' | 'copy_section' | 'apply_template';
-    payload: any;
+    payload: EstimateItem | number | string | { templateId?: string; sectionId?: string };
   };
 }
 
