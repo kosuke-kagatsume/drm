@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { X, Users, TrendingUp, Mail, Share2, DollarSign, BarChart3, Target, Plus, Download, Send, Eye, Edit3, Calendar, Star, Trash2, ArrowRight, Clock, TrendingDown, Filter, Search, User, MousePointer, ShoppingCart, CheckCircle, AlertTriangle, RefreshCw } from 'lucide-react';
 import RAGAssistant from '@/components/rag-assistant';
 
 interface MarketingDashboardProps {
@@ -55,6 +56,42 @@ interface CustomerJourney {
   dropOffRate: number;
 }
 
+interface CustomerJourneyDetailed extends CustomerJourney {
+  id: string;
+  title: string;
+  description: string;
+  touchpoints: TouchPoint[];
+  metrics: JourneyMetrics;
+  trends: JourneyTrend[];
+}
+
+interface TouchPoint {
+  id: string;
+  name: string;
+  type: 'website' | 'email' | 'phone' | 'social' | 'ad' | 'store';
+  stage: string;
+  interactions: number;
+  conversionRate: number;
+  satisfaction: number;
+  issues: string[];
+}
+
+interface JourneyMetrics {
+  totalTouchpoints: number;
+  avgJourneyTime: string;
+  totalConversions: number;
+  revenueGenerated: number;
+  customerSatisfaction: number;
+  abandonmentRate: number;
+}
+
+interface JourneyTrend {
+  period: string;
+  conversions: number;
+  dropOffs: number;
+  avgTime: number;
+}
+
 interface Campaign {
   id: string;
   name: string;
@@ -101,6 +138,8 @@ export default function MarketingDashboard({
   const [showSocialModal, setShowSocialModal] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showABModal, setShowABModal] = useState(false);
+  const [showJourneyModal, setShowJourneyModal] = useState(false);
+  const [selectedJourney, setSelectedJourney] = useState<CustomerJourneyDetailed | null>(null);
 
   const campaigns: Campaign[] = [
     {
@@ -193,6 +232,208 @@ export default function MarketingDashboard({
       conversion: 10.2,
       trend: 'down',
     },
+  ];
+
+  // 建設業界特化のカスタマージャーニーデータ
+  const customerJourneys: CustomerJourneyDetailed[] = [
+    {
+      id: 'journey-1',
+      stage: '認知・発見',
+      title: '外壁塗装検討ジャーニー',
+      description: '外壁の劣化に気づいたお客様が業者選定から契約まで',
+      count: 1250,
+      conversionRate: 8.5,
+      avgTimeInStage: '45日',
+      dropOffRate: 15.2,
+      touchpoints: [
+        {
+          id: 'tp1',
+          name: 'Google検索',
+          type: 'website',
+          stage: '認知',
+          interactions: 1250,
+          conversionRate: 12.5,
+          satisfaction: 4.2,
+          issues: ['情報不足', '料金不明確']
+        },
+        {
+          id: 'tp2', 
+          name: 'ホームページ閲覧',
+          type: 'website',
+          stage: '認知',
+          interactions: 850,
+          conversionRate: 18.3,
+          satisfaction: 4.5,
+          issues: ['施工事例少ない']
+        },
+        {
+          id: 'tp3',
+          name: '資料請求',
+          type: 'email',
+          stage: '検討',
+          interactions: 420,
+          conversionRate: 35.2,
+          satisfaction: 4.8,
+          issues: ['返答遅い']
+        },
+        {
+          id: 'tp4',
+          name: '現地調査',
+          type: 'store',
+          stage: '検討',
+          interactions: 280,
+          conversionRate: 65.5,
+          satisfaction: 4.9,
+          issues: ['時間調整困難']
+        },
+        {
+          id: 'tp5',
+          name: '見積提案',
+          type: 'store',
+          stage: '決定',
+          interactions: 180,
+          conversionRate: 78.2,
+          satisfaction: 4.7,
+          issues: ['価格高い', '工期長い']
+        }
+      ],
+      metrics: {
+        totalTouchpoints: 5,
+        avgJourneyTime: '45日',
+        totalConversions: 142,
+        revenueGenerated: 284000000,
+        customerSatisfaction: 4.6,
+        abandonmentRate: 15.2
+      },
+      trends: [
+        { period: '1月', conversions: 35, dropOffs: 8, avgTime: 48 },
+        { period: '2月', conversions: 42, dropOffs: 6, avgTime: 45 },
+        { period: '3月', conversions: 38, dropOffs: 9, avgTime: 42 },
+        { period: '4月', conversions: 27, dropOffs: 12, avgTime: 47 }
+      ]
+    },
+    {
+      id: 'journey-2',
+      stage: '認知・発見',
+      title: '屋根修理緊急対応ジャーニー',
+      description: '雨漏りなど緊急性の高いお客様の対応フロー',
+      count: 680,
+      conversionRate: 25.8,
+      avgTimeInStage: '7日',
+      dropOffRate: 8.5,
+      touchpoints: [
+        {
+          id: 'tp6',
+          name: '緊急電話相談',
+          type: 'phone',
+          stage: '認知',
+          interactions: 680,
+          conversionRate: 45.2,
+          satisfaction: 4.8,
+          issues: ['待ち時間長い']
+        },
+        {
+          id: 'tp7',
+          name: '緊急現地調査',
+          type: 'store',
+          stage: '検討',
+          interactions: 450,
+          conversionRate: 72.5,
+          satisfaction: 4.9,
+          issues: ['到着遅い']
+        },
+        {
+          id: 'tp8',
+          name: '緊急見積',
+          type: 'store',
+          stage: '決定',
+          interactions: 320,
+          conversionRate: 85.8,
+          satisfaction: 4.7,
+          issues: ['価格高い']
+        }
+      ],
+      metrics: {
+        totalTouchpoints: 3,
+        avgJourneyTime: '7日',
+        totalConversions: 175,
+        revenueGenerated: 87500000,
+        customerSatisfaction: 4.8,
+        abandonmentRate: 8.5
+      },
+      trends: [
+        { period: '1月', conversions: 38, dropOffs: 4, avgTime: 8 },
+        { period: '2月', conversions: 45, dropOffs: 3, avgTime: 6 },
+        { period: '3月', conversions: 52, dropOffs: 5, avgTime: 7 },
+        { period: '4月', conversions: 40, dropOffs: 6, avgTime: 8 }
+      ]
+    },
+    {
+      id: 'journey-3',
+      stage: '認知・発見',
+      title: 'リフォーム検討ジャーニー',
+      description: '大規模リフォームを検討するお客様の長期的なフロー',
+      count: 420,
+      conversionRate: 15.2,
+      avgTimeInStage: '120日',
+      dropOffRate: 22.8,
+      touchpoints: [
+        {
+          id: 'tp9',
+          name: 'SNS広告',
+          type: 'social',
+          stage: '認知',
+          interactions: 420,
+          conversionRate: 8.5,
+          satisfaction: 3.8,
+          issues: ['広告感強い']
+        },
+        {
+          id: 'tp10',
+          name: 'ショールーム見学',
+          type: 'store',
+          stage: '認知',
+          interactions: 180,
+          conversionRate: 32.5,
+          satisfaction: 4.6,
+          issues: ['場所不便']
+        },
+        {
+          id: 'tp11',
+          name: '設計相談',
+          type: 'store',
+          stage: '検討',
+          interactions: 120,
+          conversionRate: 58.2,
+          satisfaction: 4.8,
+          issues: ['時間かかる']
+        },
+        {
+          id: 'tp12',
+          name: '詳細見積',
+          type: 'email',
+          stage: '決定',
+          interactions: 85,
+          conversionRate: 75.8,
+          satisfaction: 4.5,
+          issues: ['複雑すぎ']
+        }
+      ],
+      metrics: {
+        totalTouchpoints: 4,
+        avgJourneyTime: '120日',
+        totalConversions: 64,
+        revenueGenerated: 640000000,
+        customerSatisfaction: 4.4,
+        abandonmentRate: 22.8
+      },
+      trends: [
+        { period: '1月', conversions: 12, dropOffs: 8, avgTime: 125 },
+        { period: '2月', conversions: 18, dropOffs: 6, avgTime: 115 },
+        { period: '3月', conversions: 20, dropOffs: 9, avgTime: 120 },
+        { period: '4月', conversions: 14, dropOffs: 11, avgTime: 118 }
+      ]
+    }
   ];
 
   const webMetrics: WebMetrics = {
@@ -528,6 +769,100 @@ export default function MarketingDashboard({
       document.body.removeChild(link);
 
       alert('ROI分析レポートをダウンロードしました！');
+    } else if (type === 'leads') {
+      // リードデータのエクスポート
+      const leadData = leadSources.map((source) => ({
+        source: source.source,
+        count: source.count,
+        quality: source.quality,
+        conversion: source.conversion,
+        trend: source.trend,
+      }));
+
+      const csvHeaders = ['ソース', 'リード数', '品質スコア', 'CV率(%)', 'トレンド'];
+      const csvData = leadData.map((d) => [
+        d.source,
+        d.count,
+        d.quality,
+        d.conversion,
+        d.trend === 'up' ? '上昇' : d.trend === 'down' ? '下降' : '安定'
+      ]);
+      const csvContent = [csvHeaders, ...csvData]
+        .map((row) => row.join(','))
+        .join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `leads-report-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      alert('リードレポートをダウンロードしました！');
+    } else if (type === 'social-analytics') {
+      // ソーシャルメディア分析のエクスポート
+      const socialData = socialPosts.map((post) => ({
+        platform: post.platform,
+        content: post.content.substring(0, 50) + '...',
+        status: post.status,
+        scheduledDate: post.scheduledDate,
+        engagement: post.engagement,
+      }));
+
+      const csvHeaders = ['プラットフォーム', 'コンテンツ', 'ステータス', '投稿日時', 'エンゲージメント'];
+      const csvData = socialData.map((d) => [
+        d.platform,
+        d.content,
+        d.status === 'published' ? '公開済み' : d.status === 'scheduled' ? '予約済み' : '下書き',
+        d.scheduledDate,
+        d.engagement
+      ]);
+      const csvContent = [csvHeaders, ...csvData]
+        .map((row) => row.join(','))
+        .join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `social-analytics-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      alert('SNS分析レポートをダウンロードしました！');
+    } else if (type === 'email-analytics') {
+      // メールマーケティング分析のエクスポート
+      const emailTemplates = [
+        { name: '外壁塗装キャンペーン', openRate: 28.5, clickRate: 4.2, revenue: 125000 },
+        { name: '屋根修理フォローアップ', openRate: 32.1, clickRate: 5.8, revenue: 89000 },
+        { name: '顧客満足度調査', openRate: 19.8, clickRate: 2.1, revenue: 15000 },
+        { name: '定期メンテナンス', openRate: 26.3, clickRate: 3.9, revenue: 67000 },
+      ];
+
+      const csvHeaders = ['テンプレート名', '開封率(%)', 'クリック率(%)', '収益(円)'];
+      const csvData = emailTemplates.map((d) => [
+        d.name,
+        d.openRate,
+        d.clickRate,
+        d.revenue
+      ]);
+      const csvContent = [csvHeaders, ...csvData]
+        .map((row) => row.join(','))
+        .join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `email-analytics-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      alert('メール分析レポートをダウンロードしました！');
     } else {
       // その他のレポート
       alert(`${type}レポートをエクスポート機能を準備中です...`);
@@ -974,7 +1309,7 @@ export default function MarketingDashboard({
               </div>
 
               {/* クイックアクセス */}
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-2 mb-4">
                 <button
                   onClick={() => router.push('/expenses')}
                   className="p-3 bg-red-50 rounded-lg hover:bg-red-100 transition text-center"
@@ -996,6 +1331,55 @@ export default function MarketingDashboard({
                   <div className="text-xl mb-1">💡</div>
                   <div className="text-xs font-medium">予算配分</div>
                 </button>
+              </div>
+
+              {/* マーケティング機能アクセス */}
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg">
+                <h5 className="font-bold text-gray-800 mb-3">🚀 マーケティング機能</h5>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={() => setShowLeadModal(true)}
+                    className="p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition text-center border border-blue-200"
+                  >
+                    <div className="text-xl mb-1">🎯</div>
+                    <div className="text-xs font-medium">リード管理</div>
+                  </button>
+                  <button
+                    onClick={() => setShowSocialModal(true)}
+                    className="p-3 bg-pink-50 rounded-lg hover:bg-pink-100 transition text-center border border-pink-200"
+                  >
+                    <div className="text-xl mb-1">📱</div>
+                    <div className="text-xs font-medium">SNS管理</div>
+                  </button>
+                  <button
+                    onClick={() => setShowEmailModal(true)}
+                    className="p-3 bg-green-50 rounded-lg hover:bg-green-100 transition text-center border border-green-200"
+                  >
+                    <div className="text-xl mb-1">📧</div>
+                    <div className="text-xs font-medium">メール配信</div>
+                  </button>
+                  <button
+                    onClick={() => setShowABModal(true)}
+                    className="p-3 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition text-center border border-yellow-200"
+                  >
+                    <div className="text-xl mb-1">🧪</div>
+                    <div className="text-xs font-medium">A/Bテスト</div>
+                  </button>
+                  <button
+                    onClick={() => router.push('/campaigns')}
+                    className="p-3 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition text-center border border-indigo-200"
+                  >
+                    <div className="text-xl mb-1">📋</div>
+                    <div className="text-xs font-medium">キャンペーン</div>
+                  </button>
+                  <button
+                    onClick={() => handleExport('marketing')}
+                    className="p-3 bg-teal-50 rounded-lg hover:bg-teal-100 transition text-center border border-teal-200"
+                  >
+                    <div className="text-xl mb-1">📄</div>
+                    <div className="text-xs font-medium">レポート</div>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1388,7 +1772,10 @@ export default function MarketingDashboard({
                 🛤️ カスタマージャーニー
               </h2>
               <button
-                onClick={() => setActiveModal('customer-journey')}
+                onClick={() => {
+                  setSelectedJourney(customerJourneys[0]);
+                  setShowJourneyModal(true);
+                }}
                 className="text-sm text-teal-600 hover:text-teal-800"
               >
                 詳細分析 →
@@ -2501,6 +2888,594 @@ export default function MarketingDashboard({
                 <button
                   onClick={() => setShowABModal(false)}
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  閉じる
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lead Modal */}
+      {showLeadModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-4 text-white">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold">リード管理</h2>
+                <button
+                  onClick={() => setShowLeadModal(false)}
+                  className="text-white hover:bg-white/20 p-2 rounded-lg"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+              {/* Lead Source Analysis */}
+              <div className="grid grid-cols-2 gap-6 mb-6">
+                <div className="bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-lg">
+                  <h3 className="font-bold text-gray-800 mb-3">📊 リードソース分析</h3>
+                  <div className="space-y-3">
+                    {leadSources.map((source, idx) => (
+                      <div key={idx} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                          <span className="text-sm font-medium">{source.source}</span>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-bold text-blue-600">{source.count}</div>
+                          <div className="text-xs text-gray-500">CV: {source.conversion}%</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg">
+                  <h3 className="font-bold text-gray-800 mb-3">🎯 リード品質スコア</h3>
+                  <div className="space-y-3">
+                    {leadSources.map((source, idx) => (
+                      <div key={idx} className="flex items-center justify-between">
+                        <span className="text-sm">{source.source}</span>
+                        <div className="flex items-center gap-2">
+                          <div className="flex">
+                            {'⭐'.repeat(Math.floor(source.quality))}
+                          </div>
+                          <span className="text-sm font-bold text-purple-600">
+                            {source.quality}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Lead Actions */}
+              <div className="bg-yellow-50 p-4 rounded-lg mb-6">
+                <h3 className="font-bold text-yellow-800 mb-3">⚡ クイックアクション</h3>
+                <div className="grid grid-cols-4 gap-3">
+                  <button 
+                    onClick={() => router.push('/leads/new')}
+                    className="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition text-center"
+                  >
+                    <div className="text-xl mb-1">➕</div>
+                    <div className="text-xs">新規リード</div>
+                  </button>
+                  <button 
+                    onClick={() => handleExport('leads')}
+                    className="bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition text-center"
+                  >
+                    <div className="text-xl mb-1">📊</div>
+                    <div className="text-xs">エクスポート</div>
+                  </button>
+                  <button 
+                    onClick={() => router.push('/leads/import')}
+                    className="bg-purple-500 text-white p-3 rounded-lg hover:bg-purple-600 transition text-center"
+                  >
+                    <div className="text-xl mb-1">📥</div>
+                    <div className="text-xs">インポート</div>
+                  </button>
+                  <button 
+                    onClick={() => router.push('/leads/analytics')}
+                    className="bg-orange-500 text-white p-3 rounded-lg hover:bg-orange-600 transition text-center"
+                  >
+                    <div className="text-xl mb-1">📈</div>
+                    <div className="text-xs">分析レポート</div>
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowLeadModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  閉じる
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Social Media Modal */}
+      {showSocialModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden">
+            <div className="bg-gradient-to-r from-pink-600 to-purple-600 px-6 py-4 text-white">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold">SNS管理</h2>
+                <button
+                  onClick={() => setShowSocialModal(false)}
+                  className="text-white hover:bg-white/20 p-2 rounded-lg"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+              {/* Social Platform Stats */}
+              <div className="grid grid-cols-4 gap-4 mb-6">
+                <div className="bg-blue-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl mb-2">📘</div>
+                  <div className="text-sm text-gray-600">Facebook</div>
+                  <div className="text-lg font-bold text-blue-600">2.4K</div>
+                  <div className="text-xs text-gray-500">フォロワー</div>
+                </div>
+                <div className="bg-gradient-to-r from-pink-50 to-purple-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl mb-2">📷</div>
+                  <div className="text-sm text-gray-600">Instagram</div>
+                  <div className="text-lg font-bold text-purple-600">1.8K</div>
+                  <div className="text-xs text-gray-500">フォロワー</div>
+                </div>
+                <div className="bg-blue-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl mb-2">🐦</div>
+                  <div className="text-sm text-gray-600">Twitter</div>
+                  <div className="text-lg font-bold text-blue-500">956</div>
+                  <div className="text-xs text-gray-500">フォロワー</div>
+                </div>
+                <div className="bg-blue-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl mb-2">💼</div>
+                  <div className="text-sm text-gray-600">LinkedIn</div>
+                  <div className="text-lg font-bold text-blue-700">445</div>
+                  <div className="text-xs text-gray-500">フォロワー</div>
+                </div>
+              </div>
+
+              {/* Recent Posts */}
+              <div className="bg-gray-50 p-4 rounded-lg mb-6">
+                <h3 className="font-bold text-gray-800 mb-3">📝 最近の投稿</h3>
+                <div className="space-y-3">
+                  {socialPosts.map((post) => (
+                    <div key={post.id} className="bg-white p-3 rounded-lg border">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">
+                            {post.platform === 'facebook' && '📘'}
+                            {post.platform === 'instagram' && '📷'}
+                            {post.platform === 'twitter' && '🐦'}
+                            {post.platform === 'linkedin' && '💼'}
+                          </span>
+                          <span className="font-medium capitalize">{post.platform}</span>
+                        </div>
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          post.status === 'published' ? 'bg-green-100 text-green-800' :
+                          post.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {post.status === 'published' ? '公開済み' :
+                           post.status === 'scheduled' ? '予約済み' : '下書き'}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-700 mb-2">{post.content}</p>
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>{post.scheduledDate}</span>
+                        <span>エンゲージメント: {post.engagement}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Social Actions */}
+              <div className="bg-gradient-to-r from-pink-50 to-purple-50 p-4 rounded-lg mb-6">
+                <h3 className="font-bold text-purple-800 mb-3">🚀 SNSアクション</h3>
+                <div className="grid grid-cols-3 gap-3">
+                  <button 
+                    onClick={() => router.push('/social/create')}
+                    className="bg-purple-500 text-white p-3 rounded-lg hover:bg-purple-600 transition text-center"
+                  >
+                    <div className="text-xl mb-1">✍️</div>
+                    <div className="text-xs">新規投稿</div>
+                  </button>
+                  <button 
+                    onClick={() => router.push('/social/schedule')}
+                    className="bg-pink-500 text-white p-3 rounded-lg hover:bg-pink-600 transition text-center"
+                  >
+                    <div className="text-xl mb-1">📅</div>
+                    <div className="text-xs">予約投稿</div>
+                  </button>
+                  <button 
+                    onClick={() => handleExport('social-analytics')}
+                    className="bg-indigo-500 text-white p-3 rounded-lg hover:bg-indigo-600 transition text-center"
+                  >
+                    <div className="text-xl mb-1">📊</div>
+                    <div className="text-xs">分析レポート</div>
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowSocialModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  閉じる
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Email Marketing Modal */}
+      {showEmailModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="bg-gradient-to-r from-green-600 to-teal-600 px-6 py-4 text-white">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold">メールマーケティング</h2>
+                <button
+                  onClick={() => setShowEmailModal(false)}
+                  className="text-white hover:bg-white/20 p-2 rounded-lg"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+              {/* Email Stats */}
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="bg-green-50 p-4 rounded-lg text-center">
+                  <div className="text-xl text-green-600 mb-2">📧</div>
+                  <div className="text-2xl font-bold text-green-600">24.5%</div>
+                  <div className="text-sm text-gray-600">開封率</div>
+                </div>
+                <div className="bg-blue-50 p-4 rounded-lg text-center">
+                  <div className="text-xl text-blue-600 mb-2">👆</div>
+                  <div className="text-2xl font-bold text-blue-600">3.8%</div>
+                  <div className="text-sm text-gray-600">クリック率</div>
+                </div>
+                <div className="bg-purple-50 p-4 rounded-lg text-center">
+                  <div className="text-xl text-purple-600 mb-2">💰</div>
+                  <div className="text-2xl font-bold text-purple-600">¥245K</div>
+                  <div className="text-sm text-gray-600">収益</div>
+                </div>
+              </div>
+
+              {/* Email Templates */}
+              <div className="bg-gray-50 p-4 rounded-lg mb-6">
+                <h3 className="font-bold text-gray-800 mb-3">📄 メールテンプレート</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-white p-3 rounded-lg border">
+                    <h4 className="font-medium mb-2">外壁塗装キャンペーン</h4>
+                    <p className="text-sm text-gray-600 mb-2">開封率: 28.5% | クリック率: 4.2%</p>
+                    <div className="flex gap-2">
+                      <button className="text-xs bg-blue-500 text-white px-2 py-1 rounded">編集</button>
+                      <button className="text-xs bg-green-500 text-white px-2 py-1 rounded">送信</button>
+                    </div>
+                  </div>
+                  <div className="bg-white p-3 rounded-lg border">
+                    <h4 className="font-medium mb-2">屋根修理フォローアップ</h4>
+                    <p className="text-sm text-gray-600 mb-2">開封率: 32.1% | クリック率: 5.8%</p>
+                    <div className="flex gap-2">
+                      <button className="text-xs bg-blue-500 text-white px-2 py-1 rounded">編集</button>
+                      <button className="text-xs bg-green-500 text-white px-2 py-1 rounded">送信</button>
+                    </div>
+                  </div>
+                  <div className="bg-white p-3 rounded-lg border">
+                    <h4 className="font-medium mb-2">顧客満足度調査</h4>
+                    <p className="text-sm text-gray-600 mb-2">開封率: 19.8% | クリック率: 2.1%</p>
+                    <div className="flex gap-2">
+                      <button className="text-xs bg-blue-500 text-white px-2 py-1 rounded">編集</button>
+                      <button className="text-xs bg-green-500 text-white px-2 py-1 rounded">送信</button>
+                    </div>
+                  </div>
+                  <div className="bg-white p-3 rounded-lg border">
+                    <h4 className="font-medium mb-2">定期メンテナンス</h4>
+                    <p className="text-sm text-gray-600 mb-2">開封率: 26.3% | クリック率: 3.9%</p>
+                    <div className="flex gap-2">
+                      <button className="text-xs bg-blue-500 text-white px-2 py-1 rounded">編集</button>
+                      <button className="text-xs bg-green-500 text-white px-2 py-1 rounded">送信</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Email Actions */}
+              <div className="bg-gradient-to-r from-green-50 to-teal-50 p-4 rounded-lg mb-6">
+                <h3 className="font-bold text-teal-800 mb-3">✉️ メールアクション</h3>
+                <div className="grid grid-cols-4 gap-3">
+                  <button 
+                    onClick={() => router.push('/email/create')}
+                    className="bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition text-center"
+                  >
+                    <div className="text-xl mb-1">✍️</div>
+                    <div className="text-xs">新規作成</div>
+                  </button>
+                  <button 
+                    onClick={() => router.push('/email/templates')}
+                    className="bg-teal-500 text-white p-3 rounded-lg hover:bg-teal-600 transition text-center"
+                  >
+                    <div className="text-xl mb-1">📄</div>
+                    <div className="text-xs">テンプレート</div>
+                  </button>
+                  <button 
+                    onClick={() => router.push('/email/segments')}
+                    className="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition text-center"
+                  >
+                    <div className="text-xl mb-1">👥</div>
+                    <div className="text-xs">セグメント</div>
+                  </button>
+                  <button 
+                    onClick={() => handleExport('email-analytics')}
+                    className="bg-purple-500 text-white p-3 rounded-lg hover:bg-purple-600 transition text-center"
+                  >
+                    <div className="text-xl mb-1">📊</div>
+                    <div className="text-xs">分析レポート</div>
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowEmailModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  閉じる
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* カスタマージャーニー詳細分析モーダル */}
+      {showJourneyModal && selectedJourney && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-7xl w-full max-h-[95vh] overflow-hidden">
+            {/* ヘッダー */}
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4 text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Target className="w-6 h-6" />
+                  <div>
+                    <h2 className="text-xl font-bold">{selectedJourney.title}</h2>
+                    <p className="text-indigo-100 text-sm">{selectedJourney.description}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowJourneyModal(false);
+                    setSelectedJourney(null);
+                  }}
+                  className="text-white hover:bg-white/20 p-2 rounded-lg"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[calc(95vh-80px)]">
+              {/* サマリー */}
+              <div className="grid grid-cols-6 gap-4 mb-6">
+                <div className="bg-blue-50 p-4 rounded-lg text-center">
+                  <Users className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-blue-600">{selectedJourney.count.toLocaleString()}</div>
+                  <div className="text-sm text-gray-600">総顧客数</div>
+                </div>
+                <div className="bg-green-50 p-4 rounded-lg text-center">
+                  <TrendingUp className="w-6 h-6 text-green-600 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-green-600">{selectedJourney.conversionRate}%</div>
+                  <div className="text-sm text-gray-600">コンバージョン率</div>
+                </div>
+                <div className="bg-purple-50 p-4 rounded-lg text-center">
+                  <Clock className="w-6 h-6 text-purple-600 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-purple-600">{selectedJourney.avgTimeInStage}</div>
+                  <div className="text-sm text-gray-600">平均ジャーニー時間</div>
+                </div>
+                <div className="bg-red-50 p-4 rounded-lg text-center">
+                  <TrendingDown className="w-6 h-6 text-red-600 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-red-600">{selectedJourney.dropOffRate}%</div>
+                  <div className="text-sm text-gray-600">離脱率</div>
+                </div>
+                <div className="bg-yellow-50 p-4 rounded-lg text-center">
+                  <DollarSign className="w-6 h-6 text-yellow-600 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-yellow-600">¥{Math.round(selectedJourney.metrics.revenueGenerated / 1000000)}M</div>
+                  <div className="text-sm text-gray-600">創出収益</div>
+                </div>
+                <div className="bg-teal-50 p-4 rounded-lg text-center">
+                  <Star className="w-6 h-6 text-teal-600 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-teal-600">{selectedJourney.metrics.customerSatisfaction}</div>
+                  <div className="text-sm text-gray-600">顧客満足度</div>
+                </div>
+              </div>
+
+              {/* タッチポイント分析 */}
+              <div className="bg-white rounded-lg border border-gray-200 mb-6">
+                <div className="p-6 border-b">
+                  <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <MousePointer className="w-5 h-5" />
+                    タッチポイント分析
+                  </h3>
+                </div>
+                <div className="p-6">
+                  <div className="space-y-4">
+                    {selectedJourney.touchpoints.map((touchpoint, index) => {
+                      const getTypeIcon = (type: string) => {
+                        switch (type) {
+                          case 'website': return '🌐';
+                          case 'email': return '📧';
+                          case 'phone': return '📞';
+                          case 'social': return '📱';
+                          case 'ad': return '📺';
+                          case 'store': return '🏪';
+                          default: return '📍';
+                        }
+                      };
+
+                      const getStageColor = (stage: string) => {
+                        switch (stage) {
+                          case '認知': return 'bg-blue-100 text-blue-800';
+                          case '検討': return 'bg-yellow-100 text-yellow-800';
+                          case '決定': return 'bg-green-100 text-green-800';
+                          default: return 'bg-gray-100 text-gray-800';
+                        }
+                      };
+
+                      return (
+                        <div key={touchpoint.id} className="relative">
+                          <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                            <div className="flex-shrink-0">
+                              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-2xl">
+                                {getTypeIcon(touchpoint.type)}
+                              </div>
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h4 className="font-semibold text-gray-900">{touchpoint.name}</h4>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStageColor(touchpoint.stage)}`}>
+                                  {touchpoint.stage}
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-4 gap-4 text-sm">
+                                <div>
+                                  <span className="text-gray-500">インタラクション: </span>
+                                  <span className="font-medium">{touchpoint.interactions.toLocaleString()}</span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">CV率: </span>
+                                  <span className="font-medium text-green-600">{touchpoint.conversionRate}%</span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">満足度: </span>
+                                  <span className="font-medium text-blue-600">{touchpoint.satisfaction}/5</span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">課題: </span>
+                                  <span className="font-medium text-red-600">{touchpoint.issues.join(', ')}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          {index < selectedJourney.touchpoints.length - 1 && (
+                            <div className="flex justify-center py-2">
+                              <ArrowRight className="w-5 h-5 text-gray-400" />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* トレンド分析 */}
+              <div className="grid grid-cols-2 gap-6 mb-6">
+                <div className="bg-white rounded-lg border border-gray-200">
+                  <div className="p-6 border-b">
+                    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                      <BarChart3 className="w-5 h-5" />
+                      月別コンバージョン推移
+                    </h3>
+                  </div>
+                  <div className="p-6">
+                    <div className="space-y-3">
+                      {selectedJourney.trends.map((trend, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                            <span className="font-medium">{trend.period}</span>
+                          </div>
+                          <div className="flex items-center gap-6">
+                            <div className="text-sm">
+                              <span className="text-green-600 font-medium">{trend.conversions}</span>
+                              <span className="text-gray-500 ml-1">CV</span>
+                            </div>
+                            <div className="text-sm">
+                              <span className="text-red-600 font-medium">{trend.dropOffs}</span>
+                              <span className="text-gray-500 ml-1">離脱</span>
+                            </div>
+                            <div className="text-sm">
+                              <span className="text-blue-600 font-medium">{trend.avgTime}</span>
+                              <span className="text-gray-500 ml-1">日</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg border border-gray-200">
+                  <div className="p-6 border-b">
+                    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                      <AlertTriangle className="w-5 h-5" />
+                      課題と改善提案
+                    </h3>
+                  </div>
+                  <div className="p-6">
+                    <div className="space-y-4">
+                      <div className="p-4 bg-red-50 rounded-lg">
+                        <h4 className="font-semibold text-red-800 mb-2">🚨 重要な課題</h4>
+                        <ul className="text-sm text-red-700 space-y-1">
+                          <li>• 初期認知段階での離脱率が高い (15.2%)</li>
+                          <li>• 料金情報の不明確さが障害となっている</li>
+                          <li>• 現地調査の時間調整が困難</li>
+                        </ul>
+                      </div>
+                      <div className="p-4 bg-green-50 rounded-lg">
+                        <h4 className="font-semibold text-green-800 mb-2">💡 改善提案</h4>
+                        <ul className="text-sm text-green-700 space-y-1">
+                          <li>• 料金シミュレーターの追加</li>
+                          <li>• オンライン予約システムの導入</li>
+                          <li>• AIチャットボットによる初期対応</li>
+                        </ul>
+                      </div>
+                      <div className="p-4 bg-blue-50 rounded-lg">
+                        <h4 className="font-semibold text-blue-800 mb-2">📈 最適化ポイント</h4>
+                        <ul className="text-sm text-blue-700 space-y-1">
+                          <li>• 資料請求から現地調査への誘導強化</li>
+                          <li>• 見積提案時の価格説明改善</li>
+                          <li>• 顧客満足度の継続的モニタリング</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* アクション */}
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => handleExport('customer-journey', selectedJourney.id)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  レポート出力
+                </button>
+                <button
+                  onClick={() => {
+                    setShowJourneyModal(false);
+                    setSelectedJourney(null);
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
                   閉じる
                 </button>

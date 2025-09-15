@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useEstimates } from '@/hooks/useEstimates';
 import { useFinancialMetrics } from '@/hooks/useFinancialMetrics';
+import ContractManagementModal from '@/components/sales/ContractManagementModal';
 
 interface TodoItem {
   id: string;
@@ -31,7 +32,6 @@ interface SalesDashboardProps {
 export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
   const router = useRouter();
   const [todayTodos, setTodayTodos] = useState<TodoItem[]>([]);
-  const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [showContractModal, setShowContractModal] = useState(false);
   const [showMapModal, setShowMapModal] = useState(false);
   const [showRAGModal, setShowRAGModal] = useState(false);
@@ -669,7 +669,7 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <button
-            onClick={() => setShowCustomerModal(true)}
+            onClick={() => router.push('/customers')}
             className="bg-white/20 backdrop-blur-sm p-4 rounded-xl hover:bg-white/30 transform hover:scale-105 transition-all duration-200 border border-white/30"
           >
             <span className="text-3xl">👥</span>
@@ -745,205 +745,16 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
       </div>
 
       {/* 顧客管理モーダル */}
-      {showCustomerModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold">👥 顧客管理（CRM）</h3>
-              <button
-                onClick={() => setShowCustomerModal(false)}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="space-y-6">
-              {/* 顧客検索 */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="顧客名、会社名、電話番号で検索"
-                    className="flex-1 px-3 py-2 border rounded-lg"
-                  />
-                  <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-                    検索
-                  </button>
-                  <button className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
-                    新規登録
-                  </button>
-                </div>
-              </div>
-
-              {/* 顧客リスト */}
-              <div className="space-y-3">
-                <h4 className="font-medium">最近の顧客</h4>
-                {[
-                  {
-                    name: '田中建設',
-                    status: 'hot',
-                    lastContact: '本日',
-                    nextAction: '見積提出',
-                  },
-                  {
-                    name: '山田工務店',
-                    status: 'warm',
-                    lastContact: '3日前',
-                    nextAction: '訪問予定',
-                  },
-                  {
-                    name: '佐藤リフォーム',
-                    status: 'cold',
-                    lastContact: '1週間前',
-                    nextAction: 'フォローアップ',
-                  },
-                ].map((customer, idx) => (
-                  <div
-                    key={idx}
-                    className="border rounded-lg p-4 hover:shadow-md transition"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h5 className="font-bold">{customer.name}</h5>
-                        <p className="text-sm text-gray-600">
-                          最終接触: {customer.lastContact}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          次のアクション: {customer.nextAction}
-                        </p>
-                      </div>
-                      <span
-                        className={`px-2 py-1 text-xs rounded-full ${
-                          customer.status === 'hot'
-                            ? 'bg-red-100 text-red-700'
-                            : customer.status === 'warm'
-                              ? 'bg-orange-100 text-orange-700'
-                              : 'bg-blue-100 text-blue-700'
-                        }`}
-                      >
-                        {customer.status === 'hot'
-                          ? '🔥 Hot'
-                          : customer.status === 'warm'
-                            ? '☀️ Warm'
-                            : '❄️ Cold'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    setShowCustomerModal(false);
-                    router.push('/customers');
-                  }}
-                  className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                >
-                  詳細画面へ
-                </button>
-                <button
-                  onClick={() => setShowCustomerModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  閉じる
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <CustomerDetailModal
+        isOpen={showCustomerModal}
+        onClose={() => setShowCustomerModal(false)}
+      />
 
       {/* 契約管理モーダル */}
-      {showContractModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-2xl w-full">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold">📄 契約管理</h3>
-              <button
-                onClick={() => setShowContractModal(false)}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {/* 契約ステータス */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="bg-yellow-50 p-3 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-yellow-600">3</div>
-                  <div className="text-sm text-gray-600">契約準備中</div>
-                </div>
-                <div className="bg-green-50 p-3 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-green-600">5</div>
-                  <div className="text-sm text-gray-600">今月成約</div>
-                </div>
-                <div className="bg-blue-50 p-3 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-blue-600">12</div>
-                  <div className="text-sm text-gray-600">進行中</div>
-                </div>
-              </div>
-
-              {/* 契約リスト */}
-              <div className="space-y-2">
-                <h4 className="font-medium">最近の契約</h4>
-                {[
-                  {
-                    customer: '田中様邸',
-                    amount: '¥2,500,000',
-                    status: '書類準備中',
-                    date: '2024-08-20',
-                  },
-                  {
-                    customer: '山田様邸',
-                    amount: '¥1,800,000',
-                    status: '署名待ち',
-                    date: '2024-08-18',
-                  },
-                  {
-                    customer: '佐藤様邸',
-                    amount: '¥3,200,000',
-                    status: '締結済み',
-                    date: '2024-08-15',
-                  },
-                ].map((contract, idx) => (
-                  <div
-                    key={idx}
-                    className="border rounded-lg p-3 hover:bg-gray-50"
-                  >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="font-medium">{contract.customer}</p>
-                        <p className="text-sm text-gray-600">{contract.date}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold">{contract.amount}</p>
-                        <p className="text-xs text-gray-500">
-                          {contract.status}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex gap-3">
-                <button className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-                  新規契約作成
-                </button>
-                <button
-                  onClick={() => setShowContractModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  閉じる
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ContractManagementModal
+        isOpen={showContractModal}
+        onClose={() => setShowContractModal(false)}
+      />
 
       {/* 地図分析モーダル */}
       {showMapModal && (
