@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Test</title>
+</head>
+<body>
+    <h1>ログインテスト</h1>
+    <button onclick="testLogin()">佐藤 次郎でログイン</button>
+    <button onclick="checkAuth()">認証状態確認</button>
+    <button onclick="clearAuth()">認証クリア</button>
+    <div id="result"></div>
+
+    <script>
+        function testLogin() {
+            localStorage.setItem('userEmail', 'sato@drm.com');
+            localStorage.setItem('userName', '佐藤 次郎');
+            localStorage.setItem('userRole', '営業担当');
+            document.getElementById('result').innerHTML = 'ログイン情報を保存しました';
+
+            setTimeout(() => {
+                window.location.href = 'http://localhost:3000/dashboard';
+            }, 1000);
+        }
+
+        function checkAuth() {
+            const email = localStorage.getItem('userEmail');
+            const name = localStorage.getItem('userName');
+            const role = localStorage.getItem('userRole');
+
+            document.getElementById('result').innerHTML =
+                `Email: ${email}<br>Name: ${name}<br>Role: ${role}`;
+        }
+
+        function clearAuth() {
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userName');
+            localStorage.removeItem('userRole');
+            document.getElementById('result').innerHTML = '認証情報をクリアしました';
+        }
+    </script>
+</body>
+</html>

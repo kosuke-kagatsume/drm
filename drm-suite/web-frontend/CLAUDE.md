@@ -4,16 +4,39 @@
 
 ### 最重要情報
 
-**最新URL**: https://web-frontend-3r9q3quax-kosukes-projects-c6ad92ba.vercel.app
-※2025年9月15日 18:02デプロイ完了
+**ローカル開発環境**: http://localhost:3003 ✅ **完全動作確認済み**
+**次回Vercelデプロイ予定**: 本日修復完了後
 
-**最新コミット**: 37a988b (マーケティング・営業ダッシュボード強化版)
+**重要**: Node.js v20を使用すること（v22では webpack chunk エラーが発生）
 
 ### プロジェクト概要
 
 - **場所**: `/Users/dw100/crm-monorepo/drm-suite/`
 - **内容**: 建設業界向けCRM「DRMスイート」完全統合システム
 - **技術**: Next.js 14 + TypeScript + Tailwind CSS
+
+---
+
+## 🚨 2025年9月15日（日）緊急修復作業 - 完了 ✅
+
+### 問題：Critical Webpack Chunk Loading エラー
+- **症状**: `TypeError: Cannot read properties of undefined (reading 'call')`
+- **影響**: ログイン画面が白画面、全機能停止
+- **原因**: Node.js v22 + Next.js 14.2.5 の非互換性
+
+### 完全解決済み ✅
+1. **Node.js v22 → v20へダウングレード** (`nvm use 20`)
+2. **完全キャッシュクリア** (`.next`, `.turbo`, `node_modules/.cache`)
+3. **本番ビルド成功** (`npm run build` エラーなし)
+4. **9人職種ログイン画面復元** (豪華UIバージョン)
+5. **営業・マーケティングダッシュボード動作確認済み**
+
+### 現在の安定動作確認
+- ✅ ログイン機能：9つのアカウント選択
+- ✅ 営業ダッシュボード：佐藤次郎でテスト済み
+- ✅ マーケティングダッシュボード：木村健太でテスト済み
+- ✅ 見積作成ボタン：アクセス権限正常
+- ✅ AuthContext連携：LocalStorage完全統合
 
 ---
 
@@ -209,8 +232,43 @@ NEXT_PUBLIC_DW_API_URL=https://dw.example.com/api
 
 ---
 
-最終更新: 2025年9月15日 17:58
+---
+
+## 🔧 開発環境セットアップ
+
+### 必須条件
+```bash
+# Node.js バージョン確認・変更
+node -v  # v20.x.x を確認
+# もしv22の場合：
+nvm use 20
+
+# 開発サーバー起動
+cd /Users/dw100/crm-monorepo/drm-suite/web-frontend
+export PORT=3003 && npm run dev
+# → http://localhost:3003 で起動
+```
+
+### トラブルシューティング
+もしwebpack chunk エラーが再発した場合：
+```bash
+# 1. Node.js確認
+nvm use 20
+
+# 2. 完全キャッシュクリア
+rm -rf .next .turbo node_modules/.cache
+
+# 3. 再インストール
+npm install
+
+# 4. 開発サーバー再起動
+export PORT=3003 && npm run dev
+```
+
+---
+
+最終更新: 2025年9月15日 21:43 - 緊急修復作業完了
 作業者: Claude（AI）
 確認者: あなた！
 
-明日も頑張りましょう！💪
+**安定版達成！次は営業機能開発へ** 🚀
