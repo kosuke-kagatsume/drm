@@ -19,6 +19,10 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@googlemaps/js-api-loader": "^1.16.10",
     "@googlemaps/markerclusterer": "^2.6.2",
+    "@mui/icons-material": "^5.16.6",
+    "@mui/material": "^5.16.6",
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
     "@react-google-maps/api": "^2.20.7",
     "@sparticuz/chromium": "^138.0.2",
     "@sparticuz/chromium-min": "^138.0.2",
@@ -35,7 +39,8 @@
     "puppeteer-core": "^24.17.0",
     "react": "18.3.1",
     "react-chartjs-2": "^5.3.0",
-    "react-dom": "18.3.1"
+    "react-dom": "18.3.1",
+    "recharts": "^2.12.7"
   },
   "devDependencies": {
     "@types/node": "20.14.8",
@@ -50,7 +55,7 @@
   },
   "packageManager": "npm@10",
   "engines": {
-    "node": ">=20.0.0 <22.0.0",
+    "node": ">=20.0.0",
     "npm": ">=10.0.0"
   }
 }
