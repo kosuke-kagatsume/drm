@@ -894,6 +894,12 @@ export default function MarketingDashboard({
           </h2>
           <div className="flex space-x-2">
             <button
+              onClick={() => router.push('/ma')}
+              className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
+            >
+              🤖 MA管理
+            </button>
+            <button
               onClick={() => router.push('/campaigns')}
               className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
             >
