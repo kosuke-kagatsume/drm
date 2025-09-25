@@ -162,6 +162,14 @@ export default function MAManagementPage() {
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
+    // ジャーニー管理タブの場合は専用ページへ遷移
+    if (newValue === 1) {
+      router.push('/ma/journey');
+    }
+    // A/Bテストタブの場合は専用ページへ遷移
+    if (newValue === 2) {
+      router.push('/ma/ab-test');
+    }
   };
 
   // Realistic mock data
@@ -308,6 +316,7 @@ export default function MAManagementPage() {
         >
           <Tab icon={<Analytics />} label="ダッシュボード" />
           <Tab icon={<Timeline />} label="ジャーニー管理" />
+          <Tab icon={<Email />} label="メール" />
           <Tab icon={<Science />} label="A/Bテスト" />
           <Tab icon={<AttachMoney />} label="ROI分析" />
           <Tab icon={<Schedule />} label="スケジュール" />
@@ -448,6 +457,65 @@ export default function MAManagementPage() {
                   </CardContent>
                 </Card>
               </Box>
+            </Box>
+
+            {/* Email Quick Access Card */}
+            <Box sx={{ mb: 2 }}>
+              <Card sx={{
+                background: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
+                color: 'white',
+              }}>
+                <CardContent>
+                  <Box display="flex" justifyContent="space-between" alignItems="center">
+                    <Box display="flex" alignItems="center" gap={2}>
+                      <Email sx={{ fontSize: 40 }} />
+                      <Box>
+                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                          メールコミュニケーション
+                        </Typography>
+                        <Box display="flex" gap={3} mt={1}>
+                          <Box>
+                            <Typography variant="caption" sx={{ opacity: 0.9 }}>
+                              本日の配信
+                            </Typography>
+                            <Typography variant="h6">
+                              2,456件
+                            </Typography>
+                          </Box>
+                          <Box>
+                            <Typography variant="caption" sx={{ opacity: 0.9 }}>
+                              平均開封率
+                            </Typography>
+                            <Typography variant="h6">
+                              28.4%
+                            </Typography>
+                          </Box>
+                          <Box>
+                            <Typography variant="caption" sx={{ opacity: 0.9 }}>
+                              クリック率
+                            </Typography>
+                            <Typography variant="h6">
+                              5.2%
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Box>
+                    </Box>
+                    <Button
+                      variant="contained"
+                      onClick={() => router.push('/ma/email')}
+                      sx={{
+                        bgcolor: 'rgba(255,255,255,0.2)',
+                        color: 'white',
+                        '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }
+                      }}
+                      endIcon={<ArrowForward />}
+                    >
+                      メール管理へ
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
             </Box>
 
             {/* Main Dashboard Content - Optimized Layout */}
@@ -699,13 +767,13 @@ export default function MAManagementPage() {
             </Typography>
           </TabPanel>
 
-          <TabPanel value={activeTab} index={3}>
+          <TabPanel value={activeTab} index={4}>
             <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 3 }}>
               ROI分析
             </Typography>
           </TabPanel>
 
-          <TabPanel value={activeTab} index={4}>
+          <TabPanel value={activeTab} index={5}>
             <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 3 }}>
               スケジュール管理
             </Typography>
