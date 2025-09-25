@@ -2,6 +2,10 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import EmailEditor from '@/components/ma/email-editor';
+import EmailReport from '@/components/ma/email-report';
+import EmailAnalytics from '@/components/ma/email-analytics';
+import EmailSettings from '@/components/ma/email-settings';
 import {
   Box,
   Typography,
@@ -62,7 +66,7 @@ import {
   Image,
   Code,
   Smartphone,
-  Desktop,
+  Computer,
   TrendingUp,
   TrendingDown,
   OpenInNew,
@@ -71,6 +75,7 @@ import {
   QueryStats,
   Campaign,
   Construction,
+  Settings,
   Home,
   Business,
   Engineering,
@@ -137,6 +142,10 @@ export default function EmailCommunicationPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [showEmailEditor, setShowEmailEditor] = useState(false);
+  const [showEmailReport, setShowEmailReport] = useState(false);
+  const [editingCampaign, setEditingCampaign] = useState<any>(null);
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string>('');
 
   // 建設業界向けテンプレート
   const templates: EmailTemplate[] = [
@@ -379,10 +388,10 @@ export default function EmailCommunicationPage() {
             <Button
               variant="contained"
               startIcon={<Add />}
-              onClick={() => router.push('/ma/email/builder')}
+              onClick={() => setShowEmailEditor(true)}
               sx={{ bgcolor: '#4285f4' }}
             >
-              新規テンプレート作成
+              新規メール作成
             </Button>
           </Box>
         </Box>
@@ -492,8 +501,8 @@ export default function EmailCommunicationPage() {
         <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
           <Tab label="テンプレート" />
           <Tab label="キャンペーン" />
-          <Tab label="分析" />
-          <Tab label="設定" />
+          <Tab label="分析" icon={<QueryStats />} iconPosition="start" />
+          <Tab label="設定" icon={<Settings />} iconPosition="start" />
         </Tabs>
       </Box>
 
@@ -615,7 +624,8 @@ export default function EmailCommunicationPage() {
                             startIcon={<Edit />}
                             onClick={(e) => {
                               e.stopPropagation();
-                              router.push(`/ma/email/builder/${template.id}`);
+                              setEditingCampaign(template);
+                              setShowEmailEditor(true);
                             }}
                           >
                             編集
@@ -755,10 +765,22 @@ export default function EmailCommunicationPage() {
                         <TableCell>{campaign.performance.clicks.toLocaleString()}</TableCell>
                         <TableCell>
                           <Box sx={{ display: 'flex', gap: 1 }}>
-                            <IconButton size="small">
+                            <IconButton
+                              size="small"
+                              onClick={() => {
+                                setSelectedCampaignId(campaign.id);
+                                setShowEmailReport(true);
+                              }}
+                            >
                               <Visibility />
                             </IconButton>
-                            <IconButton size="small">
+                            <IconButton
+                              size="small"
+                              onClick={() => {
+                                setEditingCampaign(campaign);
+                                setShowEmailEditor(true);
+                              }}
+                            >
                               <Edit />
                             </IconButton>
                             {campaign.status === 'sending' && (
@@ -778,70 +800,19 @@ export default function EmailCommunicationPage() {
         )}
 
         {activeTab === 2 && (
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={8}>
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" sx={{ mb: 3 }}>
-                  配信パフォーマンス推移
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={performanceData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <RechartsTooltip />
-                    <Legend />
-                    <Area type="monotone" dataKey="sent" stackId="1" stroke="#4285f4" fill="#4285f4" name="配信数" />
-                    <Area type="monotone" dataKey="opens" stackId="2" stroke="#34a853" fill="#34a853" name="開封数" />
-                    <Area type="monotone" dataKey="clicks" stackId="3" stroke="#fbbc04" fill="#fbbc04" name="クリック数" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </Paper>
-            </Grid>
+          <Box sx={{ p: 3 }}>
+            <EmailAnalytics />
+          </Box>
+        )}
 
-            <Grid item xs={12} md={4}>
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" sx={{ mb: 3 }}>
-                  デバイス別開封率
-                </Typography>
-                <ResponsiveContainer width="100%" height={200}>
-                  <PieChart>
-                    <Pie
-                      data={deviceStats}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      label
-                    >
-                      {deviceStats.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-                <List>
-                  {deviceStats.map(device => (
-                    <ListItem key={device.name}>
-                      <ListItemIcon>
-                        {device.name === 'モバイル' ? <Smartphone /> :
-                         device.name === 'デスクトップ' ? <Desktop /> :
-                         <Tablet />}
-                      </ListItemIcon>
-                      <ListItemText primary={device.name} />
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {device.value}%
-                      </Typography>
-                    </ListItem>
-                  ))}
-                </List>
-              </Paper>
-            </Grid>
-          </Grid>
+        {/* 設定タブ */}
+        {activeTab === 3 && (
+          <Box sx={{ p: 3 }}>
+            <EmailSettings />
+          </Box>
         )}
       </Box>
+
 
       {/* SpeedDial for quick actions */}
       <SpeedDial
@@ -863,6 +834,27 @@ export default function EmailCommunicationPage() {
           tooltipTitle="宛先リスト作成"
         />
       </SpeedDial>
+
+      {/* Email Editor Dialog */}
+      <EmailEditor
+        open={showEmailEditor}
+        onClose={() => {
+          setShowEmailEditor(false);
+          setEditingCampaign(null);
+        }}
+        isEdit={!!editingCampaign}
+        campaignData={editingCampaign}
+      />
+
+      {/* Email Report Dialog */}
+      <EmailReport
+        open={showEmailReport}
+        onClose={() => {
+          setShowEmailReport(false);
+          setSelectedCampaignId('');
+        }}
+        campaignId={selectedCampaignId}
+      />
     </Box>
   );
 }
