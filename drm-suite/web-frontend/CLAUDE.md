@@ -5,8 +5,8 @@
 ### 最重要情報
 
 **ローカル開発環境**: http://localhost:3004 ✅ **完全動作確認済み**
-**本番環境URL**: https://web-frontend-a1vi35zkl-kosukes-projects-c6ad92ba.vercel.app ✅ **MA完全機能システム最新デプロイ**
-**最終確認日時**: 2025年9月25日
+**本番環境URL**: https://web-frontend-b34r6lxgx-kosukes-projects-c6ad92ba.vercel.app ✅ **MA完全機能システム最新デプロイ（2025/09/25 23:35）**
+**最終確認日時**: 2025年9月25日 23:35
 
 **重要**: Node.js v20を使用すること（v22では webpack chunk エラーが発生）
 **現在のポート**: localhost:3004（他ポートが使用中のため）
