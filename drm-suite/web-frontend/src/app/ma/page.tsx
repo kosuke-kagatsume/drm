@@ -2,6 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import DraggableEvent from '@/components/ma/draggable-event';
+import DroppableDateCell from '@/components/ma/droppable-date-cell';
+import EventEditModal from '@/components/ma/event-edit-modal';
 import RAGAssistant from '@/components/rag-assistant';
 import {
   Card,
@@ -75,6 +80,11 @@ import {
   ArrowForward,
   ArrowBack,
   CalendarToday,
+  ChevronLeft,
+  ChevronRight,
+  ViewWeek,
+  ViewDay,
+  ViewModule,
   Assessment,
   PersonAdd,
   Visibility,
@@ -150,6 +160,21 @@ export default function MAManagementPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
   const [selectedPeriod, setSelectedPeriod] = useState('month');
+  
+  // カレンダー機能の状態管理
+  const [calendarView, setCalendarView] = useState<'month' | 'week' | 'day'>('month');
+  const [selectedDate, setSelectedDate] = useState(new Date(2025, 8, 25)); // 2025年9月25日
+  const [calendarEvents, setCalendarEvents] = useState([
+    { id: '1', title: '展示場イベント', type: 'exhibition', date: new Date(2025, 8, 3), time: '10:00', participants: 50 },
+    { id: '2', title: '断熱キャンペーン', type: 'campaign', date: new Date(2025, 8, 8), time: '終日' },
+    { id: '3', title: 'フォローメール', type: 'follow', date: new Date(2025, 8, 12), time: '09:00' },
+    { id: '4', title: '秋の展示会', type: 'exhibition', date: new Date(2025, 8, 15), time: '13:00', participants: 80 },
+    { id: '5', title: '省エネ相談会', type: 'campaign', date: new Date(2025, 8, 20), time: '14:00' },
+    { id: '6', title: '見積フォロー', type: 'follow', date: new Date(2025, 8, 25), time: '11:00' },
+    { id: '7', title: '完工後フォロー', type: 'follow', date: new Date(2025, 8, 28), time: '15:00' }
+  ]);
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
 
   useEffect(() => {
     loadDashboard();
@@ -181,6 +206,103 @@ export default function MAManagementPage() {
       router.push('/ma/ab-test');
     }
   };
+  
+  // カレンダー機能のハンドラー
+  const handleEventDrop = (date: Date, event: any) => {
+    setCalendarEvents(prev => prev.map(e => 
+      e.id === event.id ? { ...e, date } : e
+    ));
+  };
+  
+  const handleEventClick = (event: any) => {
+    setSelectedEvent(event);
+    setShowEventModal(true);
+  };
+  
+  const handleSaveEvent = (updatedEvent: any) => {
+    if (updatedEvent.id) {
+      setCalendarEvents(prev => prev.map(e => 
+        e.id === updatedEvent.id ? updatedEvent : e
+      ));
+    } else {
+      setCalendarEvents(prev => [...prev, { ...updatedEvent, id: Date.now().toString() }]);
+    }
+    setShowEventModal(false);
+    setSelectedEvent(null);
+  };
+  
+  const handleDeleteEvent = (eventId: string) => {
+    setCalendarEvents(prev => prev.filter(e => e.id !== eventId));
+    setShowEventModal(false);
+    setSelectedEvent(null);
+  };
+
+  // 新規イベント作成（空のセルをクリック）
+  const handleDateCellClick = (date: Date) => {
+    setSelectedEvent({
+      title: '',
+      type: 'campaign',
+      date: date,
+      time: '10:00',
+      participants: 0,
+      location: '',
+      description: '',
+      reminder: '1day'
+    });
+    setShowEventModal(true);
+  };
+
+  // カレンダーのヘルパー関数
+  const getEventsForDate = (date: Date) => {
+    return calendarEvents.filter(event => {
+      return event.date.getDate() === date.getDate() &&
+             event.date.getMonth() === date.getMonth() &&
+             event.date.getFullYear() === date.getFullYear();
+    });
+  };
+  
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+    const days = [];
+    const current = new Date(startDate);
+
+    while (current <= lastDay || current.getDay() !== 0) {
+      days.push(new Date(current));
+      current.setDate(current.getDate() + 1);
+      if (current.getDay() === 0 && current > lastDay) break;
+    }
+
+    return days;
+  };
+
+  // 週表示用のヘルパー関数
+  const getDaysInWeek = (date: Date) => {
+    const startOfWeek = new Date(date);
+    startOfWeek.setDate(date.getDate() - date.getDay());
+
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(startOfWeek);
+      day.setDate(startOfWeek.getDate() + i);
+      days.push(day);
+    }
+    return days;
+  };
+
+  // 時間スロット用のヘルパー関数
+  const getTimeSlots = () => {
+    const slots = [];
+    for (let hour = 8; hour <= 20; hour++) {
+      slots.push(`${hour}:00`);
+    }
+    return slots;
+  };
 
   // Realistic mock data
   const conversionFunnelData = [
@@ -198,72 +320,29 @@ export default function MAManagementPage() {
     { month: '10月', リード獲得: 3580, 商談化: 512, 成約: 145 }
   ];
 
-  const channelPerformance = [
-    { channel: 'Web広告', リード: 1450, 商談: 203, 成約: 48, CPA: 8500, ROI: 420 },
-    { channel: 'SEO', リード: 892, 商談: 156, 成約: 42, CPA: 3200, ROI: 680 },
-    { channel: 'メール', リード: 567, 商談: 78, 成約: 25, CPA: 2100, ROI: 520 },
-    { channel: 'SNS', リード: 331, 商談: 19, 成約: 11, CPA: 12000, ROI: 180 }
+  // 他の必要なデータ定義をここに追加
+  const activeJourneys = [
+    { id: '1', name: '新築検討者ジャーニー', status: 'active', contacts: 1250, conversion: 8.4, trend: 'up', steps: 7, avgDays: 45 },
+    { id: '2', name: 'リフォーム検討者ジャーニー', status: 'active', contacts: 890, conversion: 6.2, trend: 'up', steps: 5, avgDays: 30 },
+    { id: '3', name: '展示場来場者フォロー', status: 'active', contacts: 450, conversion: 12.5, trend: 'down', steps: 4, avgDays: 21 },
+    { id: '4', name: '資料請求後ナーチャリング', status: 'draft', contacts: 650, conversion: 4.8, trend: 'up', steps: 6, avgDays: 60 },
+    { id: '5', name: 'アフターメンテナンス', status: 'draft', contacts: 0, conversion: 0, trend: 'neutral', steps: 3, avgDays: 365 }
   ];
 
-  const activeJourneys = [
-    {
-      id: 1,
-      name: '新規リード獲得',
-      status: 'active',
-      contacts: 3240,
-      conversion: 3.9,
-      trend: 'up',
-      steps: 8,
-      avgDays: 14
-    },
-    {
-      id: 2,
-      name: 'ナーチャリング',
-      status: 'active',
-      contacts: 1856,
-      conversion: 6.8,
-      trend: 'up',
-      steps: 12,
-      avgDays: 28
-    },
-    {
-      id: 3,
-      name: '休眠顧客掘り起こし',
-      status: 'paused',
-      contacts: 654,
-      conversion: 2.1,
-      trend: 'down',
-      steps: 6,
-      avgDays: 45
-    },
-    {
-      id: 4,
-      name: 'アップセル',
-      status: 'active',
-      contacts: 432,
-      conversion: 12.3,
-      trend: 'up',
-      steps: 5,
-      avgDays: 7
-    }
+  const channelPerformance = [
+    { channel: 'Web広告', リード: 1250, 商談: 156, 成約: 42, CPA: 8200, ROI: 380 },
+    { channel: 'SEO', リード: 820, 商談: 98, 成約: 28, CPA: 3500, ROI: 680 },
+    { channel: 'メール', リード: 680, 商談: 112, 成約: 35, CPA: 2100, ROI: 520 },
+    { channel: 'SNS', リード: 490, 商談: 90, 成約: 21, CPA: 4800, ROI: 290 }
   ];
 
   const recentActivity = [
-    { time: '2分前', type: 'conversion', message: '山田様が見積依頼を送信', value: '¥2,500,000' },
-    { time: '5分前', type: 'lead', message: '新規リード獲得（Web広告経由）', value: 'Hot' },
-    { time: '8分前', type: 'email', message: 'メールキャンペーン配信完了', value: '2,456件' },
-    { time: '12分前', type: 'journey', message: 'ナーチャリングステップ3移行', value: '156名' },
-    { time: '15分前', type: 'alert', message: 'LINE配信エラー', value: '要対応' }
+    { type: 'conversion', message: '新規成約：山田様（新築注文住宅）', time: '5分前', value: '¥45M' },
+    { type: 'lead', message: '新規リード獲得（展示場来場）', time: '12分前', value: '+3件' },
+    { type: 'alert', message: 'キャンペーン「秋の断熱リフォーム」予算80%消化', time: '30分前', value: '要確認' },
+    { type: 'conversion', message: '商談ステージ移行：田中様→見積提出', time: '1時間前', value: '¥12M' },
+    { type: 'lead', message: 'Webフォームからの問い合わせ', time: '2時間前', value: '+5件' }
   ];
-
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" bgcolor="#f5f7fa">
-        <CircularProgress size={60} />
-        <Typography sx={{ ml: 2 }}>MA管理システムを読み込み中...</Typography>
-      </Box>
-    );
-  }
 
   if (!data) {
     return (
@@ -276,10 +355,11 @@ export default function MAManagementPage() {
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', bgcolor: '#f5f5f5' }}>
-      {/* Header - Full Width */}
-      <Box sx={{ bgcolor: 'white', borderBottom: 1, borderColor: 'divider', px: 3, py: 2, boxShadow: 1 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
+    <DndProvider backend={HTML5Backend}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', bgcolor: '#f5f5f5' }}>
+        {/* Header - Full Width */}
+        <Box sx={{ bgcolor: 'white', borderBottom: 1, borderColor: 'divider', px: 3, py: 2, boxShadow: 1 }}>
+          <Box display="flex" justifyContent="space-between" alignItems="center">
           <Box display="flex" alignItems="center" gap={2}>
             <AutoMode sx={{ fontSize: 32, color: '#667eea' }} />
             <Box>
@@ -1158,14 +1238,94 @@ export default function MAManagementPage() {
               {/* ビュー切替 */}
               <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
                 <Box>
-                  <Button variant="outlined" sx={{ mr: 1 }}>月表示</Button>
-                  <Button variant="outlined" sx={{ mr: 1 }}>週表示</Button>
-                  <Button variant="outlined">日表示</Button>
+                  <Button
+                    variant={calendarView === 'month' ? "contained" : "outlined"}
+                    sx={{
+                      mr: 1,
+                      ...(calendarView === 'month' && {
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      })
+                    }}
+                    startIcon={<ViewModule />}
+                    onClick={() => setCalendarView('month')}
+                  >
+                    月表示
+                  </Button>
+                  <Button
+                    variant={calendarView === 'week' ? "contained" : "outlined"}
+                    sx={{
+                      mr: 1,
+                      ...(calendarView === 'week' && {
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      })
+                    }}
+                    startIcon={<ViewWeek />}
+                    onClick={() => setCalendarView('week')}
+                  >
+                    週表示
+                  </Button>
+                  <Button
+                    variant={calendarView === 'day' ? "contained" : "outlined"}
+                    sx={{
+                      ...(calendarView === 'day' && {
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      })
+                    }}
+                    startIcon={<ViewDay />}
+                    onClick={() => setCalendarView('day')}
+                  >
+                    日表示
+                  </Button>
                 </Box>
                 <Box display="flex" alignItems="center" gap={2}>
-                  <Typography variant="body2">2025年9月</Typography>
-                  <IconButton size="small"><ArrowBack /></IconButton>
-                  <IconButton size="small"><ArrowForward /></IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      const newDate = new Date(selectedDate);
+                      if (calendarView === 'month') {
+                        newDate.setMonth(newDate.getMonth() - 1);
+                      } else if (calendarView === 'week') {
+                        newDate.setDate(newDate.getDate() - 7);
+                      } else {
+                        newDate.setDate(newDate.getDate() - 1);
+                      }
+                      setSelectedDate(newDate);
+                    }}
+                  >
+                    <ChevronLeft />
+                  </IconButton>
+                  <Typography variant="h6" sx={{ fontWeight: 600, minWidth: 180, textAlign: 'center' }}>
+                    {calendarView === 'month' ?
+                      `${selectedDate.getFullYear()}年${selectedDate.getMonth() + 1}月` :
+                      calendarView === 'week' ?
+                      `${selectedDate.getFullYear()}年${selectedDate.getMonth() + 1}月 第${Math.ceil(selectedDate.getDate() / 7)}週` :
+                      `${selectedDate.getFullYear()}年${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日`
+                    }
+                  </Typography>
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      const newDate = new Date(selectedDate);
+                      if (calendarView === 'month') {
+                        newDate.setMonth(newDate.getMonth() + 1);
+                      } else if (calendarView === 'week') {
+                        newDate.setDate(newDate.getDate() + 7);
+                      } else {
+                        newDate.setDate(newDate.getDate() + 1);
+                      }
+                      setSelectedDate(newDate);
+                    }}
+                  >
+                    <ChevronRight />
+                  </IconButton>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setSelectedDate(new Date())}
+                    sx={{ ml: 2 }}
+                  >
+                    今日
+                  </Button>
                 </Box>
               </Box>
 
@@ -1278,116 +1438,280 @@ export default function MAManagementPage() {
                         📅 2025年9月 キャンペーンカレンダー
                       </Typography>
 
-                      {/* カレンダーグリッド */}
+                      {/* カレンダーグリッド - ドラッグ&ドロップ対応 */}
                       <Box sx={{ border: '1px solid #e0e0e0', borderRadius: 1 }}>
-                        {/* ヘッダー（曜日） */}
-                        <Grid container>
-                          {['日', '月', '火', '水', '木', '金', '土'].map((day, index) => (
-                            <Grid item xs={12/7} key={day}>
-                              <Box
-                                sx={{
-                                  p: 1,
-                                  bgcolor: '#f5f5f5',
-                                  textAlign: 'center',
-                                  borderRight: index < 6 ? '1px solid #e0e0e0' : 'none',
-                                  color: index === 0 ? '#f44336' : index === 6 ? '#2196f3' : 'inherit'
-                                }}
-                              >
-                                <Typography variant="body2" fontWeight={600}>
-                                  {day}
-                                </Typography>
-                              </Box>
-                            </Grid>
-                          ))}
-                        </Grid>
-
-                        {/* カレンダーの日付 */}
-                        {[0, 1, 2, 3, 4].map((week) => (
-                          <Grid container key={week}>
-                            {[0, 1, 2, 3, 4, 5, 6].map((day) => {
-                              const date = week * 7 + day + 1;
-                              const isValidDate = date <= 30;
-                              const hasEvent = [3, 8, 12, 15, 20, 25, 28].includes(date);
-                              const eventType =
-                                [3, 15].includes(date) ? 'exhibition' :
-                                [8, 20].includes(date) ? 'campaign' :
-                                [12, 25, 28].includes(date) ? 'follow' : null;
-
-                              return (
+                        {/* 月表示 */}
+                        {calendarView === 'month' && (
+                          <>
+                            {/* ヘッダー（曜日） */}
+                            <Grid container>
+                              {['日', '月', '火', '水', '木', '金', '土'].map((day, index) => (
                                 <Grid item xs={12/7} key={day}>
                                   <Box
                                     sx={{
-                                      minHeight: 80,
-                                      p: 0.5,
-                                      borderRight: day < 6 ? '1px solid #e0e0e0' : 'none',
-                                      borderBottom: week < 4 ? '1px solid #e0e0e0' : 'none',
-                                      bgcolor: !isValidDate ? '#fafafa' : 'white',
-                                      cursor: isValidDate ? 'pointer' : 'default',
-                                      '&:hover': isValidDate ? { bgcolor: '#f0f0f0' } : {}
+                                      p: 1,
+                                      bgcolor: '#f5f5f5',
+                                      textAlign: 'center',
+                                      borderRight: index < 6 ? '1px solid #e0e0e0' : 'none',
+                                      color: index === 0 ? '#f44336' : index === 6 ? '#2196f3' : 'inherit'
                                     }}
                                   >
-                                    {isValidDate && (
-                                      <>
-                                        <Typography
-                                          variant="caption"
-                                          sx={{
-                                            display: 'block',
-                                            color: day === 0 ? '#f44336' : day === 6 ? '#2196f3' : 'inherit',
-                                            fontWeight: hasEvent ? 600 : 400
-                                          }}
-                                        >
-                                          {date}
-                                        </Typography>
-
-                                        {hasEvent && eventType === 'exhibition' && (
-                                          <Chip
-                                            label="展示場"
-                                            size="small"
-                                            sx={{
-                                              fontSize: 10,
-                                              height: 18,
-                                              bgcolor: '#f093fb',
-                                              color: 'white',
-                                              mb: 0.2
-                                            }}
-                                          />
-                                        )}
-
-                                        {hasEvent && eventType === 'campaign' && (
-                                          <Chip
-                                            label="断熱CP"
-                                            size="small"
-                                            sx={{
-                                              fontSize: 10,
-                                              height: 18,
-                                              bgcolor: '#667eea',
-                                              color: 'white',
-                                              mb: 0.2
-                                            }}
-                                          />
-                                        )}
-
-                                        {hasEvent && eventType === 'follow' && (
-                                          <Chip
-                                            label="フォロー"
-                                            size="small"
-                                            sx={{
-                                              fontSize: 10,
-                                              height: 18,
-                                              bgcolor: '#4facfe',
-                                              color: 'white',
-                                              mb: 0.2
-                                            }}
-                                          />
-                                        )}
-                                      </>
-                                    )}
+                                    <Typography variant="body2" fontWeight={600}>
+                                      {day}
+                                    </Typography>
                                   </Box>
                                 </Grid>
+                              ))}
+                            </Grid>
+
+                            {/* カレンダーの日付 - ドラッグ&ドロップ対応 */}
+                            <Grid container>
+                              {getDaysInMonth(selectedDate).map((date, index) => {
+                            const events = getEventsForDate(date);
+                            const isCurrentMonth = date.getMonth() === selectedDate.getMonth();
+                            const isToday =
+                              date.getDate() === new Date().getDate() &&
+                              date.getMonth() === new Date().getMonth() &&
+                              date.getFullYear() === new Date().getFullYear();
+
+                            return (
+                              <Grid item xs={12/7} key={index} sx={{ border: '1px solid #e0e0e0', borderTop: 'none', borderLeft: index % 7 === 0 ? '1px solid #e0e0e0' : 'none' }}>
+                                <DroppableDateCell
+                                  date={date}
+                                  onDropEvent={handleEventDrop}
+                                  isToday={isToday}
+                                  isCurrentMonth={isCurrentMonth}
+                                  onClick={() => handleDateCellClick(date)}
+                                >
+                                  {events.map(event => (
+                                    <DraggableEvent
+                                      key={event.id}
+                                      event={event}
+                                      onClick={handleEventClick}
+                                    />
+                                  ))}
+                                </DroppableDateCell>
+                              </Grid>
+                            );
+                              })}
+                            </Grid>
+                          </>
+                        )}
+
+                        {/* 週表示 */}
+                        {calendarView === 'week' && (
+                          <Box sx={{ display: 'flex' }}>
+                            {/* 時間軸 */}
+                            <Box sx={{ width: 60, borderRight: '1px solid #e0e0e0' }}>
+                              <Box sx={{ height: 40, borderBottom: '1px solid #e0e0e0' }} />
+                              {getTimeSlots().map(time => (
+                                <Box
+                                  key={time}
+                                  sx={{
+                                    height: 60,
+                                    borderBottom: '1px solid #e0e0e0',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '0.75rem',
+                                    color: 'text.secondary'
+                                  }}
+                                >
+                                  {time}
+                                </Box>
+                              ))}
+                            </Box>
+
+                            {/* 週の日付 */}
+                            {getDaysInWeek(selectedDate).map((date, index) => {
+                              const isToday = date.toDateString() === new Date().toDateString();
+                              const dayEvents = getEventsForDate(date);
+
+                              return (
+                                <Box key={index} sx={{ flex: 1, borderRight: index < 6 ? '1px solid #e0e0e0' : 'none' }}>
+                                  {/* 日付ヘッダー */}
+                                  <Box
+                                    sx={{
+                                      height: 40,
+                                      bgcolor: isToday ? 'primary.light' : '#f5f5f5',
+                                      borderBottom: '1px solid #e0e0e0',
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      color: index === 0 ? '#f44336' : index === 6 ? '#2196f3' : 'inherit'
+                                    }}
+                                  >
+                                    <Typography variant="caption">
+                                      {['日', '月', '火', '水', '木', '金', '土'][date.getDay()]}
+                                    </Typography>
+                                    <Typography variant="body2" fontWeight={isToday ? 700 : 400}>
+                                      {date.getDate()}
+                                    </Typography>
+                                  </Box>
+
+                                  {/* 時間スロット */}
+                                  {getTimeSlots().map(time => (
+                                    <Box
+                                      key={time}
+                                      sx={{
+                                        height: 60,
+                                        borderBottom: '1px solid #e0e0e0',
+                                        p: 0.5,
+                                        position: 'relative',
+                                        '&:hover': { bgcolor: 'action.hover' },
+                                        cursor: 'pointer'
+                                      }}
+                                      onClick={() => handleDateCellClick(date)}
+                                    >
+                                      {/* ここにイベントを表示 */}
+                                      {dayEvents.slice(0, 2).map((event, i) => (
+                                        <Box
+                                          key={event.id}
+                                          sx={{
+                                            position: 'absolute',
+                                            top: i * 25,
+                                            left: 2,
+                                            right: 2,
+                                            bgcolor: event.type === 'exhibition' ? '#f093fb' :
+                                                    event.type === 'campaign' ? '#667eea' : '#4facfe',
+                                            color: 'white',
+                                            p: 0.25,
+                                            borderRadius: 0.5,
+                                            fontSize: '0.65rem',
+                                            cursor: 'pointer',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            whiteSpace: 'nowrap'
+                                          }}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleEventClick(event);
+                                          }}
+                                        >
+                                          {event.time} {event.title}
+                                        </Box>
+                                      ))}
+                                    </Box>
+                                  ))}
+                                </Box>
                               );
                             })}
-                          </Grid>
-                        ))}
+                          </Box>
+                        )}
+
+                        {/* 日表示 */}
+                        {calendarView === 'day' && (
+                          <Box>
+                            {/* 日付ヘッダー */}
+                            <Box
+                              sx={{
+                                p: 2,
+                                bgcolor: selectedDate.toDateString() === new Date().toDateString() ? 'primary.light' : '#f5f5f5',
+                                borderBottom: '1px solid #e0e0e0',
+                                textAlign: 'center'
+                              }}
+                            >
+                              <Typography variant="h6" fontWeight={600}>
+                                {selectedDate.getFullYear()}年{selectedDate.getMonth() + 1}月{selectedDate.getDate()}日
+                                （{['日', '月', '火', '水', '木', '金', '土'][selectedDate.getDay()]}）
+                              </Typography>
+                            </Box>
+
+                            {/* タイムライン */}
+                            <Box sx={{ display: 'flex' }}>
+                              {/* 時間軸 */}
+                              <Box sx={{ width: 80, borderRight: '1px solid #e0e0e0' }}>
+                                {getTimeSlots().map(time => (
+                                  <Box
+                                    key={time}
+                                    sx={{
+                                      height: 80,
+                                      borderBottom: '1px solid #e0e0e0',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      fontSize: '0.875rem',
+                                      fontWeight: 500,
+                                      color: 'text.secondary'
+                                    }}
+                                  >
+                                    {time}
+                                  </Box>
+                                ))}
+                              </Box>
+
+                              {/* イベントエリア */}
+                              <Box sx={{ flex: 1 }}>
+                                {getTimeSlots().map(time => {
+                                  const hour = parseInt(time.split(':')[0]);
+                                  const dayEvents = getEventsForDate(selectedDate).filter(event => {
+                                    if (!event.time || event.time === '終日') return hour === 8;
+                                    const eventHour = parseInt(event.time.split(':')[0]);
+                                    return eventHour === hour;
+                                  });
+
+                                  return (
+                                    <Box
+                                      key={time}
+                                      sx={{
+                                        height: 80,
+                                        borderBottom: '1px solid #e0e0e0',
+                                        p: 1,
+                                        '&:hover': { bgcolor: 'action.hover' },
+                                        cursor: 'pointer',
+                                        position: 'relative'
+                                      }}
+                                      onClick={() => {
+                                        const newDate = new Date(selectedDate);
+                                        newDate.setHours(hour, 0, 0, 0);
+                                        handleDateCellClick(newDate);
+                                      }}
+                                    >
+                                      {dayEvents.map((event, i) => (
+                                        <Paper
+                                          key={event.id}
+                                          elevation={2}
+                                          sx={{
+                                            position: 'absolute',
+                                            top: 8 + (i * 35),
+                                            left: 8,
+                                            right: 8,
+                                            background: `linear-gradient(135deg, ${
+                                              event.type === 'exhibition' ? '#f093fb' :
+                                              event.type === 'campaign' ? '#667eea' : '#4facfe'
+                                            } 0%, ${
+                                              event.type === 'exhibition' ? '#f093fbaa' :
+                                              event.type === 'campaign' ? '#667eeaaa' : '#4facfeaa'
+                                            } 100%)`,
+                                            color: 'white',
+                                            p: 1,
+                                            cursor: 'pointer',
+                                            '&:hover': { transform: 'scale(1.02)' },
+                                            transition: 'transform 0.2s'
+                                          }}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleEventClick(event);
+                                          }}
+                                        >
+                                          <Typography variant="caption" fontWeight={600}>
+                                            {event.time} - {event.title}
+                                          </Typography>
+                                          {event.participants > 0 && (
+                                            <Typography variant="caption" display="block">
+                                              参加者: {event.participants}名
+                                            </Typography>
+                                          )}
+                                        </Paper>
+                                      ))}
+                                    </Box>
+                                  );
+                                })}
+                              </Box>
+                            </Box>
+                          </Box>
+                        )}
                       </Box>
 
                       {/* 凡例 */}
@@ -1653,5 +1977,18 @@ export default function MAManagementPage() {
       </Box>
     </Box>
     </Box>
+
+    {/* イベント編集モーダル */}
+    <EventEditModal
+      open={showEventModal}
+      event={selectedEvent}
+      onClose={() => {
+        setShowEventModal(false);
+        setSelectedEvent(null);
+      }}
+      onSave={handleSaveEvent}
+      onDelete={selectedEvent?.id ? handleDeleteEvent : undefined}
+    />
+    </DndProvider>
   );
 }
