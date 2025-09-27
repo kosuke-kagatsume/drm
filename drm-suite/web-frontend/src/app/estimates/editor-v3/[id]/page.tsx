@@ -2445,124 +2445,110 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
                 </button>
               </div>
 
-              {/* 保存ボタン */}
-              <button
-                onClick={handleSave}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm font-medium"
-                disabled={saveStatus === 'saving'}
-              >
-                <Save className="w-4 h-4" />
-                保存
-              </button>
+              {/* 保存・ファイル管理グループ */}
+              <div className="flex items-center gap-2 px-2 py-1 bg-gray-50 rounded-lg">
+                <button
+                  onClick={handleSave}
+                  className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-1.5 text-xs font-medium"
+                  disabled={saveStatus === 'saving'}
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  保存
+                </button>
 
-              {/* 保存済み見積 */}
-              <button
-                onClick={() => setShowSavedEstimatesModal(true)}
-                className="px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors flex items-center gap-2 text-sm"
-              >
-                <FolderOpen className="w-4 h-4" />
-                保存済み
-              </button>
+                <button
+                  onClick={() => setShowSavedEstimatesModal(true)}
+                  className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-md hover:bg-gray-50 transition-colors flex items-center gap-1.5 text-xs"
+                >
+                  <FolderOpen className="w-3.5 h-3.5" />
+                  開く
+                </button>
 
-              {/* ツール */}
+                <button
+                  onClick={() => setShowImportModal(true)}
+                  className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-md hover:bg-gray-50 transition-colors flex items-center gap-1.5 text-xs"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  インポート
+                </button>
+              </div>
+
+              {/* セパレーター */}
+              <div className="h-6 w-px bg-gray-300"></div>
+
+              {/* テンプレートグループ */}
               <button
-                onClick={() => {
-                  // 新しいテンプレート選択モーダルを開く
-                  setShowNewTemplateModal(true);
-                }}
-                className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors flex items-center gap-2 text-sm"
+                onClick={() => setShowNewTemplateModal(true)}
+                className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-md hover:bg-gray-50 transition-colors flex items-center gap-1.5 text-xs"
               >
-                <Package className="w-4 h-4" />
+                <Package className="w-3.5 h-3.5" />
                 テンプレート
               </button>
 
-              <button
-                onClick={() => {
-                  setTemplateMode('save');
-                  setShowTemplateModal(true);
-                }}
-                className="px-3 py-2 bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition-colors flex items-center gap-2 text-sm"
-                disabled={items.length === 0}
-              >
-                <Save className="w-4 h-4" />
-                テンプレート保存
-              </button>
-
-              <button
-                onClick={() => setShowImportModal(true)}
-                className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm"
-              >
-                <Upload className="w-4 h-4" />
-                インポート
-              </button>
+              {/* セパレーター */}
+              <div className="h-6 w-px bg-gray-300"></div>
 
               {/* 表示モード切り替え */}
-              <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <div className="flex items-center bg-gray-100 rounded-md p-0.5">
                 <button
                   onClick={() => setViewMode('internal')}
-                  className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                  className={`px-2.5 py-1 text-xs rounded transition-colors ${
                     viewMode === 'internal'
                       ? 'bg-white text-gray-900 shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  <Eye className="w-4 h-4 inline mr-1" />
-                  社内用
+                  社内
                 </button>
                 <button
                   onClick={() => setViewMode('customer')}
-                  className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                  className={`px-2.5 py-1 text-xs rounded transition-colors ${
                     viewMode === 'customer'
                       ? 'bg-white text-gray-900 shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  <EyeOff className="w-4 h-4 inline mr-1" />
-                  顧客用
+                  顧客
                 </button>
               </div>
 
-              <button
-                onClick={() => setShowComments(true)}
-                className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm"
-              >
-                <MessageSquare className="w-4 h-4" />
-                コメント
-              </button>
+              {/* セパレーター */}
+              <div className="h-6 w-px bg-gray-300"></div>
 
-              {/* バージョン管理 */}
-              <button
-                onClick={() => setShowVersionManager(!showVersionManager)}
-                className={`px-3 py-2 ${
-                  showVersionManager
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-purple-100 text-purple-700'
-                } rounded-lg hover:opacity-80 transition-all flex items-center gap-2 text-sm`}
-              >
-                <GitBranch className="w-4 h-4" />
-                バージョン
-              </button>
+              {/* ワークフロー管理グループ */}
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setShowComments(true)}
+                  className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                  title="コメント"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                </button>
 
-              {/* 承認ワークフロー */}
-              <button
-                onClick={() => setShowApprovalWorkflow(!showApprovalWorkflow)}
-                className={`px-3 py-2 ${
-                  showApprovalWorkflow
-                    ? 'bg-green-600 text-white'
-                    : 'bg-green-100 text-green-700'
-                } rounded-lg hover:opacity-80 transition-all flex items-center gap-2 text-sm`}
-              >
-                <CheckCircle className="w-4 h-4" />
-                承認申請
-              </button>
+                <button
+                  onClick={() => setShowVersionManager(!showVersionManager)}
+                  className={`p-1.5 rounded-md transition-colors ${
+                    showVersionManager
+                      ? 'bg-purple-600 text-white hover:bg-purple-700'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                  title="バージョン管理"
+                >
+                  <GitBranch className="w-4 h-4" />
+                </button>
 
-              <button
-                onClick={handleSave}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-              >
-                <Save className="w-4 h-4" />
-                保存
-              </button>
+                <button
+                  onClick={() => setShowApprovalWorkflow(!showApprovalWorkflow)}
+                  className={`p-1.5 rounded-md transition-colors ${
+                    showApprovalWorkflow
+                      ? 'bg-green-600 text-white hover:bg-green-700'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                  title="承認申請"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
