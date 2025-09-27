@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -15,6 +15,7 @@ import {
   UserPlus,
   Move,
   Save,
+  GripVertical,
 } from 'lucide-react';
 
 interface Department {
@@ -35,9 +36,64 @@ export default function OrganizationManagement() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingDept, setEditingDept] = useState<Department | null>(null);
+  const [draggedDept, setDraggedDept] = useState<Department | null>(null);
+  const [dragOverDept, setDragOverDept] = useState<string | null>(null);
+  const [isDragMode, setIsDragMode] = useState(false);
 
-  // モックデータ：組織構造
-  const [organization] = useState<Department>({
+  // 組織構造データ（ドラッグ&ドロップで変更可能）
+  const [organization, setOrganization] = useState<Department | null>(null);
+  const [loadingOrg, setLoadingOrg] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // APIから組織データを取得
+  const fetchOrganization = async () => {
+    try {
+      setLoadingOrg(true);
+      const response = await fetch('/api/admin/departments', {
+        headers: {
+          'X-Tenant-Id': 'default-tenant',
+        },
+      });
+      const data = await response.json();
+      if (data.success) {
+        setOrganization(data.organization);
+      }
+    } catch (error) {
+      console.error('組織データの取得に失敗:', error);
+    } finally {
+      setLoadingOrg(false);
+    }
+  };
+
+  // 組織構造を更新（APIに保存）
+  const saveOrganization = async (updatedOrg: Department) => {
+    try {
+      setSaving(true);
+      const response = await fetch('/api/admin/departments', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-Id': 'default-tenant',
+        },
+        body: JSON.stringify({ organization: updatedOrg }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setOrganization(data.organization);
+      }
+    } catch (error) {
+      console.error('組織データの保存に失敗:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrganization();
+  }, []);
+
+  // モックデータ（削除予定）
+  const mockOrg: Department = {
     id: 'root',
     name: 'デモ建設株式会社',
     parentId: null,
@@ -175,7 +231,7 @@ export default function OrganizationManagement() {
         ],
       },
     ],
-  });
+  } as Department;
 
   useEffect(() => {
     if (!isLoading && !isSuperAdmin()) {
@@ -195,6 +251,40 @@ export default function OrganizationManagement() {
     });
   };
 
+  // 新しい部署を追加（API連携）
+  const handleAddDepartmentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const name = formData.get('name') as string;
+    const parentId = formData.get('parentId') as string;
+    const managerId = formData.get('managerId') as string;
+    const managerName = formData.get('managerName') as string;
+
+    try {
+      const response = await fetch('/api/admin/departments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-Id': 'default-tenant',
+        },
+        body: JSON.stringify({
+          name,
+          parentId: parentId || editingDept?.id || 'root',
+          managerId,
+          managerName,
+        }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setOrganization(data.organization);
+        setShowAddModal(false);
+        setEditingDept(null);
+      }
+    } catch (error) {
+      console.error('部署の追加に失敗:', error);
+    }
+  };
+
   const handleAddDepartment = (parentDept: Department) => {
     setEditingDept(parentDept);
     setShowAddModal(true);
@@ -205,14 +295,100 @@ export default function OrganizationManagement() {
     setShowEditModal(true);
   };
 
+  // 部署を削除（API連携）
+  const handleDeleteDepartmentAPI = async (deptId: string) => {
+    try {
+      const response = await fetch(`/api/admin/departments?id=${deptId}`, {
+        method: 'DELETE',
+        headers: {
+          'X-Tenant-Id': 'default-tenant',
+        },
+      });
+      const data = await response.json();
+      if (data.success) {
+        setOrganization(data.organization);
+      }
+    } catch (error) {
+      console.error('部署の削除に失敗:', error);
+    }
+  };
+
   const handleDeleteDepartment = (dept: Department) => {
     if (dept.children.length > 0) {
       alert('下位部署が存在するため削除できません');
       return;
     }
     if (confirm(`${dept.name}を削除してもよろしいですか？`)) {
-      console.log('Delete department:', dept);
+      handleDeleteDepartmentAPI(dept.id);
     }
+  };
+
+  // ドラッグ&ドロップハンドラー
+  const handleDragStart = (e: React.DragEvent, dept: Department) => {
+    setDraggedDept(dept);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, deptId: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverDept(deptId);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverDept(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetDept: Department) => {
+    e.preventDefault();
+    setDragOverDept(null);
+
+    if (!draggedDept || draggedDept.id === targetDept.id) {
+      return;
+    }
+
+    // 自分の子孫への移動を防ぐ
+    const isDescendant = (parent: Department, childId: string): boolean => {
+      if (parent.id === childId) return true;
+      return parent.children.some(child => isDescendant(child, childId));
+    };
+
+    if (isDescendant(draggedDept, targetDept.id)) {
+      alert('部署を自身の配下に移動することはできません');
+      return;
+    }
+
+    // 組織構造を更新
+    const updateOrganization = (dept: Department): Department => {
+      // ドラッグされた部署を削除
+      if (dept.children.some(child => child.id === draggedDept.id)) {
+        return {
+          ...dept,
+          children: dept.children.filter(child => child.id !== draggedDept.id),
+          memberCount: dept.memberCount - draggedDept.memberCount,
+        };
+      }
+
+      // ターゲット部署に追加
+      if (dept.id === targetDept.id) {
+        return {
+          ...dept,
+          children: [...dept.children, { ...draggedDept, parentId: dept.id }],
+          memberCount: dept.memberCount + draggedDept.memberCount,
+        };
+      }
+
+      // 再帰的に子部署を更新
+      return {
+        ...dept,
+        children: dept.children.map(child => updateOrganization(child)),
+      };
+    };
+
+    const updatedOrg = updateOrganization(organization!);
+    setOrganization(updatedOrg);
+    saveOrganization(updatedOrg);
+    setDraggedDept(null);
   };
 
   const DepartmentNode = ({
@@ -224,15 +400,25 @@ export default function OrganizationManagement() {
   }) => {
     const isExpanded = expandedNodes.has(dept.id);
     const hasChildren = dept.children.length > 0;
+    const isDragOver = dragOverDept === dept.id;
 
     return (
       <div>
         <div
           className={`flex items-center p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors ${
             selectedDept?.id === dept.id ? 'bg-blue-50' : ''
+          } ${
+            isDragOver ? 'bg-green-100 border-2 border-green-400' : ''
+          } ${
+            isDragMode ? 'cursor-move' : ''
           }`}
           style={{ marginLeft: `${level * 24}px` }}
-          onClick={() => setSelectedDept(dept)}
+          onClick={() => !isDragMode && setSelectedDept(dept)}
+          draggable={isDragMode}
+          onDragStart={(e) => isDragMode && handleDragStart(e, dept)}
+          onDragOver={(e) => isDragMode && handleDragOver(e, dept.id)}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => isDragMode && handleDrop(e, dept)}
         >
           <button
             onClick={(e) => {
@@ -251,6 +437,9 @@ export default function OrganizationManagement() {
               <div className="w-4" />
             )}
           </button>
+          {isDragMode && (
+            <GripVertical className="h-4 w-4 text-gray-400 mr-1" />
+          )}
           <Building2 className="h-5 w-5 text-gray-400 mr-2" />
           <div className="flex-1">
             <div className="flex items-center justify-between">
@@ -260,35 +449,37 @@ export default function OrganizationManagement() {
                   ({dept.memberCount}名)
                 </span>
               </div>
-              <div className="flex items-center gap-1 opacity-0 hover:opacity-100 transition-opacity">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAddDepartment(dept);
-                  }}
-                  className="p-1 hover:bg-gray-200 rounded"
-                >
-                  <Plus className="h-4 w-4 text-gray-600" />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEditDepartment(dept);
-                  }}
-                  className="p-1 hover:bg-gray-200 rounded"
-                >
-                  <Edit2 className="h-4 w-4 text-gray-600" />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteDepartment(dept);
-                  }}
-                  className="p-1 hover:bg-gray-200 rounded"
-                >
-                  <Trash2 className="h-4 w-4 text-gray-600" />
-                </button>
-              </div>
+              {!isDragMode && (
+                <div className="flex items-center gap-1 opacity-0 hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddDepartment(dept);
+                    }}
+                    className="p-1 hover:bg-gray-200 rounded"
+                  >
+                    <Plus className="h-4 w-4 text-gray-600" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditDepartment(dept);
+                    }}
+                    className="p-1 hover:bg-gray-200 rounded"
+                  >
+                    <Edit2 className="h-4 w-4 text-gray-600" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteDepartment(dept);
+                    }}
+                    className="p-1 hover:bg-gray-200 rounded"
+                  >
+                    <Trash2 className="h-4 w-4 text-gray-600" />
+                  </button>
+                </div>
+              )}
             </div>
             {dept.managerName && (
               <div className="text-sm text-gray-500">
@@ -305,7 +496,7 @@ export default function OrganizationManagement() {
     );
   };
 
-  if (isLoading) {
+  if (isLoading || loadingOrg || !organization) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -361,6 +552,17 @@ export default function OrganizationManagement() {
                 <h2 className="text-xl font-bold text-gray-900">組織図</h2>
                 <div className="flex items-center gap-2">
                   <button
+                    onClick={() => setIsDragMode(!isDragMode)}
+                    className={`px-3 py-1 rounded-lg text-sm font-medium transition ${
+                      isDragMode
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    <Move className="h-4 w-4 inline mr-1" />
+                    {isDragMode ? '移動モード' : '移動'}
+                  </button>
+                  <button
                     onClick={() => setExpandedNodes(new Set())}
                     className="text-sm text-gray-600 hover:text-gray-800"
                   >
@@ -380,6 +582,9 @@ export default function OrganizationManagement() {
                   >
                     すべて展開
                   </button>
+                  {saving && (
+                    <span className="text-xs text-green-600">保存中...</span>
+                  )}
                 </div>
               </div>
               <div className="border rounded-lg p-4">
@@ -486,23 +691,29 @@ export default function OrganizationManagement() {
               </div>
             </div>
             <div className="p-6">
-              <form className="space-y-4">
+              <form className="space-y-4" onSubmit={handleAddDepartmentSubmit}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     部署名
                   </label>
                   <input
                     type="text"
+                    name="name"
                     className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     placeholder="新規部署名"
+                    required
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     親部署
                   </label>
-                  <select className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                    <option value="">デモ建設株式会社</option>
+                  <select
+                    name="parentId"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    defaultValue={editingDept?.id || 'root'}
+                  >
+                    <option value="root">デモ建設株式会社</option>
                     <option value="tokyo">東京支店</option>
                     <option value="osaka">大阪支店</option>
                     <option value="admin">管理本部</option>

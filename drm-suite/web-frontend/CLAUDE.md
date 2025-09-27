@@ -4,116 +4,157 @@
 
 ### 最重要情報
 
-**本番URL**: https://web-frontend-cy7qcla7s-kosukes-projects-c6ad92ba.vercel.app/
 **開発サーバー**: http://localhost:3005 (ポート3005で動作中)
+**本番URL**: 未デプロイ（ローカル開発のみ）
 
-これが2025年9月27日 23:30時点の最新デプロイです。他のURLは古いので使わないこと。
+⚠️ **2025年9月28日の大規模アップデート実施済み** - 管理コンソール完全刷新
 
 ### プロジェクト概要
 
 - **場所**: `/Users/dw100/crm-monorepo/drm-suite/`
-- **内容**: 建設業界向けCRM「DRMスイート」の見積システム + 企業向けPDF管理システム
+- **内容**: 建設業界向けCRM「DRMスイート」の統合業務システム
 - **技術**: Next.js 14 + TypeScript + Tailwind CSS
 
-### 🆕 最新の実装内容（2025/09/27）
+---
 
-#### 1. 企業向けマルチテナント対応PDF管理システム 🎯
+## 🆕 最新の実装内容（2025/09/28）
 
-**完全実装済み** - 建設業界向けの企業ブランディング対応PDF生成システム
+### 1. 管理コンソールの大幅拡張 🎯
 
-##### 主要機能
-- **企業ブランディング管理** (`/admin/pdf-management`)
-  - 会社ロゴ、カラーテーマ、フォント設定
-  - 連絡先情報、法的情報（法人番号等）
-  - リアルタイムプレビュー機能
+#### a. ユーザー管理（42名体制）
+- **パス**: `/admin/users`
+- **API**: `/api/admin/users` - 完全なREST API
+- **特徴**:
+  - 建設会社の実際的な組織構成（営業、施工、事務、経理等）
+  - リアルタイム検索・フィルタリング
+  - 役職別の絞り込み機能
+  - CRUD操作完全対応
 
-- **PDFテンプレート管理**
-  - 見積書、請求書、契約書等の多文書種対応
-  - 階層型セクション管理（ヘッダー、明細、合計等）
-  - 企業別カスタマイズ対応
+#### b. 権限管理システム
+- **パス**: `/admin/permissions`
+- **特徴**:
+  - 9段階の役職レベル（代表取締役〜研修生）
+  - 24種類の詳細権限設定
+  - 権限比較マトリックス機能
+  - トグルスイッチでの即座の権限変更
 
-- **アセット管理**
-  - ドラッグ&ドロップファイルアップロード
-  - ロゴ、印鑑、署名画像管理
-  - ファイル形式検証（PNG, JPEG, SVG対応）
+#### c. 組織構造管理 ⭐NEW
+- **パス**: `/admin/organization`
+- **API**: `/api/admin/departments`
+- **革新的機能**:
+  - **ドラッグ&ドロップで部署再編成**
+  - 階層型組織ツリービュー
+  - リアルタイムAPI保存
+  - 循環参照防止アルゴリズム
+  - 部署の追加・編集・削除モーダル
+  - 移動モード切り替え機能
 
-- **PDF生成エンジン**
-  - ブラウザネイティブ印刷（window.print）
-  - 企業ブランディング動的適用
-  - テンプレート変数処理
+### 2. 設計資料の完全文書化 📚
 
-##### 技術仕様
-```typescript
-// 型定義: /src/types/pdf-template.ts
-// PDF生成: /src/lib/pdf-engine.ts
-// API: /src/app/api/pdf/branding/, /src/app/api/pdf/templates/
-// 管理画面: /src/app/admin/pdf-management/
-// コンポーネント: /src/components/pdf/
-```
+**デスクトップに配置済み**: `~/Desktop/組織管理システム設計資料/`
 
-##### アクセスURL
-- **PDF管理システム**: https://web-frontend-cy7qcla7s-kosukes-projects-c6ad92ba.vercel.app/admin/pdf-management
-- **見積エディタ（PDF連携済み）**: https://web-frontend-cy7qcla7s-kosukes-projects-c6ad92ba.vercel.app/estimates/editor-v3/new
-- **ローカル開発**: http://localhost:3005 (開発時)
+含まれるファイル：
+- **ORGANIZATION_MANAGEMENT_DESIGN.md** (30KB) - 10章構成の完全設計書
+- **実装コード** - フロントエンド＆API
+- **クイックスタートガイド** - 5分で動かす方法
+- **DandoriPortal連携仕様** - システム間連携設計
 
-#### 2. 見積システム既存機能（継続）
+---
 
-- **見積作成フロー**: `/estimates/create-v2` → `/estimates/editor-v3`
-- **マスターデータ連携**: 建設業界75種類以上
-- **ドラッグ&ドロップ**: 明細編集対応
-- **承認ワークフロー**: 3段階承認（マネージャー→取締役→社長）
+## 実装済み機能一覧（2025/09/28更新）
 
-### 実装済みファイル構成
+### 管理コンソール機能
 
-```
-src/
-├── types/pdf-template.ts          # PDF関連型定義（400行）
-├── lib/pdf-engine.ts              # PDF生成エンジン（600行）
-├── app/
-│   ├── admin/pdf-management/      # PDF管理画面（400行）
-│   ├── api/pdf/                   # PDF用API
-│   │   ├── branding/route.ts      # 企業ブランディングAPI
-│   │   └── templates/route.ts     # テンプレート管理API
-│   └── estimates/editor-v3/[id]/  # 見積エディタ（PDF連携）
-└── components/pdf/                # PDF関連コンポーネント
-    ├── CompanyBrandingManager.tsx # ブランディング管理（500行）
-    ├── PdfTemplateManager.tsx     # テンプレート管理（400行）
-    ├── AssetManager.tsx           # アセット管理（300行）
-    └── TemplateSelector.tsx       # テンプレート選択（400行）
-```
+| 機能 | パス | 状態 | 特徴 |
+|------|------|------|------|
+| 管理ダッシュボード | `/admin` | ✅ | 6つのクイックアクション |
+| ユーザー管理 | `/admin/users` | ✅ | 42名・API完全連携 |
+| 権限管理 | `/admin/permissions` | ✅ | 役職×権限マトリックス |
+| 組織管理 | `/admin/organization` | ✅ | ドラッグ&ドロップ対応 |
+| 承認フロー | `/admin/approval-flows` | 🚧 | 次回実装予定 |
 
-### 作業の始め方
+### 見積システム機能（継続中）
+
+| 機能 | パス | 状態 |
+|------|------|------|
+| 見積作成フロー | `/estimates/create-v2` | ✅ |
+| 見積エディタ | `/estimates/editor-v3` | ✅ |
+| 資金計画書 | `/estimates/financial` | ✅ |
+| テンプレート管理 | `/estimates/templates` | ✅ |
+
+---
+
+## 作業の始め方
 
 ```bash
-# 1. ローカル開発サーバー起動（ポート3005固定）
+# 1. 開発サーバー起動（ポート3005固定）
 cd /Users/dw100/crm-monorepo/drm-suite/web-frontend
 PORT=3005 npm run dev
 
-# 2. PDF管理システムにアクセス
-open http://localhost:3005/admin/pdf-management
+# 2. 管理コンソールにアクセス
+open http://localhost:3005/admin
 
-# 3. 見積エディタでPDF機能確認
-open http://localhost:3005/estimates/editor-v3/new
+# 3. 組織管理を確認
+open http://localhost:3005/admin/organization
 ```
 
-### Git コミット履歴
+---
 
-最新コミット（2025/09/27）:
+## プロジェクト構成
+
 ```
-dfa23c0 - feat: 企業向けマルチテナント対応PDF管理システム実装
+src/
+├── app/
+│   ├── admin/
+│   │   ├── page.tsx              # 管理ダッシュボード
+│   │   ├── users/page.tsx        # ユーザー管理
+│   │   ├── permissions/page.tsx  # 権限管理
+│   │   └── organization/page.tsx # 組織管理 ⭐NEW
+│   └── api/
+│       └── admin/
+│           ├── users/route.ts    # ユーザーAPI
+│           └── departments/route.ts # 部署API ⭐NEW
+├── types/
+│   └── （各種型定義）
+└── docs/
+    └── ORGANIZATION_MANAGEMENT_DESIGN.md # 設計書 ⭐NEW
 ```
 
-### 次の開発タスク候補
+---
 
-- [x] PDF出力機能（完了）
-- [x] 承認ワークフロー統合（完了）
-- [x] 企業ブランディング管理（完了）
-- [ ] Vercelデプロイ
+## 次回の作業候補
+
+- [ ] 承認ワークフロー（/admin/approval-flows）の実装
 - [ ] 見積から契約書への自動変換
-- [ ] 請求書発行機能
-- [ ] 工事進捗との連動
+- [ ] 契約後の請求書発行機能
+- [ ] 工事進捗と請求の連動
+- [ ] DandoriPortalとのAPI連携実装
+- [ ] Vercelへのデプロイ
 
-### デプロイ方法
+---
+
+## 技術的な注意点
+
+1. **開発サーバー**: PORT=3005で統一（複数のサーバーが起動中）
+2. **API設計**: マルチテナント対応（X-Tenant-Id ヘッダー）
+3. **型定義**: TypeScript完全対応
+4. **状態管理**: React Hooksベース（Context API使用）
+5. **UIライブラリ**: Tailwind CSS + Lucide Icons
+
+---
+
+## 重要な変更点
+
+- **NEW**: 管理コンソールが本格的な業務システムに進化
+- **NEW**: 組織管理にドラッグ&ドロップ実装
+- **NEW**: DandoriPortal連携を想定した共通設計
+- 全ての見積編集はeditor-v3に統一済み
+- create-v2が正式な見積作成フロー
+- ステータス管理が業務フローに対応（受注/失注追跡可能）
+
+---
+
+## デプロイ方法
 
 ```bash
 cd /Users/dw100/crm-monorepo/drm-suite/web-frontend
@@ -121,21 +162,11 @@ vercel --prod
 # 新しいURLが出たら必ずこのファイルを更新すること！
 ```
 
-### 重要な技術詳細
-
-#### PDF生成システムの特徴
-- **マルチテナント対応**: 企業ID別のデータ分離
-- **ブラウザネイティブ**: サーバーレス環境対応
-- **リアルタイムプレビュー**: 設定変更の即時反映
-- **REST API設計**: /api/pdf/* エンドポイント
-
-#### 型安全性
-- TypeScript完全対応
-- 310行の包括的型定義
-- 企業ブランディング、テンプレート、セクション等
-
 ---
 
-**最終更新**: 2025/09/27 23:30
+**最終更新**: 2025/09/28 08:20
+**セッション時間**: 約1時間30分
+**実装機能**: 組織管理システム（ドラッグ&ドロップ対応）
+**成果物**: デスクトップに完全設計資料配置済み
 **開発者**: Claude Code + Human
-**ステータス**: PDF管理システム完全実装済み、動作確認済み
+**ステータス**: 管理コンソール基本機能完成・動作確認済み

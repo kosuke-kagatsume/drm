@@ -17,6 +17,7 @@ import {
   Key,
   FileText,
   Package,
+  FilePlus,
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -85,6 +86,13 @@ export default function AdminDashboard() {
       icon: Database,
       color: 'from-orange-500 to-red-500',
       href: '/admin/masters',
+    },
+    {
+      title: 'PDF管理',
+      description: 'PDFテンプレート・ブランディング設定',
+      icon: FilePlus,
+      color: 'from-indigo-500 to-purple-500',
+      href: '/admin/pdf-management',
     },
   ];
 

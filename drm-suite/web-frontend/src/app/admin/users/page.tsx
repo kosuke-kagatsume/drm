@@ -22,13 +22,17 @@ import {
 
 interface User {
   id: string;
+  tenantId: string;
   name: string;
   email: string;
   role: string;
   department: string;
-  isActive: boolean;
-  lastLogin: string;
+  status: 'active' | 'inactive' | 'pending';
+  joinDate: string;
+  lastLogin?: string;
+  permissions?: string[];
   createdAt: string;
+  updatedAt: string;
 }
 
 export default function UsersManagement() {
@@ -36,130 +40,161 @@ export default function UsersManagement() {
   const { user, isLoading, isSuperAdmin } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('all');
+  const [filterDepartment, setFilterDepartment] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // モックデータ
-  const [users] = useState<User[]>([
-    {
-      id: '1',
-      name: '山田 太郎',
-      email: 'yamada@drm.com',
-      role: '経営者',
-      department: '経営管理',
-      isActive: true,
-      lastLogin: '2024-03-15 09:30',
-      createdAt: '2023-01-10',
-    },
-    {
-      id: '2',
-      name: '鈴木 一郎',
-      email: 'suzuki@drm.com',
-      role: '支店長',
-      department: '東京支店',
-      isActive: true,
-      lastLogin: '2024-03-15 08:45',
-      createdAt: '2023-02-15',
-    },
-    {
-      id: '3',
-      name: '佐藤 次郎',
-      email: 'sato@drm.com',
-      role: '営業担当',
-      department: '営業部',
-      isActive: true,
-      lastLogin: '2024-03-14 18:20',
-      createdAt: '2023-03-20',
-    },
-    {
-      id: '4',
-      name: '山田 愛子',
-      email: 'aiko@drm.com',
-      role: '経理担当',
-      department: '経理部',
-      isActive: true,
-      lastLogin: '2024-03-15 10:15',
-      createdAt: '2023-04-01',
-    },
-    {
-      id: '5',
-      name: '木村 健太',
-      email: 'kimura@drm.com',
-      role: 'マーケティング',
-      department: 'マーケティング部',
-      isActive: false,
-      lastLogin: '2024-03-10 14:30',
-      createdAt: '2023-05-15',
-    },
-    {
-      id: '6',
-      name: '田中 三郎',
-      email: 'tanaka@drm.com',
-      role: '施工管理',
-      department: '施工部',
-      isActive: true,
-      lastLogin: '2024-03-15 07:00',
-      createdAt: '2023-06-01',
-    },
-    {
-      id: '7',
-      name: '高橋 花子',
-      email: 'takahashi@drm.com',
-      role: '事務員',
-      department: '事務部',
-      isActive: true,
-      lastLogin: '2024-03-15 09:00',
-      createdAt: '2023-07-10',
-    },
-    {
-      id: '8',
-      name: '中村 次郎',
-      email: 'nakamura@drm.com',
-      role: 'アフター担当',
-      department: 'アフターサービス部',
-      isActive: true,
-      lastLogin: '2024-03-14 16:45',
-      createdAt: '2023-08-20',
-    },
-  ]);
+  // APIからユーザーデータを取得
+  const fetchUsers = async () => {
+    setLoadingUsers(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams();
+      if (searchTerm) params.append('search', searchTerm);
+      if (filterDepartment !== 'all') params.append('department', filterDepartment);
+      if (filterRole !== 'all') params.append('role', filterRole);
+      if (filterStatus !== 'all') params.append('status', filterStatus);
+
+      const response = await fetch(`/api/admin/users?${params.toString()}`);
+      const data = await response.json();
+
+      if (data.success) {
+        setUsers(data.users);
+      } else {
+        setError(data.error || 'ユーザーの取得に失敗しました');
+      }
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+      setError('ユーザーの取得中にエラーが発生しました');
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  // ユーザー作成
+  const createUser = async (userData: Omit<User, 'id' | 'tenantId' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        await fetchUsers();
+        setShowAddModal(false);
+      } else {
+        alert(data.error || 'ユーザーの作成に失敗しました');
+      }
+    } catch (error) {
+      console.error('Failed to create user:', error);
+      alert('ユーザーの作成中にエラーが発生しました');
+    }
+  };
+
+  // ユーザー更新
+  const updateUser = async (userId: string, userData: Partial<User>) => {
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: userId, ...userData }),
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        await fetchUsers();
+        setShowEditModal(false);
+        setEditingUser(null);
+      } else {
+        alert(data.error || 'ユーザーの更新に失敗しました');
+      }
+    } catch (error) {
+      console.error('Failed to update user:', error);
+      alert('ユーザーの更新中にエラーが発生しました');
+    }
+  };
+
+  // ユーザー削除
+  const deleteUser = async (userId: string) => {
+    if (!confirm('本当にこのユーザーを削除しますか？')) return;
+
+    try {
+      const response = await fetch(`/api/admin/users?id=${userId}`, {
+        method: 'DELETE',
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        await fetchUsers();
+      } else {
+        alert(data.error || 'ユーザーの削除に失敗しました');
+      }
+    } catch (error) {
+      console.error('Failed to delete user:', error);
+      alert('ユーザーの削除中にエラーが発生しました');
+    }
+  };
+
+  // 初回ロード時とフィルター変更時にデータ取得
+  useEffect(() => {
+    if (!isLoading && isSuperAdmin()) {
+      fetchUsers();
+    }
+  }, [searchTerm, filterDepartment, filterRole, filterStatus]);
 
   const roles = [
-    '経営者',
-    '支店長',
+    '代表取締役',
+    '専務取締役',
+    '常務取締役',
+    '東京支店長',
+    '大阪支店長',
+    '営業部長',
+    '施工部長',
+    '設計部長',
+    '経理部長',
+    '営業課長',
+    '営業主任',
     '営業担当',
-    '経理担当',
-    'マーケティング',
-    '施工管理',
-    '事務員',
-    'アフター担当',
+    '施工管理技士',
+    '現場監督',
+    '一級建築士',
+    '二級建築士',
+    'CADオペレーター',
+    'インテリアコーディネーター',
+    '経理課長',
+    '総務課長',
+    'アフター課長',
+    'カスタマーサポート',
   ];
 
-  useEffect(() => {
-    if (!isLoading && !isSuperAdmin()) {
-      router.push('/dashboard');
-    }
-  }, [user, isLoading, isSuperAdmin, router]);
+  const departments = [
+    '経営',
+    '営業',
+    '施工',
+    '設計',
+    '経理',
+    '総務',
+    'アフターサービス',
+  ];
 
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = filterRole === 'all' || user.role === filterRole;
-    return matchesSearch && matchesRole;
-  });
+  const handleToggleActive = async (userId: string) => {
+    const targetUser = users.find(u => u.id === userId);
+    if (!targetUser) return;
 
-  const handleToggleActive = (userId: string) => {
-    // 実際の実装では、APIを呼び出してユーザーのアクティブ状態を切り替え
-    console.log('Toggle active for user:', userId);
+    const newStatus = targetUser.status === 'active' ? 'inactive' : 'active';
+    await updateUser(userId, { status: newStatus });
   };
 
   const handleDeleteUser = (userId: string) => {
-    if (confirm('このユーザーを削除してもよろしいですか？')) {
-      // 実際の実装では、APIを呼び出してユーザーを削除
-      console.log('Delete user:', userId);
-    }
+    deleteUser(userId);
   };
 
   const handleBulkAction = (action: string) => {
@@ -205,7 +240,7 @@ export default function UsersManagement() {
                 </h1>
                 <p className="text-sm opacity-90 mt-1">
                   総ユーザー数: {users.length}名 / アクティブ:{' '}
-                  {users.filter((u) => u.isActive).length}名
+                  {users.filter((u) => u.status === 'active').length}名
                 </p>
               </div>
             </div>
@@ -239,20 +274,38 @@ export default function UsersManagement() {
             <div className="flex gap-2">
               <select
                 className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                value={filterDepartment}
+                onChange={(e) => setFilterDepartment(e.target.value)}
+              >
+                <option value="all">全部署</option>
+                {departments.map((dept) => (
+                  <option key={dept} value={dept}>
+                    {dept}
+                  </option>
+                ))}
+              </select>
+              <select
+                className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 value={filterRole}
                 onChange={(e) => setFilterRole(e.target.value)}
               >
-                <option value="all">全ての役職</option>
+                <option value="all">全役職</option>
                 {roles.map((role) => (
                   <option key={role} value={role}>
                     {role}
                   </option>
                 ))}
               </select>
-              <button className="px-4 py-2 border rounded-lg hover:bg-gray-50 flex items-center gap-2">
-                <Filter className="h-4 w-4" />
-                詳細フィルター
-              </button>
+              <select
+                className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+              >
+                <option value="all">全ステータス</option>
+                <option value="active">アクティブ</option>
+                <option value="inactive">無効</option>
+                <option value="pending">保留中</option>
+              </select>
             </div>
           </div>
 
@@ -286,11 +339,28 @@ export default function UsersManagement() {
           )}
         </div>
 
-        {/* ユーザーリスト */}
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b">
+        {/* エラー表示 */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+            {error}
+          </div>
+        )}
+
+        {/* ローディング表示 */}
+        {loadingUsers ? (
+          <div className="bg-white rounded-xl shadow-md p-12">
+            <div className="flex flex-col items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500"></div>
+              <p className="mt-4 text-gray-600">ユーザーデータを読み込み中...</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* ユーザーリスト */}
+            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b">
                 <tr>
                   <th className="px-6 py-3 text-left">
                     <input
@@ -298,7 +368,7 @@ export default function UsersManagement() {
                       className="rounded"
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setSelectedUsers(filteredUsers.map((u) => u.id));
+                          setSelectedUsers(users.map((u) => u.id));
                         } else {
                           setSelectedUsers([]);
                         }
@@ -326,7 +396,7 @@ export default function UsersManagement() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredUsers.map((user) => (
+                {users.map((user) => (
                   <tr key={user.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <input
@@ -363,20 +433,25 @@ export default function UsersManagement() {
                       {user.department}
                     </td>
                     <td className="px-6 py-4">
-                      {user.isActive ? (
+                      {user.status === 'active' ? (
                         <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 flex items-center gap-1 w-fit">
                           <UserCheck className="h-3 w-3" />
                           有効
                         </span>
-                      ) : (
+                      ) : user.status === 'inactive' ? (
                         <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800 flex items-center gap-1 w-fit">
                           <UserX className="h-3 w-3" />
                           無効
                         </span>
+                      ) : (
+                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 flex items-center gap-1 w-fit">
+                          <Shield className="h-3 w-3" />
+                          保留中
+                        </span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
-                      {user.lastLogin}
+                      {user.lastLogin || '-'}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
@@ -410,24 +485,26 @@ export default function UsersManagement() {
           </div>
         </div>
 
-        {/* ツールバー */}
-        <div className="mt-6 flex justify-between items-center">
-          <div className="flex gap-2">
-            <button className="px-4 py-2 border rounded-lg hover:bg-gray-50 flex items-center gap-2">
-              <Download className="h-4 w-4" />
-              エクスポート
-            </button>
-            <button className="px-4 py-2 border rounded-lg hover:bg-gray-50 flex items-center gap-2">
-              <Upload className="h-4 w-4" />
-              インポート
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">
-              {filteredUsers.length}件中 {filteredUsers.length}件を表示
-            </span>
-          </div>
-        </div>
+            {/* ツールバー */}
+            <div className="mt-6 flex justify-between items-center">
+              <div className="flex gap-2">
+                <button className="px-4 py-2 border rounded-lg hover:bg-gray-50 flex items-center gap-2">
+                  <Download className="h-4 w-4" />
+                  エクスポート
+                </button>
+                <button className="px-4 py-2 border rounded-lg hover:bg-gray-50 flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  インポート
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">
+                  {users.length}件中 {users.length}件を表示
+                </span>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* ユーザー追加モーダル */}
@@ -446,14 +523,30 @@ export default function UsersManagement() {
               </div>
             </div>
             <div className="p-6">
-              <form className="space-y-4">
+              <form
+                className="space-y-4"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  await createUser({
+                    name: formData.get('name') as string,
+                    email: formData.get('email') as string,
+                    role: formData.get('role') as string,
+                    department: formData.get('department') as string,
+                    status: 'pending',
+                    joinDate: new Date().toISOString().split('T')[0],
+                  });
+                }}
+              >
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       氏名
                     </label>
                     <input
+                      name="name"
                       type="text"
+                      required
                       className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                       placeholder="山田 太郎"
                     />
@@ -463,7 +556,9 @@ export default function UsersManagement() {
                       メールアドレス
                     </label>
                     <input
+                      name="email"
                       type="email"
+                      required
                       className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                       placeholder="example@company.com"
                     />
@@ -474,7 +569,11 @@ export default function UsersManagement() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       役職
                     </label>
-                    <select className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                    <select
+                      name="role"
+                      required
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    >
                       <option value="">選択してください</option>
                       {roles.map((role) => (
                         <option key={role} value={role}>
@@ -487,22 +586,19 @@ export default function UsersManagement() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       部署
                     </label>
-                    <input
-                      type="text"
+                    <select
+                      name="department"
+                      required
                       className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      placeholder="営業部"
-                    />
+                    >
+                      <option value="">選択してください</option>
+                      {departments.map((dept) => (
+                        <option key={dept} value={dept}>
+                          {dept}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    初期パスワード
-                  </label>
-                  <input
-                    type="password"
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    placeholder="8文字以上の安全なパスワード"
-                  />
                 </div>
                 <div className="flex items-center gap-2">
                   <input type="checkbox" id="sendEmail" className="rounded" />
