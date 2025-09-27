@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { flushSync } from 'react-dom';
 import GlobalMasterAddModal from './GlobalMasterAddModal';
+import SavedEstimatesModal from './SavedEstimatesModal';
 import { useRouter, useSearchParams } from 'next/navigation';
 import TemplateSelectModal from '@/components/estimates/TemplateSelectModal';
 import VersionManager from '@/components/estimates/VersionManager';
@@ -60,6 +61,7 @@ import {
   Grid3x3,
   GripVertical,
   MessageSquare,
+  FolderOpen,
   GitBranch,
   Send,
   Eye,
@@ -1147,6 +1149,9 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
   ];
   // 掛率調整用の新しい状態
   const [showCostRateModal, setShowCostRateModal] = useState(false);
+
+  // 保存済み見積モーダル用の状態
+  const [showSavedEstimatesModal, setShowSavedEstimatesModal] = useState(false);
   const [costRateModalRow, setCostRateModalRow] = useState<string | null>(null);
   const [tempCostRate, setTempCostRate] = useState<number>(1.0);
   // インポート機能の状態
@@ -1814,6 +1819,33 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
     console.log('Saved successfully with validUntil:', validUntil);
   };
 
+  // 保存済み見積を読み込む
+  const handleLoadSavedEstimate = (estimate: any) => {
+    // 見積データを読み込んでitemsに設定
+    const newItems: EstimateItem[] = [
+      {
+        id: nanoid(),
+        category: estimate.tags[0] || 'その他',
+        name: estimate.title,
+        quantity: 1,
+        unit: '式',
+        unitPrice: estimate.amount,
+        amount: estimate.amount,
+        costPrice: Math.floor(estimate.amount * 0.6),
+        notes: `${estimate.customerName}様向け見積`,
+        isSelected: false,
+      },
+    ];
+
+    setItems(newItems);
+    addToHistory(newItems);
+    setSaveStatus('unsaved');
+    setShowSavedEstimatesModal(false);
+
+    // 通知
+    alert(`見積書「${estimate.title}」を読み込みました`);
+  };
+
   // 履歴管理
   const addToHistory = (newItems: EstimateItem[]) => {
     const newHistory = history.slice(0, historyIndex + 1);
@@ -2421,6 +2453,15 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
               >
                 <Save className="w-4 h-4" />
                 保存
+              </button>
+
+              {/* 保存済み見積 */}
+              <button
+                onClick={() => setShowSavedEstimatesModal(true)}
+                className="px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors flex items-center gap-2 text-sm"
+              >
+                <FolderOpen className="w-4 h-4" />
+                保存済み
               </button>
 
               {/* ツール */}
@@ -3327,6 +3368,13 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
           routeMasterSelect(master, categoryFromModal);
           setShowGlobalMasterModal(false);
         }}
+      />
+
+      {/* 保存済み見積モーダル */}
+      <SavedEstimatesModal
+        isOpen={showSavedEstimatesModal}
+        onClose={() => setShowSavedEstimatesModal(false)}
+        onLoad={handleLoadSavedEstimate}
       />
 
       {/* 新しいテンプレート選択モーダル */}
