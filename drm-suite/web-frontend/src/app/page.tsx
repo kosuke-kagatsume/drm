@@ -24,7 +24,7 @@ export default function Index() {
           </p>
           <div className="bg-white rounded-lg shadow-xl p-8 max-w-2xl mx-auto">
             <h2 className="text-2xl font-semibold mb-4">
-              マイクロサービス型CRM + RAG Copilot
+              統合型CRM + MA + RAG Copilot
             </h2>
             <div className="grid grid-cols-2 gap-4 text-left">
               <div className="p-4 bg-blue-50 rounded">
@@ -41,9 +41,9 @@ export default function Index() {
               </div>
               <div className="p-4 bg-orange-50 rounded">
                 <h3 className="font-semibold text-orange-900">
-                  マーケティング
+                  MA自動化
                 </h3>
-                <p className="text-sm text-gray-600">CPA分析・KPI</p>
+                <p className="text-sm text-gray-600">リード育成・スコアリング</p>
               </div>
             </div>
             <div className="mt-8 p-4 bg-gradient-to-r from-indigo-500 to-purple-600 rounded text-white">
