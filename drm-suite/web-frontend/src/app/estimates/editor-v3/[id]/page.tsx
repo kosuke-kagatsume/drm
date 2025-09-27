@@ -8,6 +8,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import TemplateSelectModal from '@/components/estimates/TemplateSelectModal';
 import VersionManager from '@/components/estimates/VersionManager';
 import ApprovalWorkflowComponent from '@/components/estimates/ApprovalWorkflow';
+import TemplateSelector from '@/components/pdf/TemplateSelector';
+import { PdfTemplate } from '@/types/pdf-template';
+import { PdfTemplateEngine } from '@/lib/pdf-engine';
 import { EstimateVersion } from '@/features/estimate-versions/types';
 import {
   ApprovalWorkflow as ApprovalWorkflowType,
@@ -69,6 +72,7 @@ import {
   Download,
   FileSpreadsheet,
   ChevronLeft,
+  FileText,
 } from 'lucide-react';
 
 // === DEBUG HOOK (一時) ===============================
@@ -1085,6 +1089,10 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
     Set<string>
   >(new Set());
 
+  // PDF テンプレート関連の状態
+  const [showPdfTemplateSelector, setShowPdfTemplateSelector] = useState(false);
+  const [selectedPdfTemplate, setSelectedPdfTemplate] = useState<PdfTemplate | null>(null);
+
   // 見積有効期限の状態管理
   const [validUntil, setValidUntil] = useState<string>(() => {
     // デフォルトは30日後
@@ -1819,28 +1827,152 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
     console.log('Saved successfully with validUntil:', validUntil);
   };
 
+  // 新しいマルチテナントPDF生成機能
+  const handleGeneratePDF = () => {
+    // PDFテンプレートセレクターを表示
+    setShowPdfTemplateSelector(true);
+  };
+
+  // PDF テンプレート選択時の処理
+  const handlePdfTemplateSelect = async (template: PdfTemplate) => {
+    try {
+      setShowPdfTemplateSelector(false);
+
+      // 見積データを準備
+      const estimateData = {
+        title: '建設工事見積書',
+        documentNumber: params.id,
+        date: new Date().toISOString(),
+        validUntil,
+        companyId: 'company_1', // 実際にはユーザー認証から取得
+        customer: customerInfo ? {
+          name: customerInfo.name,
+          address: customerInfo.address || '',
+          phone: customerInfo.phone || '',
+          email: customerInfo.email || '',
+          contactPerson: customerInfo.contactPerson || ''
+        } : null,
+        items: items.filter(item => !item.isCategory && !item.isSubtotal).map(item => ({
+          name: item.name || '',
+          specification: item.specification || '',
+          quantity: item.quantity || 0,
+          unit: item.unit || '',
+          unitPrice: item.unitPrice || 0,
+          amount: item.amount || 0
+        })),
+        totals: {
+          subtotal: totals.subtotal,
+          tax: totals.tax,
+          total: totals.amount
+        },
+        terms: [
+          '工期：別途協議により決定',
+          '支払条件：請求書発行後30日以内',
+          `有効期限：${new Date(validUntil).toLocaleDateString('ja-JP')}まで`,
+          '備考：材料費の変動により金額が変更になる場合があります'
+        ]
+      };
+
+      // PDF生成リクエスト
+      const response = await PdfTemplateEngine.generateFromTemplate({
+        templateId: template.id,
+        documentType: 'estimate',
+        data: estimateData,
+        options: {
+          filename: `estimate_${params.id}_${Date.now()}.pdf`,
+          downloadImmediately: true
+        }
+      });
+
+      if (!response.success) {
+        throw new Error(response.error || 'PDF生成に失敗しました');
+      }
+
+      console.log('PDF生成完了:', response);
+    } catch (error) {
+      console.error('PDF生成エラー:', error);
+      alert('PDF生成中にエラーが発生しました: ' + (error instanceof Error ? error.message : '不明なエラー'));
+    }
+  };
+
   // 保存済み見積を読み込む
   const handleLoadSavedEstimate = (estimate: any) => {
-    // 見積データを読み込んでitemsに設定
-    const newItems: EstimateItem[] = [
-      {
-        id: nanoid(),
-        category: estimate.tags[0] || 'その他',
-        name: estimate.title,
-        quantity: 1,
-        unit: '式',
-        unitPrice: estimate.amount,
-        amount: estimate.amount,
-        costPrice: Math.floor(estimate.amount * 0.6),
-        notes: `${estimate.customerName}様向け見積`,
-        isSelected: false,
-      },
-    ];
+    // LocalStorageから実際の見積データを読み込む
+    const storedData = localStorage.getItem(`estimate_${estimate.id}`);
 
-    setItems(newItems);
-    addToHistory(newItems);
+    if (storedData) {
+      // 保存されている詳細データがある場合
+      const estimateData = JSON.parse(storedData);
+      setItems(estimateData.items || []);
+      if (estimateData.validUntil) {
+        setValidUntil(estimateData.validUntil);
+      }
+      addToHistory(estimateData.items || []);
+    } else {
+      // 詳細データがない場合は、サンプルデータを作成
+      const sampleItems: EstimateItem[] = [];
+
+      // カテゴリヘッダーを追加
+      sampleItems.push({
+        id: nanoid(),
+        name: 'キッチン工事',
+        isCategory: true,
+        quantity: 0,
+        unit: '',
+        unitPrice: 0,
+        amount: 0,
+      });
+
+      // サンプル明細行を追加
+      sampleItems.push({
+        id: nanoid(),
+        category: 'キッチン工事',
+        name: 'システムキッチン',
+        specification: 'TOTO ミッテ I型2550',
+        quantity: 1,
+        unit: 'セット',
+        unitPrice: 850000,
+        amount: 850000,
+        costPrice: 595000,
+        grossProfitRate: 30,
+        isSelected: false,
+      });
+
+      sampleItems.push({
+        id: nanoid(),
+        category: 'キッチン工事',
+        name: 'IHクッキングヒーター',
+        specification: '日立 HT-M300XTWF',
+        quantity: 1,
+        unit: '台',
+        unitPrice: 120000,
+        amount: 120000,
+        costPrice: 84000,
+        grossProfitRate: 30,
+        isSelected: false,
+      });
+
+      // キッチン工事小計
+      sampleItems.push({
+        id: nanoid(),
+        name: 'キッチン工事 小計',
+        isSubtotal: true,
+        quantity: 0,
+        unit: '',
+        unitPrice: 0,
+        amount: 0,
+        category: 'キッチン工事',
+      });
+
+      // 金額を再計算
+      const updatedItems = updateCategorySubtotals(sampleItems);
+      setItems(updatedItems);
+      addToHistory(updatedItems);
+    }
+
     setSaveStatus('unsaved');
     setShowSavedEstimatesModal(false);
+    setShowCategorySelector(false); // 保存済みデータ読み込み時はカテゴリ選択を非表示
 
     // 通知
     alert(`見積書「${estimate.title}」を読み込みました`);
@@ -2471,6 +2603,15 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
                   <Upload className="w-3.5 h-3.5" />
                   インポート
                 </button>
+
+                <button
+                  onClick={handleGeneratePDF}
+                  className="px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-1.5 text-xs font-medium"
+                  title="PDF出力"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  PDF
+                </button>
               </div>
 
               {/* セパレーター */}
@@ -2556,8 +2697,8 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
 
       {/* メインコンテンツ */}
       <div className="px-4 sm:px-6 lg:px-8 py-6">
-        {/* カテゴリ選択モード */}
-        {showCategorySelector && (
+        {/* カテゴリ選択モード - 新規作成時のみ表示 */}
+        {showCategorySelector && items.length === 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -3473,7 +3614,68 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
                 status: 'draft',
                 currentStep: 0,
                 totalSteps: 3,
-                steps: [],
+                steps: [
+                  {
+                    id: nanoid(),
+                    stepNumber: 1,
+                    name: '課長承認',
+                    type: 'single',
+                    status: 'in_progress',
+                    approvers: [
+                      {
+                        id: nanoid(),
+                        userId: 'user-manager',
+                        userName: '田中 課長',
+                        role: '課長',
+                        action: null,
+                        comment: '',
+                        actionAt: null,
+                        delegatedTo: null,
+                        delegatedToName: null,
+                      }
+                    ]
+                  },
+                  {
+                    id: nanoid(),
+                    stepNumber: 2,
+                    name: '部長承認',
+                    type: 'single',
+                    status: 'waiting',
+                    approvers: [
+                      {
+                        id: nanoid(),
+                        userId: 'user-director',
+                        userName: '佐藤 部長',
+                        role: '部長',
+                        action: null,
+                        comment: '',
+                        actionAt: null,
+                        delegatedTo: null,
+                        delegatedToName: null,
+                      }
+                    ]
+                  },
+                  {
+                    id: nanoid(),
+                    stepNumber: 3,
+                    name: '最終承認',
+                    type: 'single',
+                    status: 'waiting',
+                    approvers: [
+                      {
+                        id: nanoid(),
+                        userId: 'user-president',
+                        userName: '鈴木 社長',
+                        role: '代表取締役',
+                        action: null,
+                        comment: '',
+                        actionAt: null,
+                        delegatedTo: null,
+                        delegatedToName: null,
+                      }
+                    ]
+                  }
+                ],
                 requestedBy: 'current-user',
                 requestedByName: 'システム管理者',
                 requestedAt: new Date(),
@@ -3510,6 +3712,29 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
             canApprove={true}
           />
         </div>
+      )}
+
+      {/* PDFテンプレートセレクター */}
+      {showPdfTemplateSelector && (
+        <TemplateSelector
+          companyId="company_1" // 実際にはユーザー認証から取得
+          documentType="estimate"
+          estimateData={{
+            title: '建設工事見積書',
+            documentNumber: params.id,
+            date: new Date().toISOString(),
+            validUntil,
+            customer: customerInfo,
+            items: items.filter(item => !item.isCategory && !item.isSubtotal),
+            totals: {
+              subtotal: totals.subtotal,
+              tax: totals.tax,
+              total: totals.amount
+            }
+          }}
+          onTemplateSelect={handlePdfTemplateSelect}
+          onClose={() => setShowPdfTemplateSelector(false)}
+        />
       )}
     </div>
   );
