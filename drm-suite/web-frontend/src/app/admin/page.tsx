@@ -18,6 +18,7 @@ import {
   FileText,
   Package,
   FilePlus,
+  GitBranch,
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -93,6 +94,13 @@ export default function AdminDashboard() {
       icon: FilePlus,
       color: 'from-indigo-500 to-purple-500',
       href: '/admin/pdf-management',
+    },
+    {
+      title: '承認フロー管理',
+      description: '組織連動型・カスタム型承認ルート',
+      icon: GitBranch,
+      color: 'from-teal-500 to-cyan-500',
+      href: '/admin/approval-flows',
     },
   ];
 
@@ -179,7 +187,7 @@ export default function AdminDashboard() {
 
         {/* クイックアクション */}
         <h2 className="text-xl font-bold text-gray-900 mb-4">管理機能</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {quickActions.map((action) => (
             <button
               key={action.title}
@@ -208,59 +216,25 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        {/* その他の管理項目 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* 承認フロー設定 */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <FileText className="h-5 w-5 text-blue-500" />
-              承認フロー設定
-            </h3>
-            <div className="space-y-3">
-              <button
-                onClick={() => router.push('/admin/approval-flows')}
-                className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center justify-between group"
-              >
-                <span>見積承認ルート</span>
-                <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
-              </button>
-              <button
-                onClick={() => router.push('/admin/approval-flows')}
-                className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center justify-between group"
-              >
-                <span>発注承認ルート</span>
-                <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
-              </button>
-              <button
-                onClick={() => router.push('/admin/approval-flows')}
-                className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center justify-between group"
-              >
-                <span>経費承認ルート</span>
-                <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
-              </button>
-            </div>
-          </div>
-
-          {/* システム設定 */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Settings className="h-5 w-5 text-gray-500" />
-              システム設定
-            </h3>
-            <div className="space-y-3">
-              <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center justify-between group">
-                <span>通知設定</span>
-                <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
-              </button>
-              <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center justify-between group">
-                <span>セキュリティ設定</span>
-                <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
-              </button>
-              <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center justify-between group">
-                <span>バックアップ設定</span>
-                <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
-              </button>
-            </div>
+        {/* システム設定 */}
+        <div className="bg-white rounded-xl shadow-md p-6">
+          <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Settings className="h-5 w-5 text-gray-500" />
+            システム設定
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center justify-between group">
+              <span>通知設定</span>
+              <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
+            </button>
+            <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center justify-between group">
+              <span>セキュリティ設定</span>
+              <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
+            </button>
+            <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center justify-between group">
+              <span>バックアップ設定</span>
+              <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
+            </button>
           </div>
         </div>
       </div>
