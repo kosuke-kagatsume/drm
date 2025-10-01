@@ -37,6 +37,7 @@ import type {
   ApprovalFlowType,
   Approver,
 } from '@/types/approval-flow';
+import ApprovalFlowModal from '@/components/admin/ApprovalFlowModal';
 
 export default function ApprovalFlowsManagement() {
   const router = useRouter();
@@ -164,6 +165,39 @@ export default function ApprovalFlowsManagement() {
       }
     } catch (error) {
       console.error('Failed to duplicate flow:', error);
+    }
+  };
+
+  const handleSaveFlow = async (flowData: Partial<ApprovalFlow>) => {
+    try {
+      if (editingFlow) {
+        // 更新
+        const response = await fetch('/api/admin/approval-flows', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...flowData, id: editingFlow.id }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          fetchFlows();
+          setShowEditModal(false);
+          setEditingFlow(null);
+        }
+      } else {
+        // 新規作成
+        const response = await fetch('/api/admin/approval-flows', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(flowData),
+        });
+        const data = await response.json();
+        if (data.success) {
+          fetchFlows();
+          setShowCreateModal(false);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to save flow:', error);
     }
   };
 
@@ -448,8 +482,24 @@ export default function ApprovalFlowsManagement() {
         )}
       </div>
 
-      {/* 新規作成モーダルは別コンポーネントに分離することを推奨 */}
-      {/* ここでは省略し、次のステップで詳細実装 */}
+      {/* 新規作成モーダル */}
+      <ApprovalFlowModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSave={handleSaveFlow}
+        initialDocumentType={selectedFlowType}
+      />
+
+      {/* 編集モーダル */}
+      <ApprovalFlowModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setEditingFlow(null);
+        }}
+        onSave={handleSaveFlow}
+        editingFlow={editingFlow}
+      />
     </div>
   );
 }
