@@ -2,13 +2,90 @@
 
 export type CustomerStatus = 'lead' | 'prospect' | 'customer' | 'inactive';
 
+// 顧客獲得経路
+export type CustomerSource =
+  | 'web'           // Web問い合わせ
+  | 'showroom'      // 展示場来場
+  | 'referral'      // 紹介
+  | 'ma'            // MA経由
+  | 'phone'         // 電話問い合わせ
+  | 'event'         // イベント参加
+  | 'direct'        // 直接来店
+  | 'other';        // その他
+
+// 家族関係のタイプ
+export type FamilyRelationType =
+  | 'spouse'        // 配偶者
+  | 'child'         // 子供
+  | 'parent'        // 親
+  | 'sibling'       // 兄弟姉妹
+  | 'other';        // その他
+
+// 連絡先（複数登録可能）
+export interface ContactPhone {
+  id: string;
+  number: string;
+  type: 'mobile' | 'home' | 'work' | 'other';
+  isPrimary: boolean;
+  note?: string;
+}
+
+export interface ContactEmail {
+  id: string;
+  email: string;
+  type: 'personal' | 'work' | 'other';
+  isPrimary: boolean;
+  note?: string;
+}
+
+// 住所情報
+export interface Address {
+  postalCode?: string;
+  prefecture: string;
+  city: string;
+  street: string;
+  building?: string;
+  fullAddress?: string;
+}
+
+// 家族関係
+export interface FamilyRelation {
+  id: string;
+  relatedCustomerId: string;
+  relatedCustomerName: string;
+  relationType: FamilyRelationType;
+  relationName?: string; // 「父」「長男」など自由記述
+  note?: string;
+}
+
 export interface Customer {
   id: string;
+
+  // 基本情報
   name: string;
+  nameKana?: string; // ふりがな
   company?: string;
-  email: string;
-  phone: string;
-  address?: string;
+  dateOfBirth?: string;
+  gender?: 'male' | 'female' | 'other';
+
+  // 連絡先（拡張）
+  phones: ContactPhone[];
+  emails: ContactEmail[];
+
+  // 住所（拡張）
+  currentAddress: Address;           // 現住所
+  familyHomeAddress?: Address;       // 実家住所
+  workAddress?: Address;             // 勤務先住所
+
+  // 旧フィールド（後方互換性のため）
+  email: string;  // emails[0].email と同期
+  phone: string;  // phones[0].number と同期
+  address?: string; // currentAddress.fullAddress と同期
+
+  // 家族関係
+  familyRelations: FamilyRelation[];
+
+  // 顧客分類
   industry?: string;
   status: CustomerStatus;
   tags: string[];
@@ -18,19 +95,27 @@ export interface Customer {
   // 営業関連情報
   lastContact?: string;
   nextAction?: string;
-  nextActionDate?: string; // 次回アクション予定日
+  nextActionDate?: string;
   priority?: number; // 優先度 (1-5: 5が最高)
   value: number; // 顧客価値（見込み金額）
-  source?: string; // 獲得チャネル（web, referral, direct等）
+  source: CustomerSource; // 獲得チャネル
+  leadScore?: number; // リードスコア（MA連携）
+
+  // 紹介関係
+  referredBy?: string; // 紹介者の顧客ID
+  referredByName?: string;
 
   // メタデータ
   createdAt: string;
   updatedAt: string;
   createdBy: string;
+  companyId: string; // マルチテナント対応
 
-  // 関連データ
+  // 関連データ（カウント）
+  propertiesCount?: number;
   estimatesCount?: number;
   contractsCount?: number;
+  activitiesCount?: number;
   totalRevenue?: number;
   lastEstimateDate?: string;
   lastContractDate?: string;
@@ -190,4 +275,135 @@ export interface CustomerImportResult {
     data: Partial<Customer>;
     message: string;
   }>;
+}
+
+// ==================== 物件情報 ====================
+
+export type PropertyType =
+  | 'newBuild'      // 新築
+  | 'renovation'    // リフォーム
+  | 'extension'     // 増築
+  | 'repair'        // 修繕
+  | 'exterior'      // 外構のみ
+  | 'other';
+
+export type LandOwnership =
+  | 'owned'         // 所有済み
+  | 'willPurchase'  // 購入予定
+  | 'undecided';    // 未定
+
+export type BuildingStructure =
+  | 'wood'          // 木造
+  | 'steel'         // 鉄骨
+  | 'rc'            // RC（鉄筋コンクリート）
+  | 'src'           // SRC（鉄骨鉄筋コンクリート）
+  | 'other';
+
+export interface Property {
+  id: string;
+  customerId: string;
+
+  // 物件基本情報
+  name?: string; // 物件名（任意）
+  address: Address;
+  propertyType: PropertyType;
+
+  // 土地情報
+  land: {
+    ownership: LandOwnership;
+    landUse?: string;            // 地目（宅地・雑種地など）
+    area?: number;               // 面積（㎡）
+    areaInTsubo?: number;        // 面積（坪）
+    soilCondition?: string;      // 地盤状況
+  };
+
+  // 建物情報
+  building: {
+    structure?: BuildingStructure;
+    floors?: number;             // 階数
+    totalFloorArea?: number;     // 延床面積（㎡）
+    age?: number;                // 築年数（リフォームの場合）
+  };
+
+  // 工事情報
+  desiredBudget?: number;
+  scheduledStartDate?: string;   // 着工予定日
+  scheduledCompletionDate?: string; // 竣工予定日
+  actualStartDate?: string;      // 実際の着工日
+  actualCompletionDate?: string; // 実際の竣工日
+
+  // 見積・契約との紐付け
+  estimateIds: string[];
+  contractId?: string;
+
+  // ステータス
+  status: 'planning' | 'estimating' | 'contracted' | 'construction' | 'completed' | 'cancelled';
+
+  // メタデータ
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  notes?: string;
+}
+
+// ==================== 活動履歴 ====================
+
+export type ActivityType =
+  | 'visit'           // 訪問
+  | 'call'            // 電話
+  | 'email'           // メール
+  | 'estimate'        // 見積提出
+  | 'presentation'    // プレゼン・提案
+  | 'contract'        // 契約
+  | 'meeting'         // 打ち合わせ（設計・IC）
+  | 'claim'           // クレーム対応
+  | 'inspection'      // 定期点検
+  | 'ma_action'       // MA自動アクション
+  | 'note'            // メモ
+  | 'other';
+
+export interface Activity {
+  id: string;
+  customerId: string;
+  propertyId?: string;
+
+  // 活動基本情報
+  type: ActivityType;
+  title: string;
+  content: string;
+
+  // 次回アクション
+  nextAction?: string;
+  nextActionDate?: string;
+
+  // 記録者
+  createdBy: string;
+  createdByName?: string;
+  createdAt: string;
+
+  // 自動記録フラグ
+  isAutomatic: boolean;
+
+  // 関連ファイル
+  attachments?: Array<{
+    id: string;
+    filename: string;
+    url: string;
+    type: string;
+    size: number;
+  }>;
+
+  // メタデータ
+  duration?: number; // 時間（分）
+  outcome?: string;  // 結果・成果
+}
+
+// 活動履歴テンプレート
+export interface ActivityTemplate {
+  id: string;
+  name: string;
+  type: ActivityType;
+  title: string;
+  content: string;
+  companyId: string;
 }
