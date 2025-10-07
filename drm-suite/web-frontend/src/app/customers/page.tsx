@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCustomers } from '@/hooks/useCustomers';
+import { useOrganization } from '@/hooks/useOrganization';
 import { Customer, CustomerStatus } from '@/types/customer';
 
 // Customer interface now imported from types
@@ -21,9 +22,11 @@ interface RecentAction {
 export default function CustomersPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
+  const { branches, loading: orgLoading } = useOrganization();
   const [selectedView, setSelectedView] = useState('list');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterBranch, setFilterBranch] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null,
@@ -60,10 +63,14 @@ export default function CustomersPage() {
       value: 2500000,
       tags: ['外壁塗装', 'リピーター'],
       assignee: '山田花子',
+      departmentId: 'tokyo-sales',
+      departmentName: '営業部',
+      branchId: 'tokyo',
+      branchName: '東京支店',
       createdAt: '2024-01-15T09:00:00Z',
       updatedAt: '2024-02-10T14:30:00Z',
       createdBy: 'system',
-    },
+    } as Customer,
     {
       id: '2',
       name: '佐藤美咲',
@@ -76,10 +83,14 @@ export default function CustomersPage() {
       value: 0,
       tags: ['屋根工事', '新規'],
       assignee: '鈴木一郎',
+      departmentId: 'osaka-sales',
+      departmentName: '営業部',
+      branchId: 'osaka',
+      branchName: '大阪支店',
       createdAt: '2024-02-01T10:00:00Z',
       updatedAt: '2024-02-12T16:00:00Z',
       createdBy: 'suzuki',
-    },
+    } as Customer,
     {
       id: '3',
       name: '鈴木商事',
@@ -92,10 +103,14 @@ export default function CustomersPage() {
       value: 0,
       tags: ['法人', '大型案件'],
       assignee: '山田花子',
+      departmentId: 'tokyo-sales',
+      departmentName: '営業部',
+      branchId: 'tokyo',
+      branchName: '東京支店',
       createdAt: '2024-02-05T11:00:00Z',
       updatedAt: '2024-02-08T13:00:00Z',
       createdBy: 'yamada',
-    },
+    } as Customer,
   ];
 
   // Use API data if available, fallback to mock data
@@ -200,7 +215,9 @@ export default function CustomersPage() {
       customer.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       filterStatus === 'all' || customer.status === filterStatus;
-    return matchesSearch && matchesStatus;
+    const matchesBranch =
+      filterBranch === 'all' || customer.branchId === filterBranch;
+    return matchesSearch && matchesStatus && matchesBranch;
   });
 
   return (
@@ -364,6 +381,18 @@ export default function CustomersPage() {
                   <option value="customer">⭐ 顧客</option>
                   <option value="inactive">💤 休眠</option>
                 </select>
+                <select
+                  value={filterBranch}
+                  onChange={(e) => setFilterBranch(e.target.value)}
+                  className="px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dandori-blue focus:border-transparent transition-all duration-200 font-medium"
+                >
+                  <option value="all">🏢 全ての支店</option>
+                  {branches.map((branch) => (
+                    <option key={branch.id} value={branch.id}>
+                      {branch.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>
@@ -389,7 +418,10 @@ export default function CustomersPage() {
                       活動状況
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      担当
+                      担当部署
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      担当者
                     </th>
                     <th className="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
                       アクション
@@ -477,6 +509,16 @@ export default function CustomersPage() {
                               </span>
                             </div>
                           )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm">
+                          <div className="font-medium text-gray-900">
+                            {customer.branchName || '未設定'}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {customer.departmentName || ''}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">

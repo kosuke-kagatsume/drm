@@ -541,7 +541,6 @@ export default function ExecutiveDashboard({
               </div>
               <button
                 onClick={() => {
-                  alert('顧客管理画面へ移動します');
                   router.push('/customers');
                 }}
                 className="w-full bg-white text-purple-600 py-3 rounded-xl font-bold hover:shadow-lg transform hover:scale-105 transition-all duration-200"

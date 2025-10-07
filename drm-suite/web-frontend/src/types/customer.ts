@@ -92,6 +92,12 @@ export interface Customer {
   assignee: string;
   notes?: string;
 
+  // 組織・部署情報
+  departmentId?: string;     // 担当部署ID (tokyo, osaka, tokyo-sales, etc.)
+  departmentName?: string;   // 担当部署名 (東京支店、営業部、etc.)
+  branchId?: string;         // 支店ID (tokyo, osaka)
+  branchName?: string;       // 支店名 (東京支店、大阪支店)
+
   // 営業関連情報
   lastContact?: string;
   nextAction?: string;
@@ -177,6 +183,10 @@ export interface CustomerFilter {
   tags?: string[];
   industry?: string[];
   source?: string[];
+
+  // 組織・部署フィルター
+  departmentId?: string[];   // 部署IDでフィルタ
+  branchId?: string[];       // 支店IDでフィルタ
 
   // 金額範囲
   valueMin?: number;
