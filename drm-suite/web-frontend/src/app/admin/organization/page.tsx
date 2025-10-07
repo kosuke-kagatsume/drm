@@ -28,6 +28,15 @@ interface Department {
   children: Department[];
 }
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  department: string;
+  status: 'active' | 'inactive' | 'pending';
+}
+
 export default function OrganizationManagement() {
   const router = useRouter();
   const { user, isLoading, isSuperAdmin } = useAuth();
@@ -39,6 +48,9 @@ export default function OrganizationManagement() {
   const [draggedDept, setDraggedDept] = useState<Department | null>(null);
   const [dragOverDept, setDragOverDept] = useState<string | null>(null);
   const [isDragMode, setIsDragMode] = useState(false);
+  const [showMembersModal, setShowMembersModal] = useState(false);
+  const [departmentMembers, setDepartmentMembers] = useState<User[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
 
   // 組織構造データ（ドラッグ&ドロップで変更可能）
   const [organization, setOrganization] = useState<Department | null>(null);
@@ -63,6 +75,36 @@ export default function OrganizationManagement() {
     } finally {
       setLoadingOrg(false);
     }
+  };
+
+  // 部署のメンバーを取得
+  const fetchDepartmentMembers = async (departmentId: string) => {
+    try {
+      setLoadingMembers(true);
+      const response = await fetch(
+        `/api/admin/departments/${departmentId}/members`,
+        {
+          headers: {
+            'X-Tenant-Id': 'default-tenant',
+          },
+        }
+      );
+      const data = await response.json();
+      if (data.success) {
+        setDepartmentMembers(data.members || []);
+      }
+    } catch (error) {
+      console.error('メンバーデータの取得に失敗:', error);
+    } finally {
+      setLoadingMembers(false);
+    }
+  };
+
+  // メンバー一覧を表示
+  const showMembers = (dept: Department) => {
+    setSelectedDept(dept);
+    setShowMembersModal(true);
+    fetchDepartmentMembers(dept.id);
   };
 
   // 組織構造を更新（APIに保存）
@@ -627,7 +669,10 @@ export default function OrganizationManagement() {
                   </div>
                 </div>
                 <div className="mt-6 space-y-2">
-                  <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
+                  <button
+                    onClick={() => showMembers(selectedDept)}
+                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
+                  >
                     <Users className="h-4 w-4" />
                     メンバー一覧
                   </button>
@@ -814,6 +859,88 @@ export default function OrganizationManagement() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* メンバー一覧モーダル */}
+      {showMembersModal && selectedDept && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white p-6 rounded-t-2xl">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-bold">{selectedDept.name}</h2>
+                  <p className="text-sm opacity-90 mt-1">
+                    所属メンバー: {departmentMembers.length}名
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowMembersModal(false)}
+                  className="text-white hover:bg-white/20 rounded-full p-2"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6">
+              {loadingMembers ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-4 text-gray-600">読み込み中...</p>
+                </div>
+              ) : departmentMembers.length > 0 ? (
+                <div className="space-y-3">
+                  {departmentMembers.map((member) => (
+                    <div
+                      key={member.id}
+                      className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold">
+                            {member.name.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {member.name}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {member.role}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-gray-600">{member.email}</p>
+                          <span
+                            className={`inline-block px-2 py-1 rounded-full text-xs mt-1 ${
+                              member.status === 'active'
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-gray-100 text-gray-700'
+                            }`}
+                          >
+                            {member.status === 'active' ? '在籍中' : '退職'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>メンバーが登録されていません</p>
+                </div>
+              )}
+            </div>
+            <div className="border-t p-4">
+              <button
+                onClick={() => setShowMembersModal(false)}
+                className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg"
+              >
+                閉じる
+              </button>
             </div>
           </div>
         </div>
