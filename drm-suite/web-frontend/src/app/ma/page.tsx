@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -121,12 +121,7 @@ import {
   Legend,
   BarChart,
   Bar,
-  Area,
-  AreaChart,
-  RadialBarChart,
-  RadialBar,
-  ComposedChart,
-  Scatter
+  ComposedChart
 } from 'recharts';
 import { getMaDashboard } from '@/services/ma/dashboard';
 import { MaDashboard } from '@/types/ma';
@@ -252,16 +247,16 @@ export default function MAManagementPage() {
     setShowEventModal(true);
   };
 
-  // カレンダーのヘルパー関数
-  const getEventsForDate = (date: Date) => {
+  // カレンダーのヘルパー関数（useCallbackでメモ化）
+  const getEventsForDate = useCallback((date: Date) => {
     return calendarEvents.filter(event => {
       return event.date.getDate() === date.getDate() &&
              event.date.getMonth() === date.getMonth() &&
              event.date.getFullYear() === date.getFullYear();
     });
-  };
-  
-  const getDaysInMonth = (date: Date) => {
+  }, [calendarEvents]);
+
+  const getDaysInMonth = useCallback((date: Date) => {
     const year = date.getFullYear();
     const month = date.getMonth();
     const firstDay = new Date(year, month, 1);
@@ -279,10 +274,10 @@ export default function MAManagementPage() {
     }
 
     return days;
-  };
+  }, []);
 
-  // 週表示用のヘルパー関数
-  const getDaysInWeek = (date: Date) => {
+  // 週表示用のヘルパー関数（useCallbackでメモ化）
+  const getDaysInWeek = useCallback((date: Date) => {
     const startOfWeek = new Date(date);
     startOfWeek.setDate(date.getDate() - date.getDay());
 
@@ -293,16 +288,19 @@ export default function MAManagementPage() {
       days.push(day);
     }
     return days;
-  };
+  }, []);
 
-  // 時間スロット用のヘルパー関数
-  const getTimeSlots = () => {
+  // 時間スロット用のヘルパー関数（useMemoでメモ化 - 常に同じ結果）
+  const timeSlots = useMemo(() => {
     const slots = [];
     for (let hour = 8; hour <= 20; hour++) {
       slots.push(`${hour}:00`);
     }
     return slots;
-  };
+  }, []);
+
+  // 後方互換性のため関数形式も残す
+  const getTimeSlots = useCallback(() => timeSlots, [timeSlots]);
 
   // Realistic mock data
   const conversionFunnelData = [
