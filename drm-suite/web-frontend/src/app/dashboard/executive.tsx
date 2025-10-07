@@ -2,6 +2,18 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 
 interface ExecutiveDashboardProps {
   userEmail: string;
@@ -47,6 +59,23 @@ export default function ExecutiveDashboard({
       severity: 'medium',
     },
   ];
+
+  // 売上推移データ（6ヶ月）
+  const revenueTrend = [
+    { month: '4月', 売上: 95, 粗利: 21.4, キャッシュフロー: 35 },
+    { month: '5月', 売上: 105, 粗利: 22.8, キャッシュフロー: 38 },
+    { month: '6月', 売上: 110, 粗利: 23.5, キャッシュフロー: 40 },
+    { month: '7月', 売上: 115, 粗利: 23.9, キャッシュフロー: 42 },
+    { month: '8月', 売上: 118, 粗利: 24.0, キャッシュフロー: 43 },
+    { month: '9月', 売上: 125, 粗利: 24.2, キャッシュフロー: 45 },
+  ];
+
+  // 部門別売上データ
+  const departmentRevenueData = branchPerformance.map((branch) => ({
+    name: branch.name,
+    売上: branch.revenue / 1000000,
+    粗利率: branch.profit,
+  }));
 
   return (
     <div className="space-y-6">
@@ -206,6 +235,88 @@ export default function ExecutiveDashboard({
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+
+          {/* 📈 売上推移グラフ */}
+          <div className="bg-white rounded-2xl shadow-lg mt-6 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100">
+              <h2 className="text-lg font-semibold">📈 売上・粗利推移（6ヶ月）</h2>
+            </div>
+            <div className="p-6">
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={revenueTrend}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="month" stroke="#6b7280" />
+                  <YAxis yAxisId="left" stroke="#6b7280" />
+                  <YAxis yAxisId="right" orientation="right" stroke="#6b7280" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                    }}
+                  />
+                  <Legend />
+                  <Line
+                    yAxisId="left"
+                    type="monotone"
+                    dataKey="売上"
+                    stroke="#3b82f6"
+                    strokeWidth={3}
+                    dot={{ fill: '#3b82f6', r: 5 }}
+                    name="売上 (M)"
+                  />
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="粗利"
+                    stroke="#10b981"
+                    strokeWidth={3}
+                    dot={{ fill: '#10b981', r: 5 }}
+                    name="粗利率 (%)"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* 📊 部門別売上グラフ */}
+          <div className="bg-white rounded-2xl shadow-lg mt-6 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100">
+              <h2 className="text-lg font-semibold">📊 部門別売上・粗利率</h2>
+            </div>
+            <div className="p-6">
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={departmentRevenueData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="name" stroke="#6b7280" />
+                  <YAxis yAxisId="left" stroke="#6b7280" />
+                  <YAxis yAxisId="right" orientation="right" stroke="#6b7280" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                    }}
+                  />
+                  <Legend />
+                  <Bar
+                    yAxisId="left"
+                    dataKey="売上"
+                    fill="#3b82f6"
+                    name="売上 (M)"
+                    radius={[8, 8, 0, 0]}
+                  />
+                  <Bar
+                    yAxisId="right"
+                    dataKey="粗利率"
+                    fill="#10b981"
+                    name="粗利率 (%)"
+                    radius={[8, 8, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
@@ -440,12 +551,56 @@ export default function ExecutiveDashboard({
             </div>
           </div>
 
+          {/* マーケティング分析 */}
+          <div className="bg-gradient-to-br from-yellow-500 to-orange-500 text-white rounded-2xl shadow-lg mb-6 overflow-hidden">
+            <div className="p-6">
+              <h3 className="font-bold text-xl mb-4 flex items-center">
+                <span className="text-2xl mr-2">📢</span>
+                マーケティング分析
+              </h3>
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="bg-white/20 backdrop-blur-sm p-3 rounded-lg">
+                  <p className="text-3xl font-bold">425%</p>
+                  <p className="text-xs text-white/80">マーケROI</p>
+                </div>
+                <div className="bg-white/20 backdrop-blur-sm p-3 rounded-lg">
+                  <p className="text-3xl font-bold">¥8.4K</p>
+                  <p className="text-xs text-white/80">顧客獲得コスト</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  window.open('/dashboard/view-marketing', '_blank');
+                }}
+                className="w-full bg-white text-orange-600 py-3 rounded-xl font-bold hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+              >
+                📊 マーケティングダッシュボード →
+              </button>
+            </div>
+          </div>
+
           {/* 財務管理 */}
           <div className="bg-white rounded-2xl shadow-lg mb-6 overflow-hidden">
             <div className="px-6 py-4 bg-gradient-to-r from-dandori-blue to-dandori-sky text-white">
               <h3 className="font-semibold">💰 財務管理</h3>
             </div>
             <div className="p-4">
+              {/* 経理ダッシュボードへのリンク */}
+              <button
+                onClick={() => {
+                  window.open('/dashboard/view-accounting', '_blank');
+                }}
+                className="w-full mb-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white p-4 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="text-left">
+                    <div className="font-bold text-lg">📊 経理ダッシュボード</div>
+                    <div className="text-sm opacity-90 mt-1">財務詳細・入出金管理・決算情報</div>
+                  </div>
+                  <div className="text-2xl">→</div>
+                </div>
+              </button>
+
               <div className="space-y-3">
                 <button
                   onClick={() => setActiveModal('financial-analysis')}
