@@ -97,12 +97,68 @@ export async function POST(
       );
     }
 
-    // TODO: ユーザーの部署を更新する処理
-    // 実際の実装では、ユーザーのdepartmentIdを更新する
+    // ユーザーの部署を更新する処理
+    // 部署IDから部署名を取得
+    const departmentMapping: Record<string, string> = {
+      'tokyo': '東京支店',
+      'tokyo-sales': '東京支店 営業部',
+      'tokyo-construction': '東京支店 施工部',
+      'tokyo-office': '東京支店 事務部',
+      'osaka': '大阪支店',
+      'osaka-sales': '大阪支店 営業部',
+      'osaka-construction': '大阪支店 施工部',
+      'osaka-office': '大阪支店 事務部',
+      'accounting': '経理部',
+      'marketing': 'マーケティング部',
+      'aftercare': 'アフターサービス部',
+      'hr': '人事部',
+      'it': 'IT部',
+    };
+
+    const departmentName = departmentMapping[departmentId] || departmentId;
+
+    // ユーザーデータを取得
+    const usersResponse = await fetch(
+      `${request.nextUrl.protocol}//${request.nextUrl.host}/api/admin/users`,
+      {
+        headers: {
+          'X-Tenant-Id': request.headers.get('X-Tenant-Id') || 'default-tenant',
+        },
+      }
+    );
+
+    if (!usersResponse.ok) {
+      throw new Error('ユーザーデータの取得に失敗しました');
+    }
+
+    const usersData = await usersResponse.json();
+    const allUsers: User[] = usersData.users || [];
+
+    // 対象ユーザーを見つける
+    const targetUser = allUsers.find(u => u.id === userId);
+
+    if (!targetUser) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'ユーザーが見つかりません',
+        },
+        { status: 404 }
+      );
+    }
+
+    // ユーザーの部署情報を更新（モック実装なのでここでは成功を返すのみ）
+    // 実際のDB実装では、ここでユーザーのdepartmentとdepartmentIdを更新する
+    console.log(`ユーザー ${targetUser.name} (${userId}) を部署 ${departmentName} (${departmentId}) に追加`);
 
     return NextResponse.json({
       success: true,
       message: 'メンバーを追加しました',
+      user: {
+        ...targetUser,
+        department: departmentName,
+        departmentId: departmentId,
+      },
     });
   } catch (error: any) {
     return NextResponse.json(

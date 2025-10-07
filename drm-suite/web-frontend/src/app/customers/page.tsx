@@ -27,6 +27,7 @@ export default function CustomersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterBranch, setFilterBranch] = useState('all');
+  const [filterAssignee, setFilterAssignee] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null,
@@ -208,6 +209,11 @@ export default function CustomersPage() {
     );
   }
 
+  // 担当者の一覧を抽出
+  const uniqueAssignees = Array.from(
+    new Set(displayCustomers.map((c) => c.assignee).filter(Boolean))
+  ).sort();
+
   const filteredCustomers = displayCustomers.filter((customer) => {
     const matchesSearch =
       customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -217,7 +223,9 @@ export default function CustomersPage() {
       filterStatus === 'all' || customer.status === filterStatus;
     const matchesBranch =
       filterBranch === 'all' || customer.branchId === filterBranch;
-    return matchesSearch && matchesStatus && matchesBranch;
+    const matchesAssignee =
+      filterAssignee === 'all' || customer.assignee === filterAssignee;
+    return matchesSearch && matchesStatus && matchesBranch && matchesAssignee;
   });
 
   return (
@@ -390,6 +398,18 @@ export default function CustomersPage() {
                   {branches.map((branch) => (
                     <option key={branch.id} value={branch.id}>
                       {branch.name}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={filterAssignee}
+                  onChange={(e) => setFilterAssignee(e.target.value)}
+                  className="px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dandori-blue focus:border-transparent transition-all duration-200 font-medium"
+                >
+                  <option value="all">👤 全ての担当者</option>
+                  {uniqueAssignees.map((assignee) => (
+                    <option key={assignee} value={assignee}>
+                      {assignee}
                     </option>
                   ))}
                 </select>

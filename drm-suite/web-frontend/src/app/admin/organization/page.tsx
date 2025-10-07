@@ -138,6 +138,40 @@ export default function OrganizationManagement() {
     await Promise.all([fetchAllUsers(), fetchDepartmentMembers(dept.id)]);
   };
 
+  // メンバーを部署に追加
+  const addMemberToDepartment = async (userId: string, userName: string) => {
+    if (!selectedDept) return;
+
+    try {
+      const response = await fetch(
+        `/api/admin/departments/${selectedDept.id}/members`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Tenant-Id': 'default-tenant',
+          },
+          body: JSON.stringify({ userId }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        // メンバーリストを更新
+        await fetchDepartmentMembers(selectedDept.id);
+        // 組織データも更新（メンバー数が変わるため）
+        await fetchOrganization();
+        alert(`${userName}を${selectedDept.name}に追加しました`);
+      } else {
+        alert(`追加に失敗しました: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('メンバー追加エラー:', error);
+      alert('メンバーの追加に失敗しました');
+    }
+  };
+
   // 組織構造を更新（APIに保存）
   const saveOrganization = async (updatedOrg: Department) => {
     try {
@@ -1043,10 +1077,7 @@ export default function OrganizationManagement() {
                           }`}
                           onClick={() => {
                             if (!isAlreadyMember) {
-                              // TODO: メンバーを追加する処理
-                              alert(
-                                `${user.name}を${selectedDept.name}に追加します（実装予定）`
-                              );
+                              addMemberToDepartment(user.id, user.name);
                             }
                           }}
                         >
