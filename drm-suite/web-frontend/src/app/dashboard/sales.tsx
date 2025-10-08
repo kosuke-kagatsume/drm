@@ -5,25 +5,6 @@ import { useEffect, useState } from 'react';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useEstimates } from '@/hooks/useEstimates';
 import { useFinancialMetrics } from '@/hooks/useFinancialMetrics';
-// 一時的にモックコンポーネントに置き換え
-const ContractManagementModal = ({ isOpen, onClose }: any) => {
-  if (!isOpen) return null;
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 max-w-2xl w-full">
-        <h3 className="text-xl font-bold mb-4">契約管理</h3>
-        <p className="text-gray-600 mb-4">契約管理機能は準備中です</p>
-        <button
-          onClick={onClose}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          閉じる
-        </button>
-      </div>
-    </div>
-  );
-};
-
 const CustomerDetailModal = ({ isOpen, onClose }: any) => {
   if (!isOpen) return null;
   return (
@@ -67,7 +48,6 @@ interface SalesDashboardProps {
 export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
   const router = useRouter();
   const [todayTodos, setTodayTodos] = useState<TodoItem[]>([]);
-  const [showContractModal, setShowContractModal] = useState(false);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [showMapModal, setShowMapModal] = useState(false);
   const [showRAGModal, setShowRAGModal] = useState(false);
@@ -739,44 +719,18 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
         </div>
       </div>
 
-      {/* その他のツール */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* 契約管理 */}
+      <div className="bg-white rounded-xl shadow-sm p-6">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">契約管理</h3>
+        <p className="text-sm text-gray-600 mb-4">
+          受注済み見積から作成された契約を管理
+        </p>
         <button
-          onClick={() => setShowContractModal(true)}
-          className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+          onClick={() => router.push('/contracts')}
+          className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
         >
-          <span className="text-2xl">📄</span>
-          <p className="mt-2 font-medium">契約管理</p>
-        </button>
-        <button
-          onClick={() => {
-            alert('協力会社管理画面へ移動します');
-            router.push('/vendors');
-          }}
-          className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-4 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-        >
-          <span className="text-2xl">👷</span>
-          <p className="mt-2 font-medium">協力会社</p>
-        </button>
-        <button
-          onClick={() => {
-            alert('請求書管理画面へ移動します');
-            router.push('/invoices');
-          }}
-          className="bg-gradient-to-br from-green-500 to-green-600 text-white p-4 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-        >
-          <span className="text-2xl">💰</span>
-          <p className="mt-2 font-medium">請求書</p>
-        </button>
-        <button
-          onClick={() => {
-            alert('経費精算画面へ移動します');
-            router.push('/expenses');
-          }}
-          className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-4 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-        >
-          <span className="text-2xl">💳</span>
-          <p className="mt-2 font-medium">経費精算</p>
+          <span className="text-xl">📄</span>
+          <span className="font-medium">契約一覧を見る</span>
         </button>
       </div>
 
@@ -784,12 +738,6 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
       <CustomerDetailModal
         isOpen={showCustomerModal}
         onClose={() => setShowCustomerModal(false)}
-      />
-
-      {/* 契約管理モーダル */}
-      <ContractManagementModal
-        isOpen={showContractModal}
-        onClose={() => setShowContractModal(false)}
       />
 
       {/* 地図分析モーダル */}

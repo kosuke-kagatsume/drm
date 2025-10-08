@@ -402,71 +402,31 @@ export default function EstimatesPage() {
     }
   };
 
-  // 契約書作成
+  // 契約書作成（自動マッピング対応）
   const handleCreateContract = async (estimate: Estimate) => {
-    const options = [
-      { value: 'traditional', label: '通常の契約書作成' },
-      { value: 'electronic', label: '電子契約で作成' },
-    ];
+    try {
+      // workflow-settingsから自動マッピング設定を取得して契約データを生成
+      const response = await fetch('/api/contracts/from-estimate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estimateId: estimate.id }),
+      });
 
-    const choice = prompt(
-      `${estimate.projectName}の契約書を作成します。\n\n1: 通常の契約書作成\n2: 電子契約で作成\n\n選択してください (1 または 2):`,
-    );
-
-    if (choice === '1') {
-      // 通常の契約書作成
-      const contractData = {
-        id: `CON-${Date.now()}`,
-        estimateId: estimate.id,
-        projectName: estimate.projectName,
-        customer: estimate.customerName,
-        customerCompany: estimate.companyName,
-        contractDate: new Date().toISOString().split('T')[0],
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split('T')[0], // 3ヶ月後
-        amount: estimate.contractAmount || estimate.totalAmount,
-        status: 'draft',
-        paymentStatus: 'pending',
-        paymentProgress: 0,
-        projectType: estimate.projectType,
-        contractType: 'lump_sum',
-        manager: user?.name || '未割当',
-        createdFrom: estimate.estimateNo,
-      };
-
-      // LocalStorageに保存
-      const existingContracts = localStorage.getItem('contracts');
-      const contracts = existingContracts ? JSON.parse(existingContracts) : [];
-      contracts.push(contractData);
-      localStorage.setItem('contracts', JSON.stringify(contracts));
-
-      // 請求スケジュールを自動作成
-      try {
-        await invoiceService.createBillingScheduleFromContract(
-          contractData.id,
-          contractData.amount,
-          contractData.projectName,
-          contractData.startDate,
-          contractData.endDate,
-        );
-        console.log('請求スケジュールを作成しました');
-      } catch (error) {
-        console.error('請求スケジュール作成に失敗:', error);
+      if (!response.ok) {
+        throw new Error('契約データの生成に失敗しました');
       }
 
-      // 契約書ページへ遷移
-      router.push(`/contracts?id=${contractData.id}`);
-    } else if (choice === '2') {
-      // 電子契約作成画面へ遷移（見積データを引き継ぎ）
-      const estimateParams = new URLSearchParams({
+      const { contract: contractData, settings } = await response.json();
+
+      // 契約書作成画面へ遷移（自動生成されたデータを引き継ぎ）
+      const params = new URLSearchParams({
         estimateId: estimate.id,
-        projectName: estimate.projectName,
-        customer: estimate.customerName,
-        amount: estimate.totalAmount.toString(),
+        autoMapped: 'true',
       });
-      router.push(`/contracts/electronic?${estimateParams.toString()}`);
+      router.push(`/contracts/create?${params.toString()}`);
+    } catch (error) {
+      console.error('契約書作成エラー:', error);
+      alert('契約書の作成に失敗しました。管理者設定を確認してください。');
     }
   };
 
@@ -878,64 +838,92 @@ export default function EstimatesPage() {
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedEstimate(estimate);
-                            setShowStatusModal(true);
-                          }}
-                          className="p-1.5 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded transition-colors"
-                          title="ステータス変更"
-                        >
-                          🔄
-                        </button>
-                        <button
-                          onClick={() =>
-                            router.push(`/estimates/${estimate.id}`)
-                          }
-                          className="p-1.5 text-gray-600 hover:text-dandori-blue hover:bg-dandori-blue/10 rounded transition-colors"
-                          title="詳細"
-                        >
-                          🔍
-                        </button>
-                        <button
-                          onClick={() =>
-                            router.push(`/estimates/editor-v3/${estimate.id}`)
-                          }
-                          className="p-1.5 text-gray-600 hover:text-dandori-blue hover:bg-dandori-blue/10 rounded transition-colors"
-                          title="編集"
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          onClick={() => handleDuplicate(estimate)}
-                          className="p-1.5 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
-                          title="複製"
-                        >
-                          📋
-                        </button>
-                        <button
-                          className="p-1.5 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded transition-colors"
-                          title="PDF出力"
-                        >
-                          📄
-                        </button>
-                        <button
-                          onClick={() => handleDelete(estimate.id)}
-                          className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                          title="削除"
-                        >
-                          🗑
-                        </button>
+                        <div className="relative group">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedEstimate(estimate);
+                              setShowStatusModal(true);
+                            }}
+                            className="p-1.5 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded transition-colors"
+                          >
+                            🔄
+                          </button>
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                            ステータス変更
+                          </div>
+                        </div>
+                        <div className="relative group">
+                          <button
+                            onClick={() =>
+                              router.push(`/estimates/${estimate.id}`)
+                            }
+                            className="p-1.5 text-gray-600 hover:text-dandori-blue hover:bg-dandori-blue/10 rounded transition-colors"
+                          >
+                            🔍
+                          </button>
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                            詳細表示
+                          </div>
+                        </div>
+                        <div className="relative group">
+                          <button
+                            onClick={() =>
+                              router.push(`/estimates/editor-v3/${estimate.id}`)
+                            }
+                            className="p-1.5 text-gray-600 hover:text-dandori-blue hover:bg-dandori-blue/10 rounded transition-colors"
+                          >
+                            ✏️
+                          </button>
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                            編集
+                          </div>
+                        </div>
+                        <div className="relative group">
+                          <button
+                            onClick={() => handleDuplicate(estimate)}
+                            className="p-1.5 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
+                          >
+                            📋
+                          </button>
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                            複製（A/B/C案）
+                          </div>
+                        </div>
+                        <div className="relative group">
+                          <button
+                            className="p-1.5 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded transition-colors"
+                          >
+                            📄
+                          </button>
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                            PDF出力
+                          </div>
+                        </div>
+                        <div className="relative group">
+                          <button
+                            onClick={() => handleDelete(estimate.id)}
+                            className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                          >
+                            🗑
+                          </button>
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                            削除
+                          </div>
+                        </div>
                         {(estimate.status === 'won' ||
                           estimate.status === 'approved') && (
-                          <button
-                            onClick={() => handleCreateContract(estimate)}
-                            className="p-1.5 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
-                            title="契約書作成"
-                          >
-                            📑
-                          </button>
+                          <div className="relative group">
+                            <button
+                              onClick={() => handleCreateContract(estimate)}
+                              className="p-1.5 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
+                            >
+                              📑
+                            </button>
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                              契約書作成
+                            </div>
+                          </div>
                         )}
                       </div>
                     </td>

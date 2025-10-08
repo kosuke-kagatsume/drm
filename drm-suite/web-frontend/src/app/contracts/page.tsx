@@ -590,13 +590,6 @@ export default function ContractsPage() {
               >
                 ⚡ 電子契約管理
               </button>
-              <button
-                onClick={() => router.push('/contracts/new')}
-                className="px-6 py-2 bg-gradient-to-r from-dandori-blue to-dandori-sky text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2"
-              >
-                <span className="text-lg">+</span>
-                新規契約作成
-              </button>
             </div>
           </div>
         </div>

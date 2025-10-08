@@ -19,6 +19,10 @@ import {
   Package,
   FilePlus,
   GitBranch,
+  Workflow,
+  ShoppingCart,
+  CreditCard,
+  DollarSign,
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -101,6 +105,34 @@ export default function AdminDashboard() {
       icon: GitBranch,
       color: 'from-teal-500 to-cyan-500',
       href: '/admin/approval-flows',
+    },
+    {
+      title: '業務フロー設定',
+      description: '見積→契約変換、項目マッピング',
+      icon: Workflow,
+      color: 'from-amber-500 to-yellow-500',
+      href: '/admin/workflow-settings',
+    },
+    {
+      title: '発注管理設定',
+      description: '発注期限、承認ルート、DW連携',
+      icon: ShoppingCart,
+      color: 'from-rose-500 to-red-500',
+      href: '/admin/order-settings',
+    },
+    {
+      title: '請求設定',
+      description: '請求タイミング、分割請求パターン',
+      icon: CreditCard,
+      color: 'from-violet-500 to-purple-500',
+      href: '/admin/billing-settings',
+    },
+    {
+      title: '原価管理設定',
+      description: 'アラート閾値、差分管理',
+      icon: DollarSign,
+      color: 'from-emerald-500 to-green-500',
+      href: '/admin/cost-settings',
     },
   ];
 
@@ -223,15 +255,24 @@ export default function AdminDashboard() {
             システム設定
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center justify-between group">
+            <button
+              onClick={() => router.push('/admin/notification-settings')}
+              className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center justify-between group"
+            >
               <span>通知設定</span>
               <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
             </button>
-            <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center justify-between group">
+            <button
+              onClick={() => router.push('/admin/security-settings')}
+              className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center justify-between group"
+            >
               <span>セキュリティ設定</span>
               <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
             </button>
-            <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center justify-between group">
+            <button
+              onClick={() => router.push('/admin/backup-settings')}
+              className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center justify-between group"
+            >
               <span>バックアップ設定</span>
               <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
             </button>

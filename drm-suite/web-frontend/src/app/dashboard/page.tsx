@@ -129,6 +129,14 @@ export default function DashboardPage() {
               </p>
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
+              <button
+                onClick={() => router.push('/settings/notifications')}
+                className="bg-white/20 hover:bg-white/30 px-3 sm:px-4 py-2 rounded transition text-sm sm:text-base whitespace-nowrap border border-white/30"
+                title="通知設定"
+              >
+                <span className="mr-1 sm:mr-2">🔔</span>
+                <span className="hidden sm:inline">通知設定</span>
+              </button>
               {isSuperAdmin() && (
                 <button
                   onClick={() => router.push('/admin')}

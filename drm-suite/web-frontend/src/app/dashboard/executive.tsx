@@ -657,6 +657,34 @@ export default function ExecutiveDashboard({
                     <span className="text-green-600">→</span>
                   </div>
                 </button>
+                <button
+                  onClick={() => {
+                    router.push('/cost-management');
+                  }}
+                  className="w-full text-left bg-gradient-to-r from-orange-50 to-yellow-50 p-3 rounded-lg hover:from-orange-100 hover:to-yellow-100 transition-all duration-200"
+                >
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="font-medium text-gray-900">原価管理</p>
+                      <p className="text-xs text-gray-600">DW連携・予実管理</p>
+                    </div>
+                    <span className="text-orange-600">→</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => {
+                    router.push('/approvals');
+                  }}
+                  className="w-full text-left bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-lg hover:from-blue-100 hover:to-indigo-100 transition-all duration-200"
+                >
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="font-medium text-gray-900">承認管理</p>
+                      <p className="text-xs text-gray-600">見積・契約・発注・請求</p>
+                    </div>
+                    <span className="text-blue-600">→</span>
+                  </div>
+                </button>
               </div>
               <div className="mt-4 p-3 bg-dandori-pink/5 rounded-lg border border-dandori-pink/20">
                 <p className="text-xs font-medium text-dandori-pink mb-1">
