@@ -605,6 +605,15 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
                     <span className="text-2xl">→</span>
                   </div>
                 </button>
+                <button
+                  onClick={() => router.push('/construction-ledgers')}
+                  className="w-full px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">工事台帳</span>
+                    <span className="text-2xl">🏗️</span>
+                  </div>
+                </button>
               </div>
 
               <div className="mt-4 pt-4 border-t">

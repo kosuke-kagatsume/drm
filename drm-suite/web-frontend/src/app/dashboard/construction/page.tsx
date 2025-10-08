@@ -211,7 +211,7 @@ export default function ConstructionDashboard() {
           <div className="max-w-full-hd mx-auto px-4 lg:px-6 xl:px-8 2xl:px-12 py-3">
             <div className="flex space-x-6">
               <button
-                onClick={() => router.push('/construction/ledger')}
+                onClick={() => router.push('/construction-ledgers')}
                 className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
               >
                 <FileText className="h-4 w-4" />

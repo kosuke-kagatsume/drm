@@ -716,6 +716,14 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
             <p className="mt-2 font-bold">地図分析</p>
             <p className="text-xs text-white/80">エリア</p>
           </button>
+          <button
+            onClick={() => router.push('/construction-ledgers')}
+            className="bg-white/20 backdrop-blur-sm p-4 rounded-xl hover:bg-white/30 transform hover:scale-105 transition-all duration-200 border border-white/30"
+          >
+            <span className="text-3xl">🏗️</span>
+            <p className="mt-2 font-bold">工事台帳</p>
+            <p className="text-xs text-white/80">管理</p>
+          </button>
         </div>
       </div>
 
