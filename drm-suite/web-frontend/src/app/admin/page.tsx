@@ -23,6 +23,7 @@ import {
   ShoppingCart,
   CreditCard,
   DollarSign,
+  Hammer,
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -91,6 +92,20 @@ export default function AdminDashboard() {
       icon: Database,
       color: 'from-orange-500 to-red-500',
       href: '/admin/masters',
+    },
+    {
+      title: '勘定科目マスタ',
+      description: '原価を会計ソフトに連携する科目管理',
+      icon: FileText,
+      color: 'from-blue-600 to-indigo-600',
+      href: '/admin/account-subjects',
+    },
+    {
+      title: '工事項目マスタ',
+      description: '工事項目の単価と勘定科目の紐付け管理',
+      icon: Hammer,
+      color: 'from-amber-600 to-orange-600',
+      href: '/admin/construction-items',
     },
     {
       title: 'PDF管理',

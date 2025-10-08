@@ -20,6 +20,7 @@ import {
   Clock,
   Users,
 } from 'lucide-react';
+import CostDetailsTab from './CostDetailsTab';
 
 interface ConstructionLedger {
   id: string;
@@ -113,9 +114,9 @@ export default function ConstructionLedgerDetailPage() {
 
   const [ledger, setLedger] = useState<ConstructionLedger | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'budget' | 'progress' | 'integrated'>(
-    'overview'
-  );
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'budget' | 'cost-details' | 'progress' | 'integrated'
+  >('overview');
 
   useEffect(() => {
     if (ledgerId) {
@@ -255,6 +256,16 @@ export default function ConstructionLedgerDetailPage() {
               }`}
             >
               予算・原価
+            </button>
+            <button
+              onClick={() => setActiveTab('cost-details')}
+              className={`py-4 border-b-2 font-medium transition ${
+                activeTab === 'cost-details'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              原価明細
             </button>
             <button
               onClick={() => setActiveTab('progress')}
@@ -699,6 +710,9 @@ export default function ConstructionLedgerDetailPage() {
             )}
           </div>
         )}
+
+        {/* 原価明細タブ */}
+        {activeTab === 'cost-details' && <CostDetailsTab ledgerId={ledgerId} />}
 
         {/* 進捗管理タブ */}
         {activeTab === 'progress' && (
