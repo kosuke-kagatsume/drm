@@ -14,6 +14,7 @@ import {
   Clock,
   Download,
   Send,
+  Building2,
 } from 'lucide-react';
 
 export default function ContractDetailPage() {
@@ -147,13 +148,35 @@ export default function ContractDetailPage() {
                 </button>
               )}
               {(contract.status === 'signed' || contract.status === 'in_progress') && (
-                <button
-                  onClick={() => router.push(`/invoices/create?contractId=${contractId}`)}
-                  className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-                >
-                  <FileText className="h-4 w-4" />
-                  請求書発行
-                </button>
+                <>
+                  <button
+                    onClick={() => router.push(`/invoices/create?contractId=${contractId}`)}
+                    className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                  >
+                    <FileText className="h-4 w-4" />
+                    請求書発行
+                  </button>
+                  <button
+                    onClick={async () => {
+                      // 工事台帳を作成
+                      const response = await fetch('/api/construction-ledgers/from-contract', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contractId }),
+                      });
+                      const data = await response.json();
+                      if (data.success) {
+                        router.push(`/construction-ledgers/${data.ledger.id}`);
+                      } else {
+                        alert('工事台帳の作成に失敗しました');
+                      }
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                  >
+                    <Building2 className="h-4 w-4" />
+                    工事台帳作成
+                  </button>
+                </>
               )}
             </div>
           </div>

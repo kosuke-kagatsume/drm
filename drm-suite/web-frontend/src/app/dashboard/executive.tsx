@@ -685,6 +685,20 @@ export default function ExecutiveDashboard({
                     <span className="text-blue-600">→</span>
                   </div>
                 </button>
+                <button
+                  onClick={() => {
+                    router.push('/construction-ledgers');
+                  }}
+                  className="w-full text-left bg-gradient-to-r from-purple-50 to-pink-50 p-3 rounded-lg hover:from-purple-100 hover:to-pink-100 transition-all duration-200"
+                >
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="font-medium text-gray-900">工事台帳</p>
+                      <p className="text-xs text-gray-600">進捗・原価・収支管理</p>
+                    </div>
+                    <span className="text-purple-600">→</span>
+                  </div>
+                </button>
               </div>
               <div className="mt-4 p-3 bg-dandori-pink/5 rounded-lg border border-dandori-pink/20">
                 <p className="text-xs font-medium text-dandori-pink mb-1">
