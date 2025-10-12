@@ -1451,6 +1451,19 @@ export default function ExecutiveDashboard({
                             機械学習による受注確度予測
                           </div>
                         </button>
+                        <button
+                          onClick={() =>
+                            router.push('/analytics/revenue-forecast')
+                          }
+                          className="p-3 border-2 border-pink-200 bg-pink-50 rounded-lg hover:bg-pink-100 text-left transition-all"
+                        >
+                          <div className="font-medium text-pink-900">
+                            📈 AI売上トレンド予測
+                          </div>
+                          <div className="text-xs text-pink-600">
+                            3シナリオによる将来予測
+                          </div>
+                        </button>
                         <button className="p-3 border rounded-lg hover:bg-gray-50 text-left">
                           <div className="font-medium">月次経営レポート</div>
                           <div className="text-xs text-gray-500">
