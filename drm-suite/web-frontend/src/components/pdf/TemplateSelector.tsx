@@ -16,9 +16,13 @@ import {
   Printer,
   ArrowLeft,
   ArrowRight,
-  Star
+  Star,
 } from 'lucide-react';
-import { PdfTemplate, CompanyBranding, DocumentType } from '@/types/pdf-template';
+import {
+  PdfTemplate,
+  CompanyBranding,
+  DocumentType,
+} from '@/types/pdf-template';
 import { PdfTemplateService } from '@/lib/pdf-engine';
 
 interface TemplateSelectorProps {
@@ -34,16 +38,20 @@ export default function TemplateSelector({
   documentType = 'estimate',
   estimateData,
   onTemplateSelect,
-  onClose
+  onClose,
 }: TemplateSelectorProps) {
   const [templates, setTemplates] = useState<PdfTemplate[]>([]);
   const [branding, setBranding] = useState<CompanyBranding | null>(null);
-  const [selectedTemplate, setSelectedTemplate] = useState<PdfTemplate | null>(null);
-  const [showPreview, setShowPreview] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<PdfTemplate | null>(
+    null,
+  );
+  const [showPreview, setShowPreview] = useState(true); // デフォルトでプレビューを表示
   const [previewHtml, setPreviewHtml] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [previewLoading, setPreviewLoading] = useState(false);
-  const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile' | 'print'>('desktop');
+  const [previewMode, setPreviewMode] = useState<
+    'desktop' | 'mobile' | 'print'
+  >('desktop');
 
   useEffect(() => {
     loadTemplatesAndBranding();
@@ -54,16 +62,22 @@ export default function TemplateSelector({
       setLoading(true);
 
       const [templatesResponse, brandingResponse] = await Promise.all([
-        fetch(`/api/pdf/templates?companyId=${companyId}&documentType=${documentType}`),
-        fetch(`/api/pdf/branding?companyId=${companyId}`)
+        fetch(
+          `/api/pdf/templates?companyId=${companyId}&documentType=${documentType}`,
+        ),
+        fetch(`/api/pdf/branding?companyId=${companyId}`),
       ]);
+
+      let defaultTemplate: PdfTemplate | null = null;
 
       if (templatesResponse.ok) {
         const templatesData = await templatesResponse.json();
         setTemplates(templatesData.templates);
 
         // デフォルトテンプレートがあれば選択
-        const defaultTemplate = templatesData.templates.find((t: PdfTemplate) => t.isDefault);
+        defaultTemplate = templatesData.templates.find(
+          (t: PdfTemplate) => t.isDefault,
+        );
         if (defaultTemplate) {
           setSelectedTemplate(defaultTemplate);
         }
@@ -72,6 +86,11 @@ export default function TemplateSelector({
       if (brandingResponse.ok) {
         const brandingData = await brandingResponse.json();
         setBranding(brandingData.branding);
+      }
+
+      // デフォルトテンプレートのプレビューを自動生成
+      if (defaultTemplate && brandingResponse.ok) {
+        setTimeout(() => generatePreview(defaultTemplate!), 100);
       }
     } catch (error) {
       console.error('データ読み込みエラー:', error);
@@ -82,9 +101,9 @@ export default function TemplateSelector({
 
   const handleTemplateSelect = (template: PdfTemplate) => {
     setSelectedTemplate(template);
-    if (showPreview) {
-      generatePreview(template);
-    }
+    // テンプレート選択時に自動的にプレビューを表示
+    setShowPreview(true);
+    generatePreview(template);
   };
 
   const generatePreview = async (template: PdfTemplate) => {
@@ -130,7 +149,7 @@ export default function TemplateSelector({
       address: '東京都渋谷区〇〇 1-2-3',
       phone: '03-0000-0000',
       email: 'sample@example.com',
-      contactPerson: '田中 太郎'
+      contactPerson: '田中 太郎',
     },
     items: [
       {
@@ -139,7 +158,7 @@ export default function TemplateSelector({
         quantity: 1,
         unit: '式',
         unitPrice: 5000000,
-        amount: 5000000
+        amount: 5000000,
       },
       {
         name: '構造工事',
@@ -147,7 +166,7 @@ export default function TemplateSelector({
         quantity: 150,
         unit: 'm²',
         unitPrice: 80000,
-        amount: 12000000
+        amount: 12000000,
       },
       {
         name: '仕上工事',
@@ -155,26 +174,26 @@ export default function TemplateSelector({
         quantity: 1,
         unit: '式',
         unitPrice: 8000000,
-        amount: 8000000
-      }
+        amount: 8000000,
+      },
     ],
     totals: {
       subtotal: 25000000,
       tax: 2500000,
-      total: 27500000
+      total: 27500000,
     },
     terms: [
       '工期：着工より4ヶ月',
       '支払条件：着手金30%、中間金40%、完成金30%',
       '有効期限：本見積書発行日より1ヶ月間',
-      '備考：材料費の変動により金額が変更になる場合があります'
-    ]
+      '備考：材料費の変動により金額が変更になる場合があります',
+    ],
   });
 
   const generatePreviewHtml = async (
     template: PdfTemplate,
     branding: CompanyBranding,
-    data: any
+    data: any,
   ): Promise<string> => {
     // 简化版のプレビューHTML生成
     return `
@@ -288,7 +307,9 @@ export default function TemplateSelector({
               </tr>
             </thead>
             <tbody>
-              ${data.items.map((item: any, index: number) => `
+              ${data.items
+                .map(
+                  (item: any, index: number) => `
                 <tr>
                   <td>${item.name}</td>
                   <td>${item.specification}</td>
@@ -297,7 +318,9 @@ export default function TemplateSelector({
                   <td style="text-align: right">¥${item.unitPrice.toLocaleString()}</td>
                   <td style="text-align: right">¥${item.amount.toLocaleString()}</td>
                 </tr>
-              `).join('')}
+              `,
+                )
+                .join('')}
             </tbody>
           </table>
 
@@ -343,7 +366,8 @@ export default function TemplateSelector({
             <div>
               <h2 className="text-xl font-bold">PDFテンプレート選択</h2>
               <p className="text-sm text-gray-600">
-                {documentType === 'estimate' ? '見積書' : documentType}テンプレートを選択してください
+                {documentType === 'estimate' ? '見積書' : documentType}
+                テンプレートを選択してください
               </p>
             </div>
           </div>
@@ -398,7 +422,9 @@ export default function TemplateSelector({
         {/* メインコンテンツ */}
         <div className="flex-1 flex min-h-0">
           {/* テンプレート一覧 */}
-          <div className={`${showPreview ? 'w-1/3' : 'w-full'} border-r overflow-y-auto`}>
+          <div
+            className={`${showPreview ? 'w-1/3' : 'w-full'} border-r overflow-y-auto`}
+          >
             <div className="p-4">
               <h3 className="font-semibold mb-4">
                 利用可能なテンプレート ({templates.length}件)
@@ -417,17 +443,22 @@ export default function TemplateSelector({
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center">
-                          <h4 className="font-medium text-gray-900">{template.name}</h4>
+                          <h4 className="font-medium text-gray-900">
+                            {template.name}
+                          </h4>
                           {template.isDefault && (
                             <Star className="w-4 h-4 text-yellow-500 fill-current ml-2" />
                           )}
                         </div>
                         {template.description && (
-                          <p className="text-sm text-gray-600 mt-1">{template.description}</p>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {template.description}
+                          </p>
                         )}
                         <div className="flex items-center mt-2 text-xs text-gray-500">
                           <Layout className="w-3 h-3 mr-1" />
-                          {template.layout.pageSize} {template.layout.orientation}
+                          {template.layout.pageSize}{' '}
+                          {template.layout.orientation}
                           <span className="mx-2">•</span>
                           <Eye className="w-3 h-3 mr-1" />
                           {template.usageCount}回使用
@@ -468,8 +499,8 @@ export default function TemplateSelector({
                       previewMode === 'mobile'
                         ? 'max-w-sm'
                         : previewMode === 'print'
-                        ? 'max-w-4xl'
-                        : 'max-w-3xl'
+                          ? 'max-w-4xl'
+                          : 'max-w-3xl'
                     } ${previewMode === 'print' ? 'text-sm' : ''}`}
                   >
                     <iframe
