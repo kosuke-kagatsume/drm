@@ -130,7 +130,6 @@ export default function InvoicesPage() {
     }
   }, [user]);
 
-
   // 統計計算（API型に合わせて修正）
   const stats: InvoiceStats = useMemo(() => {
     const totalInvoiced = invoices.reduce(
@@ -141,7 +140,9 @@ export default function InvoicesPage() {
       .filter((inv) => inv.paymentStatus === 'paid')
       .reduce((sum, inv) => sum + inv.paidAmount, 0);
     const totalOutstanding = invoices
-      .filter((inv) => inv.paymentStatus !== 'paid' && inv.status !== 'cancelled')
+      .filter(
+        (inv) => inv.paymentStatus !== 'paid' && inv.status !== 'cancelled',
+      )
       .reduce((sum, inv) => sum + (inv.totalAmount - inv.paidAmount), 0);
     const overdueAmount = invoices
       .filter((inv) => inv.status === 'overdue')
@@ -182,7 +183,9 @@ export default function InvoicesPage() {
         (inv) =>
           inv.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
           inv.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          inv.customerCompany.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          inv.customerCompany
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
           inv.invoiceNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
           inv.id.toLowerCase().includes(searchTerm.toLowerCase()),
       );
@@ -311,7 +314,9 @@ export default function InvoicesPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">⚠️</div>
-          <p className="text-gray-800 font-bold mb-2">データの読み込みに失敗しました</p>
+          <p className="text-gray-800 font-bold mb-2">
+            データの読み込みに失敗しました
+          </p>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={fetchInvoices}
@@ -654,9 +659,13 @@ export default function InvoicesPage() {
                       </td>
                       <td className="px-4 py-4 text-center">
                         {(() => {
-                          const paymentProgress = invoice.totalAmount > 0
-                            ? Math.round((invoice.paidAmount / invoice.totalAmount) * 100)
-                            : 0;
+                          const paymentProgress =
+                            invoice.totalAmount > 0
+                              ? Math.round(
+                                  (invoice.paidAmount / invoice.totalAmount) *
+                                    100,
+                                )
+                              : 0;
                           return paymentProgress > 0 ? (
                             <div className="w-16 mx-auto">
                               <div className="flex justify-between text-xs text-gray-600 mb-1">
@@ -670,14 +679,18 @@ export default function InvoicesPage() {
                               </div>
                             </div>
                           ) : (
-                            <span className="text-xs text-gray-400">未入金</span>
+                            <span className="text-xs text-gray-400">
+                              未入金
+                            </span>
                           );
                         })()}
                       </td>
                       <td className="px-4 py-4 text-center">
                         <div className="flex justify-center space-x-1">
                           <button
-                            onClick={() => router.push(`/invoices/${invoice.id}`)}
+                            onClick={() =>
+                              router.push(`/invoices/${invoice.id}`)
+                            }
                             className="p-1 text-dandori-blue hover:bg-dandori-blue hover:text-white rounded"
                             title="詳細"
                           >
@@ -699,6 +712,11 @@ export default function InvoicesPage() {
                             📧
                           </button>
                           <button
+                            onClick={() => {
+                              const companyId = 'demo-tenant';
+                              const pdfUrl = `/api/pdf/generate/invoice/${invoice.id}?companyId=${companyId}`;
+                              window.open(pdfUrl, '_blank');
+                            }}
                             className="p-1 text-purple-600 hover:bg-purple-600 hover:text-white rounded"
                             title="PDF"
                           >
@@ -735,7 +753,9 @@ export default function InvoicesPage() {
                   </div>
 
                   <div className="mb-4">
-                    <p className="text-sm text-gray-600">{invoice.customerCompany || invoice.customerName}</p>
+                    <p className="text-sm text-gray-600">
+                      {invoice.customerCompany || invoice.customerName}
+                    </p>
                     <p className="text-2xl font-bold text-dandori-blue">
                       {formatCurrency(invoice.totalAmount)}
                     </p>
@@ -747,22 +767,27 @@ export default function InvoicesPage() {
                   </div>
 
                   {(() => {
-                    const paymentProgress = invoice.totalAmount > 0
-                      ? Math.round((invoice.paidAmount / invoice.totalAmount) * 100)
-                      : 0;
-                    return paymentProgress > 0 && (
-                      <div className="mb-4">
-                        <div className="flex justify-between text-xs text-gray-600 mb-1">
-                          <span>入金進捗</span>
-                          <span>{paymentProgress}%</span>
+                    const paymentProgress =
+                      invoice.totalAmount > 0
+                        ? Math.round(
+                            (invoice.paidAmount / invoice.totalAmount) * 100,
+                          )
+                        : 0;
+                    return (
+                      paymentProgress > 0 && (
+                        <div className="mb-4">
+                          <div className="flex justify-between text-xs text-gray-600 mb-1">
+                            <span>入金進捗</span>
+                            <span>{paymentProgress}%</span>
+                          </div>
+                          <div className="bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-green-500 h-2 rounded-full"
+                              style={{ width: `${paymentProgress}%` }}
+                            />
+                          </div>
                         </div>
-                        <div className="bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-green-500 h-2 rounded-full"
-                            style={{ width: `${paymentProgress}%` }}
-                          />
-                        </div>
-                      </div>
+                      )
                     );
                   })()}
 
@@ -811,7 +836,9 @@ export default function InvoicesPage() {
                     {selectedInvoice.invoiceNo}
                   </h2>
                   <p className="text-gray-600">{selectedInvoice.projectName}</p>
-                  <p className="text-sm text-gray-500">契約番号: {selectedInvoice.contractNo}</p>
+                  <p className="text-sm text-gray-500">
+                    契約番号: {selectedInvoice.contractNo}
+                  </p>
                 </div>
                 <button
                   onClick={() => setShowInvoiceModal(false)}
@@ -879,7 +906,8 @@ export default function InvoicesPage() {
                     <p>
                       <span className="text-gray-600">入金状況:</span>{' '}
                       <span className="font-medium">
-                        ¥{selectedInvoice.paidAmount.toLocaleString()} / ¥{selectedInvoice.totalAmount.toLocaleString()}
+                        ¥{selectedInvoice.paidAmount.toLocaleString()} / ¥
+                        {selectedInvoice.totalAmount.toLocaleString()}
                       </span>
                     </p>
                   </div>

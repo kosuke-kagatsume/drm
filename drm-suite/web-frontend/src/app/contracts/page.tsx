@@ -1056,6 +1056,16 @@ export default function ContractsPage() {
                         >
                           請求
                         </button>
+                        <button
+                          onClick={() => {
+                            const companyId = 'demo-tenant';
+                            const pdfUrl = `/api/pdf/generate/contract/${contract.id}?companyId=${companyId}`;
+                            window.open(pdfUrl, '_blank');
+                          }}
+                          className="text-purple-600 hover:text-purple-700"
+                        >
+                          📄
+                        </button>
                         <button className="text-gray-600 hover:text-gray-700">
                           編集
                         </button>

@@ -892,6 +892,12 @@ export default function EstimatesPage() {
                         </div>
                         <div className="relative group">
                           <button
+                            onClick={() => {
+                              // 新しいタブでPDF生成APIを開く
+                              const companyId = 'demo-tenant';
+                              const pdfUrl = `/api/pdf/generate/estimate/${estimate.id}?companyId=${companyId}`;
+                              window.open(pdfUrl, '_blank');
+                            }}
                             className="p-1.5 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded transition-colors"
                           >
                             📄

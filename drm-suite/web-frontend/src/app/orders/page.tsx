@@ -47,7 +47,9 @@ interface ConstructionLedger {
 export default function OrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
-  const [constructionLedgers, setConstructionLedgers] = useState<ConstructionLedger[]>([]); // 🔥 工事台帳一覧
+  const [constructionLedgers, setConstructionLedgers] = useState<
+    ConstructionLedger[]
+  >([]); // 🔥 工事台帳一覧
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
@@ -106,17 +108,49 @@ export default function OrdersPage() {
 
   const getStatusBadge = (status: string) => {
     const config: any = {
-      draft: { bg: 'bg-gray-100', text: 'text-gray-800', label: '下書き', icon: Clock },
-      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: '承認待ち', icon: Clock },
-      approved: { bg: 'bg-blue-100', text: 'text-blue-800', label: '承認済み', icon: CheckCircle },
-      sent_to_dw: { bg: 'bg-green-100', text: 'text-green-800', label: 'DW送信済み', icon: Send },
-      in_progress: { bg: 'bg-cyan-100', text: 'text-cyan-800', label: '進行中', icon: RefreshCw },
-      completed: { bg: 'bg-emerald-100', text: 'text-emerald-800', label: '完了', icon: CheckCircle },
+      draft: {
+        bg: 'bg-gray-100',
+        text: 'text-gray-800',
+        label: '下書き',
+        icon: Clock,
+      },
+      pending: {
+        bg: 'bg-yellow-100',
+        text: 'text-yellow-800',
+        label: '承認待ち',
+        icon: Clock,
+      },
+      approved: {
+        bg: 'bg-blue-100',
+        text: 'text-blue-800',
+        label: '承認済み',
+        icon: CheckCircle,
+      },
+      sent_to_dw: {
+        bg: 'bg-green-100',
+        text: 'text-green-800',
+        label: 'DW送信済み',
+        icon: Send,
+      },
+      in_progress: {
+        bg: 'bg-cyan-100',
+        text: 'text-cyan-800',
+        label: '進行中',
+        icon: RefreshCw,
+      },
+      completed: {
+        bg: 'bg-emerald-100',
+        text: 'text-emerald-800',
+        label: '完了',
+        icon: CheckCircle,
+      },
     };
     const cfg = config[status] || config.draft;
     const Icon = cfg.icon;
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-medium ${cfg.bg} ${cfg.text} flex items-center gap-1`}>
+      <span
+        className={`px-3 py-1 rounded-full text-xs font-medium ${cfg.bg} ${cfg.text} flex items-center gap-1`}
+      >
         <Icon className="h-3 w-3" />
         {cfg.label}
       </span>
@@ -126,13 +160,19 @@ export default function OrdersPage() {
   const getSyncStatusBadge = (syncStatus: string) => {
     const config: any = {
       not_synced: { bg: 'bg-gray-100', text: 'text-gray-800', label: '未送信' },
-      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: '送信中' },
+      pending: {
+        bg: 'bg-yellow-100',
+        text: 'text-yellow-800',
+        label: '送信中',
+      },
       synced: { bg: 'bg-green-100', text: 'text-green-800', label: '同期済み' },
       error: { bg: 'bg-red-100', text: 'text-red-800', label: 'エラー' },
     };
     const cfg = config[syncStatus] || config.not_synced;
     return (
-      <span className={`px-2 py-1 rounded text-xs font-medium ${cfg.bg} ${cfg.text}`}>
+      <span
+        className={`px-2 py-1 rounded text-xs font-medium ${cfg.bg} ${cfg.text}`}
+      >
         {cfg.label}
       </span>
     );
@@ -169,22 +209,25 @@ export default function OrdersPage() {
       order.orderNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.partnerName.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = selectedStatus === 'all' || order.status === selectedStatus;
-    const matchesSyncStatus = selectedSyncStatus === 'all' || order.dwSyncStatus === selectedSyncStatus;
+    const matchesStatus =
+      selectedStatus === 'all' || order.status === selectedStatus;
+    const matchesSyncStatus =
+      selectedSyncStatus === 'all' || order.dwSyncStatus === selectedSyncStatus;
 
     // 🔥 工事台帳フィルター
-    const matchesLedger = selectedLedger === 'all' ||
-                         (selectedLedger === 'unassigned' && !order.contractId) ||
-                         order.contractId === selectedLedger;
+    const matchesLedger =
+      selectedLedger === 'all' ||
+      (selectedLedger === 'unassigned' && !order.contractId) ||
+      order.contractId === selectedLedger;
 
     return matchesSearch && matchesStatus && matchesSyncStatus && matchesLedger;
   });
 
   const stats = {
     total: orders.length,
-    notSynced: orders.filter(o => o.dwSyncStatus === 'not_synced').length,
-    synced: orders.filter(o => o.dwSyncStatus === 'synced').length,
-    overdue: orders.filter(o => o.isOverdue).length,
+    notSynced: orders.filter((o) => o.dwSyncStatus === 'not_synced').length,
+    synced: orders.filter((o) => o.dwSyncStatus === 'synced').length,
+    overdue: orders.filter((o) => o.isOverdue).length,
     totalAmount: orders.reduce((sum, o) => sum + o.totalAmount, 0),
   };
 
@@ -232,7 +275,9 @@ export default function OrdersPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">総発注数</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">
+                  {stats.total}
+                </p>
               </div>
               <FileText className="h-10 w-10 text-blue-500" />
             </div>
@@ -242,7 +287,9 @@ export default function OrdersPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">未送信</p>
-                <p className="text-2xl font-bold text-yellow-600 mt-1">{stats.notSynced}</p>
+                <p className="text-2xl font-bold text-yellow-600 mt-1">
+                  {stats.notSynced}
+                </p>
               </div>
               <Clock className="h-10 w-10 text-yellow-500" />
             </div>
@@ -252,7 +299,9 @@ export default function OrdersPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">DW同期済み</p>
-                <p className="text-2xl font-bold text-green-600 mt-1">{stats.synced}</p>
+                <p className="text-2xl font-bold text-green-600 mt-1">
+                  {stats.synced}
+                </p>
               </div>
               <CheckCircle className="h-10 w-10 text-green-500" />
             </div>
@@ -262,7 +311,9 @@ export default function OrdersPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">期限超過</p>
-                <p className="text-2xl font-bold text-red-600 mt-1">{stats.overdue}</p>
+                <p className="text-2xl font-bold text-red-600 mt-1">
+                  {stats.overdue}
+                </p>
               </div>
               <AlertTriangle className="h-10 w-10 text-red-500" />
             </div>
@@ -374,83 +425,116 @@ export default function OrdersPage() {
                 {filteredOrders.map((order) => {
                   // 🔥 工事台帳情報を取得
                   const ledger = constructionLedgers.find(
-                    (l) => l.contractId === order.contractId || l.id === order.contractId
+                    (l) =>
+                      l.contractId === order.contractId ||
+                      l.id === order.contractId,
                   );
 
                   return (
                     <tr key={order.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{order.projectName}</div>
-                          <div className="text-xs text-gray-500">{order.orderNo}</div>
-                          <div className="text-xs text-gray-500">契約: {order.contractNo}</div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {order.projectName}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {order.orderNo}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            契約: {order.contractNo}
+                          </div>
                         </div>
                       </td>
                       {/* 🔥 工事台帳カラム */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         {ledger ? (
                           <button
-                            onClick={() => router.push(`/construction-ledgers/${ledger.id}`)}
+                            onClick={() =>
+                              router.push(`/construction-ledgers/${ledger.id}`)
+                            }
                             className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
                           >
-                            <div className="font-medium">{ledger.constructionNo}</div>
-                            <div className="text-xs text-gray-500">{ledger.constructionName}</div>
+                            <div className="font-medium">
+                              {ledger.constructionNo}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {ledger.constructionName}
+                            </div>
                           </button>
                         ) : (
-                          <span className="text-xs text-gray-400">未割り当て</span>
+                          <span className="text-xs text-gray-400">
+                            未割り当て
+                          </span>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <Building2 className="h-4 w-4 text-gray-400" />
-                          <span className="text-sm text-gray-900">{order.partnerName}</span>
+                          <span className="text-sm text-gray-900">
+                            {order.partnerName}
+                          </span>
                         </div>
                       </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        ¥{order.totalAmount.toLocaleString()}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-xs text-gray-600 mb-1">
-                          {order.orderDeadline}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          ¥{order.totalAmount.toLocaleString()}
                         </div>
-                        {getDeadlineBadge(order.daysUntilDeadline, order.isOverdue)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(order.status)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        {getSyncStatusBadge(order.dwSyncStatus)}
-                        {order.dwOrderId && (
-                          <div className="text-xs text-gray-500 mt-1">
-                            DW: {order.dwOrderId}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-xs text-gray-600 mb-1">
+                            {order.orderDeadline}
                           </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => router.push(`/orders/${order.id}`)}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        {order.dwSyncStatus === 'not_synced' && order.status === 'approved' && (
+                          {getDeadlineBadge(
+                            order.daysUntilDeadline,
+                            order.isOverdue,
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getStatusBadge(order.status)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          {getSyncStatusBadge(order.dwSyncStatus)}
+                          {order.dwOrderId && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              DW: {order.dwOrderId}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() => handleSyncToDW(order.id)}
-                            className="text-green-600 hover:text-green-900"
+                            onClick={() => router.push(`/orders/${order.id}`)}
+                            className="text-blue-600 hover:text-blue-900"
                           >
-                            <Send className="h-4 w-4" />
+                            <Eye className="h-4 w-4" />
                           </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
+                          <button
+                            onClick={() => {
+                              const companyId = 'demo-tenant';
+                              const pdfUrl = `/api/pdf/generate/order/${order.id}?companyId=${companyId}`;
+                              window.open(pdfUrl, '_blank');
+                            }}
+                            className="text-purple-600 hover:text-purple-900"
+                            title="PDF生成"
+                          >
+                            <FileText className="h-4 w-4" />
+                          </button>
+                          {order.dwSyncStatus === 'not_synced' &&
+                            order.status === 'approved' && (
+                              <button
+                                onClick={() => handleSyncToDW(order.id)}
+                                className="text-green-600 hover:text-green-900"
+                              >
+                                <Send className="h-4 w-4" />
+                              </button>
+                            )}
+                        </div>
+                      </td>
+                    </tr>
                   );
                 })}
               </tbody>
