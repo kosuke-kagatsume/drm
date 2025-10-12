@@ -7,6 +7,8 @@ import { PDFClientService } from '@/services/pdf-client.service';
 import { getConstructionMasters } from '@/data/construction-masters';
 import { Download, FileText } from 'lucide-react';
 import { invoiceService } from '@/services/invoice.service';
+import TemplateSelector from '@/components/pdf/TemplateSelector';
+import { PdfTemplate } from '@/types/pdf-template';
 
 interface Estimate {
   id: string;
@@ -60,6 +62,10 @@ export default function EstimatesPage() {
   const [lostReason, setLostReason] = useState<string>('price');
   const [lostReasonDetail, setLostReasonDetail] = useState('');
   const [competitorName, setCompetitorName] = useState('');
+  const [showPdfTemplateModal, setShowPdfTemplateModal] = useState(false);
+  const [pdfTargetEstimate, setPdfTargetEstimate] = useState<Estimate | null>(
+    null,
+  );
 
   const [estimates, setEstimates] = useState<Estimate[]>([]);
 
@@ -326,6 +332,23 @@ export default function EstimatesPage() {
           );
       }
     });
+
+  // PDF出力（テンプレート選択モーダル経由）
+  const handlePdfDownload = (estimate: Estimate) => {
+    setPdfTargetEstimate(estimate);
+    setShowPdfTemplateModal(true);
+  };
+
+  const handleTemplateSelect = (template: PdfTemplate) => {
+    if (!pdfTargetEstimate) return;
+
+    const companyId = 'demo-tenant';
+    const pdfUrl = `/api/pdf/generate/estimate/${pdfTargetEstimate.id}?companyId=${companyId}&templateId=${template.id}`;
+    window.open(pdfUrl, '_blank');
+
+    setShowPdfTemplateModal(false);
+    setPdfTargetEstimate(null);
+  };
 
   // 統計情報
   // 見積複製（A案/B案/C案として複製可能）
@@ -892,12 +915,7 @@ export default function EstimatesPage() {
                         </div>
                         <div className="relative group">
                           <button
-                            onClick={() => {
-                              // 新しいタブでPDF生成APIを開く
-                              const companyId = 'demo-tenant';
-                              const pdfUrl = `/api/pdf/generate/estimate/${estimate.id}?companyId=${companyId}`;
-                              window.open(pdfUrl, '_blank');
-                            }}
+                            onClick={() => handlePdfDownload(estimate)}
                             className="p-1.5 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded transition-colors"
                           >
                             📄
@@ -1022,7 +1040,10 @@ export default function EstimatesPage() {
                   >
                     編集
                   </button>
-                  <button className="flex-1 py-1.5 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200 transition-colors">
+                  <button
+                    onClick={() => handlePdfDownload(estimate)}
+                    className="flex-1 py-1.5 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200 transition-colors"
+                  >
                     PDF
                   </button>
                 </div>
@@ -1183,6 +1204,19 @@ export default function EstimatesPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* PDFテンプレート選択モーダル */}
+        {showPdfTemplateModal && pdfTargetEstimate && (
+          <TemplateSelector
+            companyId="demo-tenant"
+            documentType="estimate"
+            onTemplateSelect={handleTemplateSelect}
+            onClose={() => {
+              setShowPdfTemplateModal(false);
+              setPdfTargetEstimate(null);
+            }}
+          />
         )}
       </div>
     </div>
