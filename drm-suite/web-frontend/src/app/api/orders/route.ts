@@ -417,6 +417,33 @@ export async function POST(request: NextRequest) {
     tenantOrders.push(newOrder);
     orders.set(tenantId, tenantOrders);
 
+    // 🔥 工事台帳の予算を自動更新
+    if (newOrder.contractId) {
+      try {
+        await fetch(`${request.nextUrl.origin}/api/construction-ledgers/update-budget`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Cookie: `tenantId=${tenantId}`,
+          },
+          body: JSON.stringify({
+            contractId: newOrder.contractId,
+            orderId: newOrder.id,
+            orderNo: newOrder.orderNo,
+            partnerName: newOrder.partnerName,
+            orderAmount: newOrder.totalAmount || newOrder.subtotal || 0,
+            orderItems: newOrder.workItems || [],
+            operation: 'add',
+          }),
+        });
+
+        console.log(`✅ 工事台帳の予算を更新しました (発注: ${newOrder.orderNo})`);
+      } catch (budgetError) {
+        console.error('⚠️ 工事台帳の予算更新に失敗しました:', budgetError);
+        // 予算更新に失敗してもエラーにはしない（発注自体は成功）
+      }
+    }
+
     return NextResponse.json({
       success: true,
       order: newOrder,
@@ -447,8 +474,9 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    const previousOrder = tenantOrders[orderIndex];
     const updatedOrder = {
-      ...tenantOrders[orderIndex],
+      ...previousOrder,
       ...updates,
       updatedAt: new Date().toISOString(),
     };
@@ -462,6 +490,44 @@ export async function PUT(request: NextRequest) {
 
     tenantOrders[orderIndex] = updatedOrder;
     orders.set(tenantId, tenantOrders);
+
+    // 🔥 ステータス変更時に工事台帳の予算を更新
+    if (updatedOrder.contractId && previousOrder.status !== updatedOrder.status) {
+      try {
+        let operation = null;
+
+        // キャンセルされた場合: 予算から減算
+        if (updatedOrder.status === 'cancelled' && previousOrder.status !== 'cancelled') {
+          operation = 'subtract';
+          console.log(`🗑️ 発注がキャンセルされました - 予算から減算します (発注: ${updatedOrder.orderNo})`);
+        }
+        // 下書きから承認済みに変更された場合は、既にPOSTで加算済みなのでスキップ
+
+        if (operation) {
+          await fetch(`${request.nextUrl.origin}/api/construction-ledgers/update-budget`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Cookie: `tenantId=${tenantId}`,
+            },
+            body: JSON.stringify({
+              contractId: updatedOrder.contractId,
+              orderId: updatedOrder.id,
+              orderNo: updatedOrder.orderNo,
+              partnerName: updatedOrder.partnerName,
+              orderAmount: updatedOrder.totalAmount || updatedOrder.subtotal || 0,
+              orderItems: updatedOrder.workItems || [],
+              operation: operation,
+            }),
+          });
+
+          console.log(`✅ 工事台帳の予算を更新しました (${operation})`);
+        }
+      } catch (budgetError) {
+        console.error('⚠️ 工事台帳の予算更新に失敗しました:', budgetError);
+        // 予算更新に失敗してもエラーにはしない
+      }
+    }
 
     return NextResponse.json({
       success: true,

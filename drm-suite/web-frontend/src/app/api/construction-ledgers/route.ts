@@ -80,6 +80,13 @@ export interface ConstructionLedger {
     };
   };
 
+  // アラート情報
+  alerts?: Array<{
+    type: 'cost_overrun' | 'profit_decline' | 'loss_making';
+    severity: 'warning' | 'critical';
+    message: string;
+  }>;
+
   // 工事進捗
   progress: {
     status: 'not_started' | 'in_progress' | 'completed' | 'suspended' | 'cancelled';
@@ -161,28 +168,40 @@ const initializeSampleData = (tenantId: string) => {
           expectedProfitRate: 10.0,
         },
         actualCost: {
-          materialCost: 11800000,
-          laborCost: 8200000,
-          outsourcingCost: 9900000,
-          expenseCost: 1600000,
-          totalCost: 31500000,
-          actualProfit: 3500000,
-          actualProfitRate: 10.0,
+          materialCost: 14378116,
+          laborCost: 9418735,
+          outsourcingCost: 10108952,
+          expenseCost: 1810720,
+          totalCost: 35716523,
+          actualProfit: 2783477,
+          actualProfitRate: 7.23,
         },
         costAnalysis: {
           budgetVsActual: {
-            materialVariance: 200000,
-            laborVariance: -200000,
-            outsourcingVariance: 100000,
-            expenseVariance: -100000,
-            totalVariance: 0,
-            varianceRate: 0,
+            materialVariance: -2378116,
+            laborVariance: -1418735,
+            outsourcingVariance: -108952,
+            expenseVariance: -310720,
+            totalVariance: -4216523,
+            varianceRate: -13.39,
           },
           profitAnalysis: {
-            profitVariance: 0,
-            profitVarianceRate: 0,
+            profitVariance: 716523,
+            profitVarianceRate: 20.47,
           },
         },
+        alerts: [
+          {
+            type: 'cost_overrun',
+            severity: 'warning',
+            message: '原価が予算を超過しています（13.4%超過）',
+          },
+          {
+            type: 'profit_decline',
+            severity: 'warning',
+            message: '粗利率が予定を大きく下回っています（予定: 10.0%, 実績: 7.2%）',
+          },
+        ],
         progress: {
           status: 'in_progress',
           progressRate: 45,
@@ -291,28 +310,45 @@ const initializeSampleData = (tenantId: string) => {
           expectedProfitRate: 6.67,
         },
         actualCost: {
-          materialCost: 15500000,
-          laborCost: 12500000,
-          outsourcingCost: 13200000,
-          expenseCost: 2100000,
-          totalCost: 43300000,
-          actualProfit: 1700000,
-          actualProfitRate: 3.78,
+          materialCost: 18000000,
+          laborCost: 15000000,
+          outsourcingCost: 15500000,
+          expenseCost: 2500000,
+          totalCost: 51000000,
+          actualProfit: -1500000,
+          actualProfitRate: -3.03,
         },
         costAnalysis: {
           budgetVsActual: {
-            materialVariance: -500000,
-            laborVariance: -500000,
-            outsourcingVariance: -200000,
-            expenseVariance: -100000,
-            totalVariance: -1300000,
-            varianceRate: -3.10,
+            materialVariance: -3000000,
+            laborVariance: -3000000,
+            outsourcingVariance: -2500000,
+            expenseVariance: -500000,
+            totalVariance: -9000000,
+            varianceRate: -21.43,
           },
           profitAnalysis: {
-            profitVariance: -1300000,
-            profitVarianceRate: -43.33,
+            profitVariance: -4500000,
+            profitVarianceRate: -150.00,
           },
         },
+        alerts: [
+          {
+            type: 'cost_overrun',
+            severity: 'warning',
+            message: '原価が予算を超過しています（21.4%超過）',
+          },
+          {
+            type: 'profit_decline',
+            severity: 'warning',
+            message: '粗利率が予定を大きく下回っています（予定: 6.7%, 実績: -3.0%）',
+          },
+          {
+            type: 'loss_making',
+            severity: 'critical',
+            message: '赤字案件です（実績粗利: ¥-1,500,000）',
+          },
+        ],
         progress: {
           status: 'completed',
           progressRate: 100,
@@ -350,6 +386,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     const constructionNo = searchParams.get('constructionNo');
+    const contractId = searchParams.get('contractId'); // 🔥 契約IDでの検索を追加
     const status = searchParams.get('status');
     const constructionType = searchParams.get('constructionType');
     const salesPerson = searchParams.get('salesPerson');
@@ -366,6 +403,12 @@ export async function GET(request: NextRequest) {
     if (constructionNo) {
       const ledger = ledgers.find((l) => l.constructionNo === constructionNo);
       return NextResponse.json({ success: true, ledger });
+    }
+
+    // 🔥 契約IDでの検索
+    if (contractId) {
+      const ledger = ledgers.find((l) => l.contractId === contractId);
+      return NextResponse.json({ success: true, ledger, ledgers: ledger ? [ledger] : [] });
     }
 
     if (status) {

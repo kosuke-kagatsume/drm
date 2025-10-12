@@ -114,6 +114,52 @@ export async function POST(request: NextRequest) {
 
     const updatedOrder = await updateRes.json();
 
+    // 🔥 工事台帳の実績原価を自動更新
+    let ledgerUpdateResult = null;
+    if (order.contractId) {
+      try {
+        const ledgerUpdateRes = await fetch(
+          `${request.nextUrl.origin}/api/construction-ledgers/update-actual-cost`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Cookie: `tenantId=${tenantId}`,
+            },
+            body: JSON.stringify({
+              contractId: order.contractId,
+              orderId: order.id,
+              orderNo: order.orderNo,
+              actualCosts: {
+                laborCost: actualCosts.laborCost || 0,
+                materialCost: actualCosts.materialCost || 0,
+                equipmentCost: actualCosts.equipmentCost || 0,
+                otherCost: actualCosts.otherCost || 0,
+                totalCost: actualCosts.totalCost || 0,
+              },
+              workProgress: workProgress,
+              costDetails: costDetails || [],
+            }),
+          }
+        );
+
+        if (ledgerUpdateRes.ok) {
+          ledgerUpdateResult = await ledgerUpdateRes.json();
+          console.log(`✅ 工事台帳の実績原価を更新しました (発注: ${order.orderNo})`);
+
+          // アラートがある場合はログに出力
+          if (ledgerUpdateResult.data?.alerts && ledgerUpdateResult.data.alerts.length > 0) {
+            console.log('⚠️ 原価アラート:', ledgerUpdateResult.data.alerts.map((a: any) => a.message).join(', '));
+          }
+        } else {
+          console.error('⚠️ 工事台帳の実績原価更新に失敗しました');
+        }
+      } catch (ledgerError) {
+        console.error('⚠️ 工事台帳の実績原価更新エラー:', ledgerError);
+        // 工事台帳更新失敗時もエラーにはしない（発注データの更新自体は成功）
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: 'DWからの原価データを受信しました',
@@ -129,6 +175,11 @@ export async function POST(request: NextRequest) {
         },
         workProgress: workProgress,
         syncedAt: new Date().toISOString(),
+        ledgerUpdate: ledgerUpdateResult ? {
+          success: true,
+          summary: ledgerUpdateResult.data?.summary,
+          alerts: ledgerUpdateResult.data?.alerts,
+        } : null,
       },
     });
   } catch (error) {

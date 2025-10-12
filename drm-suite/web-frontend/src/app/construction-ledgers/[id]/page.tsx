@@ -78,6 +78,11 @@ interface ConstructionLedger {
       profitVarianceRate: number;
     };
   };
+  alerts?: Array<{
+    type: 'cost_overrun' | 'profit_decline' | 'loss_making';
+    severity: 'warning' | 'critical';
+    message: string;
+  }>;
   progress: {
     status: string;
     progressRate: number;
@@ -127,11 +132,21 @@ export default function ConstructionLedgerDetailPage() {
   const fetchLedger = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/construction-ledgers?id=${ledgerId}`);
+      const response = await fetch(`/api/construction-ledgers?id=${ledgerId}`, {
+        cache: 'no-store', // キャッシュ無効化
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+      });
       const data = await response.json();
 
       if (data.success && data.ledger) {
         setLedger(data.ledger);
+        console.log('📊 工事台帳データ取得:', {
+          id: data.ledger.id,
+          actualCost: data.ledger.actualCost?.totalCost,
+          executionBudget: data.ledger.executionBudget?.totalBudget,
+        });
       }
     } catch (error) {
       console.error('Error fetching construction ledger:', error);
@@ -454,6 +469,61 @@ export default function ConstructionLedgerDetailPage() {
         {/* 予算・原価タブ */}
         {activeTab === 'budget' && (
           <div className="space-y-6">
+            {/* 🔥 アラート表示 */}
+            {ledger.alerts && ledger.alerts.length > 0 && (
+              <div className="space-y-3">
+                {ledger.alerts.map((alert, index) => (
+                  <div
+                    key={index}
+                    className={`rounded-lg p-4 flex items-start gap-3 ${
+                      alert.severity === 'critical'
+                        ? 'bg-red-50 border-2 border-red-200'
+                        : 'bg-yellow-50 border-2 border-yellow-200'
+                    }`}
+                  >
+                    <AlertCircle
+                      className={`h-5 w-5 flex-shrink-0 mt-0.5 ${
+                        alert.severity === 'critical' ? 'text-red-600' : 'text-yellow-600'
+                      }`}
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`text-sm font-semibold ${
+                            alert.severity === 'critical' ? 'text-red-900' : 'text-yellow-900'
+                          }`}
+                        >
+                          {alert.severity === 'critical' ? '🔴 重大' : '⚠️ 警告'}
+                        </span>
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full ${
+                            alert.type === 'cost_overrun'
+                              ? 'bg-red-100 text-red-700'
+                              : alert.type === 'profit_decline'
+                              ? 'bg-orange-100 text-orange-700'
+                              : 'bg-red-100 text-red-700'
+                          }`}
+                        >
+                          {alert.type === 'cost_overrun'
+                            ? '原価超過'
+                            : alert.type === 'profit_decline'
+                            ? '粗利低下'
+                            : '赤字案件'}
+                        </span>
+                      </div>
+                      <p
+                        className={`text-sm mt-1 ${
+                          alert.severity === 'critical' ? 'text-red-800' : 'text-yellow-800'
+                        }`}
+                      >
+                        {alert.message}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* 予算vs実績サマリー */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-white rounded-lg shadow p-6">
