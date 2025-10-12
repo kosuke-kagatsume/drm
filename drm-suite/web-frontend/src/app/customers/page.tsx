@@ -211,7 +211,7 @@ export default function CustomersPage() {
 
   // 担当者の一覧を抽出
   const uniqueAssignees = Array.from(
-    new Set(displayCustomers.map((c) => c.assignee).filter(Boolean))
+    new Set(displayCustomers.map((c) => c.assignee).filter(Boolean)),
   ).sort();
 
   const filteredCustomers = displayCustomers.filter((customer) => {
@@ -256,13 +256,22 @@ export default function CustomersPage() {
               </div>
             </div>
 
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="bg-white text-dandori-blue px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-            >
-              <span className="text-lg mr-2">+</span>
-              新規顧客登録
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => router.push('/customers/segmentation')}
+                className="bg-white/10 border-2 border-white/30 text-white px-5 py-3 rounded-xl font-bold hover:bg-white/20 transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
+              >
+                <span className="text-lg">📊</span>
+                セグメント分析
+              </button>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="bg-white text-dandori-blue px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+              >
+                <span className="text-lg mr-2">+</span>
+                新規顧客登録
+              </button>
+            </div>
           </div>
         </div>
       </div>
