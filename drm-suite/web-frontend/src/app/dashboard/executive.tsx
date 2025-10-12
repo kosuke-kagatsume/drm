@@ -14,6 +14,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import OrderAnalytics from '@/components/analytics/OrderAnalytics';
 
 interface ExecutiveDashboardProps {
   userEmail: string;
@@ -319,6 +320,16 @@ export default function ExecutiveDashboard({
                   />
                 </BarChart>
               </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* 📊 受注率分析ダッシュボード */}
+          <div className="bg-white rounded-2xl shadow-lg mt-6 overflow-hidden">
+            <div className="px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+              <h3 className="font-semibold">📊 受注率分析</h3>
+            </div>
+            <div className="p-6">
+              <OrderAnalytics tenantId="demo-tenant" period="monthly" />
             </div>
           </div>
 
