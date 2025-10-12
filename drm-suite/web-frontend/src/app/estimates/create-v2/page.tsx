@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calculator,
@@ -117,11 +117,28 @@ const SAMPLE_CUSTOMERS = [
 
 export default function EstimateCreateV2Page() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState<'initial' | 'customer' | 'type'>('initial');
   const [hasCustomer, setHasCustomer] = useState<boolean | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
+  const [selectedCustomerName, setSelectedCustomerName] = useState<string>('');
   const [customerSearch, setCustomerSearch] = useState('');
   const [showNewCustomerForm, setShowNewCustomerForm] = useState(false);
+
+  // 顧客詳細ページから直接遷移してきた場合の処理
+  useEffect(() => {
+    const customerId = searchParams.get('customerId');
+    const customerName = searchParams.get('customerName');
+    const skipCustomerSelection = searchParams.get('skipCustomerSelection');
+
+    if (skipCustomerSelection === 'true' && customerId) {
+      // 顧客選択をスキップして、直接見積タイプ選択画面へ
+      setSelectedCustomer(customerId);
+      setSelectedCustomerName(customerName || '');
+      setHasCustomer(true);
+      setStep('type');
+    }
+  }, [searchParams]);
 
   const filteredCustomers = SAMPLE_CUSTOMERS.filter(
     (customer) =>
@@ -142,7 +159,9 @@ export default function EstimateCreateV2Page() {
 
   // 顧客選択
   const handleCustomerSelect = (customerId: string) => {
+    const customer = SAMPLE_CUSTOMERS.find(c => c.id === customerId);
     setSelectedCustomer(customerId);
+    setSelectedCustomerName(customer?.name || '');
     setStep('type');
   };
 
@@ -196,7 +215,8 @@ export default function EstimateCreateV2Page() {
                       ? 'ステップ 2: 顧客を選択'
                       : 'ステップ ' +
                         (hasCustomer ? '3' : '2') +
-                        ': 見積タイプを選択'}
+                        ': 見積タイプを選択' +
+                        (selectedCustomerName ? ` - ${selectedCustomerName}様` : '')}
                 </p>
               </div>
             </div>

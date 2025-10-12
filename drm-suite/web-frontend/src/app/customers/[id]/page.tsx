@@ -1261,7 +1261,7 @@ export default function CustomerDetailPage() {
                 見積一覧
               </h2>
               <button
-                onClick={() => router.push('/estimates/create-v2')}
+                onClick={() => router.push(`/estimates/create-v2?customerId=${customerId}&customerName=${encodeURIComponent(customer.name)}&skipCustomerSelection=true`)}
                 className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:shadow-2xl transform hover:scale-105 transition-all font-bold flex items-center gap-2"
               >
                 <Plus className="h-5 w-5" />
@@ -1337,7 +1337,7 @@ export default function CustomerDetailPage() {
                   {customer?.name}様への見積を作成しましょう
                 </p>
                 <button
-                  onClick={() => router.push('/estimates/create-v2')}
+                  onClick={() => router.push(`/estimates/create-v2?customerId=${customerId}&customerName=${encodeURIComponent(customer.name)}&skipCustomerSelection=true`)}
                   className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:shadow-2xl transform hover:scale-105 transition-all font-bold inline-flex items-center gap-2"
                 >
                   <Plus className="h-5 w-5" />
