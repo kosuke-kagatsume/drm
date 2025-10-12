@@ -22,6 +22,7 @@ interface Order {
   drmOrderId: string;
   dwOrderId?: string;
   contractNo: string;
+  contractId?: string; // 🔥 工事台帳連携用
   projectName: string;
   partnerName: string;
   orderNo: string;
@@ -36,16 +37,26 @@ interface Order {
   createdAt: string;
 }
 
+interface ConstructionLedger {
+  id: string;
+  constructionNo: string;
+  constructionName: string;
+  contractId?: string;
+}
+
 export default function OrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
+  const [constructionLedgers, setConstructionLedgers] = useState<ConstructionLedger[]>([]); // 🔥 工事台帳一覧
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedSyncStatus, setSelectedSyncStatus] = useState<string>('all');
+  const [selectedLedger, setSelectedLedger] = useState<string>('all'); // 🔥 工事台帳フィルター
 
   useEffect(() => {
     loadOrders();
+    loadConstructionLedgers(); // 🔥 工事台帳を読み込み
   }, []);
 
   const loadOrders = async () => {
@@ -60,6 +71,18 @@ export default function OrdersPage() {
       alert('発注データの読み込みに失敗しました');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 🔥 工事台帳一覧を読み込み
+  const loadConstructionLedgers = async () => {
+    try {
+      const response = await fetch('/api/construction-ledgers');
+      if (!response.ok) throw new Error('Failed to fetch construction ledgers');
+      const data = await response.json();
+      setConstructionLedgers(data.ledgers || []);
+    } catch (error) {
+      console.error('Error loading construction ledgers:', error);
     }
   };
 
@@ -149,7 +172,12 @@ export default function OrdersPage() {
     const matchesStatus = selectedStatus === 'all' || order.status === selectedStatus;
     const matchesSyncStatus = selectedSyncStatus === 'all' || order.dwSyncStatus === selectedSyncStatus;
 
-    return matchesSearch && matchesStatus && matchesSyncStatus;
+    // 🔥 工事台帳フィルター
+    const matchesLedger = selectedLedger === 'all' ||
+                         (selectedLedger === 'unassigned' && !order.contractId) ||
+                         order.contractId === selectedLedger;
+
+    return matchesSearch && matchesStatus && matchesSyncStatus && matchesLedger;
   });
 
   const stats = {
@@ -255,7 +283,7 @@ export default function OrdersPage() {
 
         {/* フィルター */}
         <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
@@ -266,6 +294,21 @@ export default function OrdersPage() {
                 className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
+
+            {/* 🔥 工事台帳フィルター */}
+            <select
+              value={selectedLedger}
+              onChange={(e) => setSelectedLedger(e.target.value)}
+              className="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">すべての工事台帳</option>
+              <option value="unassigned">未割り当て</option>
+              {constructionLedgers.map((ledger) => (
+                <option key={ledger.id} value={ledger.contractId || ledger.id}>
+                  {ledger.constructionNo} - {ledger.constructionName}
+                </option>
+              ))}
+            </select>
 
             <select
               value={selectedStatus}
@@ -305,6 +348,9 @@ export default function OrdersPage() {
                     発注情報
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    工事台帳
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     協力会社
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -325,21 +371,41 @@ export default function OrdersPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredOrders.map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{order.projectName}</div>
-                        <div className="text-xs text-gray-500">{order.orderNo}</div>
-                        <div className="text-xs text-gray-500">契約: {order.contractNo}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-4 w-4 text-gray-400" />
-                        <span className="text-sm text-gray-900">{order.partnerName}</span>
-                      </div>
-                    </td>
+                {filteredOrders.map((order) => {
+                  // 🔥 工事台帳情報を取得
+                  const ledger = constructionLedgers.find(
+                    (l) => l.contractId === order.contractId || l.id === order.contractId
+                  );
+
+                  return (
+                    <tr key={order.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{order.projectName}</div>
+                          <div className="text-xs text-gray-500">{order.orderNo}</div>
+                          <div className="text-xs text-gray-500">契約: {order.contractNo}</div>
+                        </div>
+                      </td>
+                      {/* 🔥 工事台帳カラム */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {ledger ? (
+                          <button
+                            onClick={() => router.push(`/construction-ledgers/${ledger.id}`)}
+                            className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                          >
+                            <div className="font-medium">{ledger.constructionNo}</div>
+                            <div className="text-xs text-gray-500">{ledger.constructionName}</div>
+                          </button>
+                        ) : (
+                          <span className="text-xs text-gray-400">未割り当て</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4 text-gray-400" />
+                          <span className="text-sm text-gray-900">{order.partnerName}</span>
+                        </div>
+                      </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
                         ¥{order.totalAmount.toLocaleString()}
@@ -385,7 +451,8 @@ export default function OrdersPage() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
 
