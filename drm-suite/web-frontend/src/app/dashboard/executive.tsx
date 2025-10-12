@@ -1438,6 +1438,19 @@ export default function ExecutiveDashboard({
                             担当者別受注・パイプライン
                           </div>
                         </button>
+                        <button
+                          onClick={() =>
+                            router.push('/analytics/win-prediction')
+                          }
+                          className="p-3 border-2 border-orange-200 bg-orange-50 rounded-lg hover:bg-orange-100 text-left transition-all"
+                        >
+                          <div className="font-medium text-orange-900">
+                            🤖 AI受注予測分析
+                          </div>
+                          <div className="text-xs text-orange-600">
+                            機械学習による受注確度予測
+                          </div>
+                        </button>
                         <button className="p-3 border rounded-lg hover:bg-gray-50 text-left">
                           <div className="font-medium">月次経営レポート</div>
                           <div className="text-xs text-gray-500">
