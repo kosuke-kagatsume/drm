@@ -1425,6 +1425,19 @@ export default function ExecutiveDashboard({
                             プロジェクト別・工種別利益率
                           </div>
                         </button>
+                        <button
+                          onClick={() =>
+                            router.push('/analytics/sales-performance')
+                          }
+                          className="p-3 border-2 border-green-200 bg-green-50 rounded-lg hover:bg-green-100 text-left transition-all"
+                        >
+                          <div className="font-medium text-green-900">
+                            📈 営業パフォーマンス分析
+                          </div>
+                          <div className="text-xs text-green-600">
+                            担当者別受注・パイプライン
+                          </div>
+                        </button>
                         <button className="p-3 border rounded-lg hover:bg-gray-50 text-left">
                           <div className="font-medium">月次経営レポート</div>
                           <div className="text-xs text-gray-500">
