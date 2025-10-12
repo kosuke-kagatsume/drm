@@ -8,6 +8,21 @@ import {
   Font,
 } from '@react-pdf/renderer';
 
+// 日本語フォントを登録
+Font.register({
+  family: 'NotoSansJP',
+  fonts: [
+    {
+      src: 'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5.0.0/files/noto-sans-jp-japanese-400-normal.woff',
+      fontWeight: 'normal',
+    },
+    {
+      src: 'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5.0.0/files/noto-sans-jp-japanese-700-normal.woff',
+      fontWeight: 'bold',
+    },
+  ],
+});
+
 // 請求書データの型定義
 export interface InvoiceData {
   id: string;
@@ -77,7 +92,7 @@ const styles = StyleSheet.create({
   page: {
     padding: 40,
     fontSize: 10,
-    fontFamily: 'Helvetica',
+    fontFamily: 'NotoSansJP',
   },
   header: {
     marginBottom: 30,
