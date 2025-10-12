@@ -57,6 +57,13 @@ export default function TemplateSelector({
     loadTemplatesAndBranding();
   }, [companyId, documentType]);
 
+  // brandingとselectedTemplateが揃ったら自動的にプレビューを生成
+  useEffect(() => {
+    if (branding && selectedTemplate && showPreview && !previewHtml) {
+      generatePreview(selectedTemplate);
+    }
+  }, [branding, selectedTemplate]);
+
   const loadTemplatesAndBranding = async () => {
     try {
       setLoading(true);
@@ -87,11 +94,6 @@ export default function TemplateSelector({
         const brandingData = await brandingResponse.json();
         setBranding(brandingData.branding);
       }
-
-      // デフォルトテンプレートのプレビューを自動生成
-      if (defaultTemplate && brandingResponse.ok) {
-        setTimeout(() => generatePreview(defaultTemplate!), 100);
-      }
     } catch (error) {
       console.error('データ読み込みエラー:', error);
     } finally {
@@ -107,7 +109,8 @@ export default function TemplateSelector({
   };
 
   const generatePreview = async (template: PdfTemplate) => {
-    if (!branding || !estimateData) return;
+    // brandingのみチェック（estimateDataがなくてもサンプルデータを使用）
+    if (!branding) return;
 
     try {
       setPreviewLoading(true);
@@ -138,20 +141,9 @@ export default function TemplateSelector({
     }
   };
 
-  const getSampleEstimateData = () => ({
-    title: '建設工事見積書',
-    documentNumber: 'EST-2024-001',
-    date: new Date().toISOString(),
-    validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-    companyId,
-    customer: {
-      name: '株式会社サンプル',
-      address: '東京都渋谷区〇〇 1-2-3',
-      phone: '03-0000-0000',
-      email: 'sample@example.com',
-      contactPerson: '田中 太郎',
-    },
-    items: [
+  const getSampleEstimateData = () => {
+    // documentTypeに応じたサンプルデータを生成
+    const baseItems = [
       {
         name: '基礎工事',
         specification: 'RC造基礎工事一式',
@@ -176,19 +168,123 @@ export default function TemplateSelector({
         unitPrice: 8000000,
         amount: 8000000,
       },
-    ],
-    totals: {
+    ];
+
+    const baseTotals = {
       subtotal: 25000000,
       tax: 2500000,
       total: 27500000,
-    },
-    terms: [
-      '工期：着工より4ヶ月',
-      '支払条件：着手金30%、中間金40%、完成金30%',
-      '有効期限：本見積書発行日より1ヶ月間',
-      '備考：材料費の変動により金額が変更になる場合があります',
-    ],
-  });
+    };
+
+    const customer = {
+      name: '株式会社サンプル',
+      address: '東京都渋谷区〇〇 1-2-3',
+      phone: '03-0000-0000',
+      email: 'sample@example.com',
+      contactPerson: '田中 太郎',
+    };
+
+    switch (documentType) {
+      case 'invoice':
+        return {
+          title: '建設工事請求書',
+          documentNumber: 'INV-2024-001',
+          date: new Date().toISOString(),
+          validUntil: new Date(
+            Date.now() + 30 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+          dueDate: new Date(
+            Date.now() + 30 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+          companyId,
+          customer,
+          items: baseItems,
+          totals: baseTotals,
+          terms: [
+            '支払期限：請求書発行日より30日以内',
+            '振込手数料：お客様負担',
+            '備考：本請求書は電子契約に基づき発行されています。',
+          ],
+        };
+
+      case 'order':
+        return {
+          title: '発注書',
+          documentNumber: 'ORD-2024-001',
+          date: new Date().toISOString(),
+          validUntil: new Date(
+            Date.now() + 60 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+          deliveryDate: new Date(
+            Date.now() + 60 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+          companyId,
+          customer: {
+            name: '協力会社A',
+            address: '東京都江東区〇〇 4-5-6',
+            phone: '03-1111-2222',
+            email: 'supplier@example.com',
+            contactPerson: '山田 花子',
+          },
+          items: baseItems,
+          totals: baseTotals,
+          terms: [
+            '納期：発注日より60日',
+            '納品場所：指定現場への直送',
+            '検収：納品後7日以内',
+            '備考：工事の品質管理には十分ご配慮ください。',
+          ],
+        };
+
+      case 'contract':
+        return {
+          title: '工事請負契約書',
+          documentNumber: 'CON-2024-001',
+          date: new Date().toISOString(),
+          validUntil: new Date(
+            Date.now() + 30 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+          startDate: new Date(
+            Date.now() + 7 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+          endDate: new Date(
+            Date.now() + 127 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+          companyId,
+          customer,
+          items: baseItems,
+          totals: baseTotals,
+          terms: [
+            '第1条: 工事内容および工期',
+            '第2条: 請負代金および支払条件',
+            '第3条: 契約の変更',
+            '第4条: 瑕疵担保責任',
+            '第5条: 本契約は民法および建設業法に基づき締結されます。',
+          ],
+        };
+
+      case 'estimate':
+      default:
+        return {
+          title: '建設工事見積書',
+          documentNumber: 'EST-2024-001',
+          date: new Date().toISOString(),
+          validUntil: new Date(
+            Date.now() + 30 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+          companyId,
+          customer,
+          items: baseItems,
+          totals: baseTotals,
+          terms: [
+            '工期：着工より4ヶ月',
+            '支払条件：着手金30%、中間金40%、完成金30%',
+            '有効期限：本見積書発行日より1ヶ月間',
+            '備考：材料費の変動により金額が変更になる場合があります',
+          ],
+        };
+    }
+  };
 
   const generatePreviewHtml = async (
     template: PdfTemplate,
