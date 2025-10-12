@@ -14,7 +14,7 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-16">
+      <div className="max-w-7xl mx-auto px-4 py-16">
         <div className="text-center">
           <h1 className="text-5xl font-bold text-gray-900 mb-4">
             DRM Suite v1.0
@@ -40,10 +40,10 @@ export default function Index() {
                 <p className="text-sm text-gray-600">会議室・車両</p>
               </div>
               <div className="p-4 bg-orange-50 rounded">
-                <h3 className="font-semibold text-orange-900">
-                  MA自動化
-                </h3>
-                <p className="text-sm text-gray-600">リード育成・スコアリング</p>
+                <h3 className="font-semibold text-orange-900">MA自動化</h3>
+                <p className="text-sm text-gray-600">
+                  リード育成・スコアリング
+                </p>
               </div>
             </div>
             <div className="mt-8 p-4 bg-gradient-to-r from-indigo-500 to-purple-600 rounded text-white">
