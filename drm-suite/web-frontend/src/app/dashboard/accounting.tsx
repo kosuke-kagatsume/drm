@@ -572,13 +572,6 @@ export default function AccountingDashboard({
               <span>➕</span>
               <span>新規請求書</span>
             </button>
-            <button
-              onClick={() => handleExport('financial-summary')}
-              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition flex items-center gap-2"
-            >
-              <span>📥</span>
-              <span>エクスポート</span>
-            </button>
           </div>
         </div>
 
