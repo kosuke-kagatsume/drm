@@ -81,17 +81,49 @@ interface Invoice {
   updatedAt: string;
 }
 
-// 入金記録の型
+// 入金記録の型（API準拠）
 interface PaymentRecord {
   id: string;
+  tenantId: string;
   invoiceId: string;
+  invoiceNo: string;
   paymentDate: string;
   amount: number;
   paymentMethod: string;
   reference?: string;
   notes?: string;
+  status: 'confirmed' | 'pending' | 'cancelled';
+  appliedToInvoice: boolean;
+  appliedAt?: string;
   createdBy: string;
+  confirmedBy?: string;
   createdAt: string;
+  updatedAt: string;
+}
+
+// 入金予定の型
+interface PaymentSchedule {
+  id: string;
+  scheduledDate: string;
+  amount: number;
+  installmentNumber?: number;
+  totalInstallments?: number;
+  status: 'scheduled' | 'received' | 'overdue' | 'cancelled';
+  alertLevel?: 'none' | 'warning' | 'danger' | 'critical';
+  alertMessage?: string;
+  daysUntilDue?: number;
+  notes?: string;
+}
+
+// アラートの型
+interface PaymentAlert {
+  id: string;
+  type: 'upcoming' | 'due_today' | 'overdue' | 'large_amount';
+  severity: 'info' | 'warning' | 'danger' | 'critical';
+  title: string;
+  message: string;
+  amount: number;
+  daysUntilDue: number;
 }
 
 export default function InvoiceDetailPage() {
@@ -102,7 +134,10 @@ export default function InvoiceDetailPage() {
 
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [paymentRecords, setPaymentRecords] = useState<PaymentRecord[]>([]);
+  const [paymentSchedules, setPaymentSchedules] = useState<PaymentSchedule[]>([]);
+  const [paymentAlerts, setPaymentAlerts] = useState<PaymentAlert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingPayments, setIsLoadingPayments] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'items' | 'payments' | 'related'>('overview');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -135,10 +170,58 @@ export default function InvoiceDetailPage() {
     }
   };
 
+  // APIから入金記録を取得
+  const fetchPaymentRecords = async () => {
+    try {
+      setIsLoadingPayments(true);
+      const response = await fetch(`/api/payments?invoiceId=${invoiceId}`);
+      if (!response.ok) throw new Error('Failed to fetch payment records');
+      const data = await response.json();
+      if (data.success && data.payments) {
+        setPaymentRecords(data.payments);
+      }
+    } catch (err) {
+      console.error('Error fetching payment records:', err);
+    } finally {
+      setIsLoadingPayments(false);
+    }
+  };
+
+  // APIから入金予定を取得
+  const fetchPaymentSchedules = async () => {
+    try {
+      const response = await fetch(`/api/payment-schedules?invoiceId=${invoiceId}`);
+      if (!response.ok) throw new Error('Failed to fetch payment schedules');
+      const data = await response.json();
+      if (data.success && data.schedules) {
+        setPaymentSchedules(data.schedules);
+      }
+    } catch (err) {
+      console.error('Error fetching payment schedules:', err);
+    }
+  };
+
+  // APIからアラートを取得
+  const fetchPaymentAlerts = async () => {
+    try {
+      const response = await fetch(`/api/payment-alerts?invoiceId=${invoiceId}&activeOnly=true`);
+      if (!response.ok) throw new Error('Failed to fetch payment alerts');
+      const data = await response.json();
+      if (data.success && data.alerts) {
+        setPaymentAlerts(data.alerts);
+      }
+    } catch (err) {
+      console.error('Error fetching payment alerts:', err);
+    }
+  };
+
   // 初回ロード
   useEffect(() => {
     if (user && invoiceId) {
       fetchInvoice();
+      fetchPaymentRecords();
+      fetchPaymentSchedules();
+      fetchPaymentAlerts();
     }
   }, [user, invoiceId]);
 
@@ -183,7 +266,7 @@ export default function InvoiceDetailPage() {
 
   const formatCurrency = (amount: number) => `¥${amount.toLocaleString()}`;
 
-  // 入金登録
+  // 入金登録（API経由）
   const handleAddPayment = async () => {
     if (!invoice) return;
     if (newPayment.amount <= 0) {
@@ -192,35 +275,37 @@ export default function InvoiceDetailPage() {
     }
 
     try {
-      // 入金記録を追加（簡易実装）
-      const record: PaymentRecord = {
-        id: `PAY-${Date.now()}`,
+      // 入金記録をAPIに送信
+      const paymentData = {
         invoiceId: invoice.id,
-        ...newPayment,
+        invoiceNo: invoice.invoiceNo,
+        paymentDate: newPayment.paymentDate,
+        amount: newPayment.amount,
+        paymentMethod: newPayment.paymentMethod,
+        reference: newPayment.reference,
+        notes: newPayment.notes,
+        appliedToInvoice: true, // 請求書に自動反映
         createdBy: user?.name || 'Unknown',
-        createdAt: new Date().toISOString(),
-      };
-      setPaymentRecords([...paymentRecords, record]);
-
-      // 請求書の支払状況を更新
-      const newPaidAmount = invoice.paidAmount + newPayment.amount;
-      const updatedInvoice: Invoice = {
-        ...invoice,
-        paidAmount: newPaidAmount,
-        paymentStatus: newPaidAmount >= invoice.totalAmount ? 'paid' : 'partially_paid',
-        status: newPaidAmount >= invoice.totalAmount ? 'paid' : invoice.status,
-        paidDate: newPaidAmount >= invoice.totalAmount ? newPayment.paymentDate : invoice.paidDate,
       };
 
-      // APIに更新を送信
-      const response = await fetch('/api/invoices', {
-        method: 'PUT',
+      const response = await fetch('/api/payments', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedInvoice),
+        body: JSON.stringify(paymentData),
       });
 
-      if (response.ok) {
-        setInvoice(updatedInvoice);
+      if (!response.ok) throw new Error('Failed to create payment');
+
+      const data = await response.json();
+
+      if (data.success) {
+        // 入金記録を再取得
+        await fetchPaymentRecords();
+
+        // 請求書を再取得（支払状況が更新されている）
+        await fetchInvoice();
+
+        // モーダルを閉じてフォームをリセット
         setShowPaymentModal(false);
         setNewPayment({
           paymentDate: new Date().toISOString().split('T')[0],
@@ -229,13 +314,14 @@ export default function InvoiceDetailPage() {
           reference: '',
           notes: '',
         });
+
         alert('入金を記録しました');
       } else {
-        throw new Error('Failed to update invoice');
+        throw new Error(data.error || 'Failed to create payment');
       }
     } catch (err) {
       console.error('Error adding payment:', err);
-      alert('入金の記録に失敗しました');
+      alert('入金の記録に失敗しました: ' + (err instanceof Error ? err.message : 'Unknown error'));
     }
   };
 
@@ -627,6 +713,46 @@ export default function InvoiceDetailPage() {
         {/* 入金管理タブ */}
         {activeTab === 'payments' && (
           <div className="space-y-6">
+            {/* アラート表示 */}
+            {paymentAlerts.length > 0 && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">⚠️ 入金アラート</h3>
+                <div className="space-y-3">
+                  {paymentAlerts.map((alert) => {
+                    const alertStyles = {
+                      critical: 'bg-red-50 border-red-200 text-red-900',
+                      danger: 'bg-orange-50 border-orange-200 text-orange-900',
+                      warning: 'bg-yellow-50 border-yellow-200 text-yellow-900',
+                      info: 'bg-blue-50 border-blue-200 text-blue-900',
+                    };
+                    return (
+                      <div
+                        key={alert.id}
+                        className={`p-4 border-l-4 rounded-lg ${alertStyles[alert.severity]}`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-semibold mb-1">{alert.title}</h4>
+                            <p className="text-sm mb-2">{alert.message}</p>
+                            <div className="flex items-center gap-4 text-sm">
+                              <span>金額: {formatCurrency(alert.amount)}</span>
+                              {alert.daysUntilDue < 0 && (
+                                <span className="font-medium">遅延: {Math.abs(alert.daysUntilDue)}日</span>
+                              )}
+                              {alert.daysUntilDue > 0 && (
+                                <span>期日まで: {alert.daysUntilDue}日</span>
+                              )}
+                            </div>
+                          </div>
+                          <AlertCircle className="h-5 w-5" />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* 入金サマリー */}
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">入金サマリー</h3>
@@ -648,6 +774,72 @@ export default function InvoiceDetailPage() {
               </div>
             </div>
 
+            {/* 入金予定 */}
+            {paymentSchedules.length > 0 && (
+              <div className="bg-white rounded-lg shadow">
+                <div className="p-6 border-b">
+                  <h3 className="text-lg font-semibold text-gray-900">入金予定</h3>
+                </div>
+                <div className="p-6">
+                  <div className="space-y-3">
+                    {paymentSchedules.map((schedule) => {
+                      const statusStyles = {
+                        scheduled: 'bg-blue-100 text-blue-800',
+                        received: 'bg-green-100 text-green-800',
+                        overdue: 'bg-red-100 text-red-800',
+                        cancelled: 'bg-gray-100 text-gray-600',
+                      };
+                      const alertStyles = {
+                        critical: 'border-l-4 border-red-500',
+                        danger: 'border-l-4 border-orange-500',
+                        warning: 'border-l-4 border-yellow-500',
+                        none: '',
+                      };
+                      return (
+                        <div
+                          key={schedule.id}
+                          className={`p-4 border rounded-lg ${alertStyles[schedule.alertLevel || 'none']} hover:bg-gray-50`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <Clock className="h-5 w-5 text-gray-400" />
+                                <span className="font-semibold text-gray-900">{schedule.scheduledDate}</span>
+                                <span
+                                  className={`px-2 py-0.5 text-xs font-medium rounded ${statusStyles[schedule.status]}`}
+                                >
+                                  {schedule.status === 'scheduled' && '予定'}
+                                  {schedule.status === 'received' && '入金済み'}
+                                  {schedule.status === 'overdue' && '遅延'}
+                                  {schedule.status === 'cancelled' && 'キャンセル'}
+                                </span>
+                                {schedule.installmentNumber && schedule.totalInstallments && (
+                                  <span className="text-sm text-gray-600">
+                                    {schedule.installmentNumber}/{schedule.totalInstallments}回目
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-4 ml-8">
+                                <span className="text-lg font-bold text-gray-900">
+                                  {formatCurrency(schedule.amount)}
+                                </span>
+                                {schedule.alertMessage && (
+                                  <span className="text-sm text-orange-600">{schedule.alertMessage}</span>
+                                )}
+                              </div>
+                              {schedule.notes && (
+                                <p className="text-sm text-gray-600 ml-8 mt-1">{schedule.notes}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* 入金履歴 */}
             <div className="bg-white rounded-lg shadow">
               <div className="p-6 border-b">
@@ -663,7 +855,12 @@ export default function InvoiceDetailPage() {
                 </div>
               </div>
               <div className="p-6">
-                {paymentRecords.length === 0 ? (
+                {isLoadingPayments ? (
+                  <div className="text-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-500">読み込み中...</p>
+                  </div>
+                ) : paymentRecords.length === 0 ? (
                   <div className="text-center py-12">
                     <DollarSign className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500">入金記録がありません</p>
@@ -676,28 +873,56 @@ export default function InvoiceDetailPage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {paymentRecords.map((record) => (
-                      <div key={record.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <CheckCircle className="h-5 w-5 text-green-600" />
-                            <span className="text-lg font-bold text-gray-900">
-                              {formatCurrency(record.amount)}
-                            </span>
-                            <span className="text-sm text-gray-500">|</span>
-                            <span className="text-sm text-gray-600">{record.paymentMethod}</span>
+                    {paymentRecords.map((record) => {
+                      const statusStyles = {
+                        confirmed: 'bg-green-100 text-green-800',
+                        pending: 'bg-yellow-100 text-yellow-800',
+                        cancelled: 'bg-gray-100 text-gray-600',
+                      };
+                      return (
+                        <div
+                          key={record.id}
+                          className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <CheckCircle className="h-5 w-5 text-green-600" />
+                              <span className="text-lg font-bold text-gray-900">
+                                {formatCurrency(record.amount)}
+                              </span>
+                              <span className="text-sm text-gray-500">|</span>
+                              <span className="text-sm text-gray-600">{record.paymentMethod}</span>
+                              <span
+                                className={`px-2 py-0.5 text-xs font-medium rounded ${statusStyles[record.status]}`}
+                              >
+                                {record.status === 'confirmed' && '確認済み'}
+                                {record.status === 'pending' && '保留中'}
+                                {record.status === 'cancelled' && 'キャンセル'}
+                              </span>
+                              {record.appliedToInvoice && (
+                                <span className="px-2 py-0.5 text-xs font-medium rounded bg-blue-100 text-blue-800">
+                                  請求書反映済み
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-gray-600 ml-8">
+                              <span>入金日: {record.paymentDate}</span>
+                              {record.reference && <span>参照: {record.reference}</span>}
+                              <span>記録者: {record.createdBy}</span>
+                              {record.confirmedBy && <span>承認者: {record.confirmedBy}</span>}
+                            </div>
+                            {record.notes && (
+                              <p className="text-sm text-gray-600 ml-8 mt-1">{record.notes}</p>
+                            )}
+                            <div className="flex items-center gap-2 text-xs text-gray-500 ml-8 mt-2">
+                              <span>ID: {record.id}</span>
+                              <span>|</span>
+                              <span>登録: {new Date(record.createdAt).toLocaleString('ja-JP')}</span>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-4 text-sm text-gray-600 ml-8">
-                            <span>入金日: {record.paymentDate}</span>
-                            {record.reference && <span>参照: {record.reference}</span>}
-                            <span>記録者: {record.createdBy}</span>
-                          </div>
-                          {record.notes && (
-                            <p className="text-sm text-gray-600 ml-8 mt-1">{record.notes}</p>
-                          )}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
