@@ -870,6 +870,142 @@ export default function AccountingDashboard({
 
       </div>
 
+      {/* Phase 9: 入金・支払管理ウィジェット */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        {/* 入金予定アラート */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-800">💰 入金予定アラート</h3>
+            <button
+              onClick={() => router.push('/invoices')}
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
+              詳細 →
+            </button>
+          </div>
+          <div className="space-y-3">
+            <div className="border-l-4 border-red-500 pl-3 py-2 bg-red-50">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm font-medium text-gray-800">INV-2024-001</p>
+                  <p className="text-xs text-gray-600">田中建設 - 5日遅延</p>
+                </div>
+                <p className="text-sm font-bold text-red-600">¥2.5M</p>
+              </div>
+            </div>
+            <div className="border-l-4 border-yellow-500 pl-3 py-2 bg-yellow-50">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm font-medium text-gray-800">INV-2024-002</p>
+                  <p className="text-xs text-gray-600">山田商事 - 3日後期限</p>
+                </div>
+                <p className="text-sm font-bold text-yellow-600">¥5.8M</p>
+              </div>
+            </div>
+            <div className="border-l-4 border-green-500 pl-3 py-2 bg-green-50">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm font-medium text-gray-800">INV-2024-004</p>
+                  <p className="text-xs text-gray-600">鈴木工業 - 今週中</p>
+                </div>
+                <p className="text-sm font-bold text-green-600">¥3.2M</p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 pt-4 border-t">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">今月入金予定</span>
+              <span className="font-bold text-gray-800">¥11.5M</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 支払予定アラート */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-800">💸 支払予定アラート</h3>
+            <button
+              onClick={() => router.push('/disbursements')}
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
+              詳細 →
+            </button>
+          </div>
+          <div className="space-y-3">
+            <div className="border-l-4 border-orange-500 pl-3 py-2 bg-orange-50">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm font-medium text-gray-800">DIS-SCH-001</p>
+                  <p className="text-xs text-gray-600">承認待ち（500万円以上）</p>
+                </div>
+                <p className="text-sm font-bold text-orange-600">¥6.0M</p>
+              </div>
+            </div>
+            <div className="border-l-4 border-yellow-500 pl-3 py-2 bg-yellow-50">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm font-medium text-gray-800">DIS-SCH-002</p>
+                  <p className="text-xs text-gray-600">明日支払期限</p>
+                </div>
+                <p className="text-sm font-bold text-yellow-600">¥1.5M</p>
+              </div>
+            </div>
+            <div className="border-l-4 border-blue-500 pl-3 py-2 bg-blue-50">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm font-medium text-gray-800">DIS-SCH-003</p>
+                  <p className="text-xs text-gray-600">来週支払予定</p>
+                </div>
+                <p className="text-sm font-bold text-blue-600">¥3.0M</p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 pt-4 border-t">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">今月支払予定</span>
+              <span className="font-bold text-gray-800">¥10.5M</span>
+            </div>
+          </div>
+        </div>
+
+        {/* キャッシュフロー予測サマリー */}
+        <div className="bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">📊 キャッシュフロー予測</h3>
+            <button
+              onClick={() => router.push('/cashflow')}
+              className="text-sm text-white/80 hover:text-white"
+            >
+              詳細 →
+            </button>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-white/80 mb-1">今月予測残高（現実的）</p>
+              <p className="text-3xl font-bold">¥15.8M</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-white/10 rounded p-3">
+                <p className="text-xs text-white/80 mb-1">楽観的</p>
+                <p className="text-lg font-bold">¥18.2M</p>
+              </div>
+              <div className="bg-white/10 rounded p-3">
+                <p className="text-xs text-white/80 mb-1">悲観的</p>
+                <p className="text-lg font-bold">¥13.4M</p>
+              </div>
+            </div>
+            <div className="bg-white/10 rounded p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">リスク評価</span>
+                <span className="px-2 py-1 bg-green-500 rounded text-xs font-bold">
+                  低リスク
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Advanced Financial Analytics Dashboard */}
 
       {/* Executive Financial Summary */}
@@ -3108,20 +3244,35 @@ export default function AccountingDashboard({
         <div className="bg-white rounded-lg shadow p-4">
           <h3 className="font-semibold text-gray-800 mb-3">⚡ クイックアクション</h3>
           <div className="space-y-2">
-            <button className="w-full bg-blue-500 text-white py-2 px-3 rounded text-sm hover:bg-blue-600 transition">
-              🧾 新規請求書作成
+            <button
+              onClick={() => router.push('/invoices')}
+              className="w-full bg-blue-500 text-white py-2 px-3 rounded text-sm hover:bg-blue-600 transition"
+            >
+              📋 請求管理
             </button>
-            <button className="w-full bg-green-500 text-white py-2 px-3 rounded text-sm hover:bg-green-600 transition">
-              💰 入金記録
+            <button
+              onClick={() => router.push('/invoices')}
+              className="w-full bg-green-500 text-white py-2 px-3 rounded text-sm hover:bg-green-600 transition"
+            >
+              💰 入金管理
             </button>
-            <button className="w-full bg-purple-500 text-white py-2 px-3 rounded text-sm hover:bg-purple-600 transition">
+            <button
+              onClick={() => router.push('/disbursements')}
+              className="w-full bg-purple-500 text-white py-2 px-3 rounded text-sm hover:bg-purple-600 transition"
+            >
+              💸 支払管理
+            </button>
+            <button
+              onClick={() => router.push('/cashflow')}
+              className="w-full bg-orange-500 text-white py-2 px-3 rounded text-sm hover:bg-orange-600 transition"
+            >
+              📊 資金繰り表
+            </button>
+            <button
+              onClick={() => setShowExpenseForm(true)}
+              className="w-full bg-gray-500 text-white py-2 px-3 rounded text-sm hover:bg-gray-600 transition"
+            >
               📋 経費入力
-            </button>
-            <button className="w-full bg-orange-500 text-white py-2 px-3 rounded text-sm hover:bg-orange-600 transition">
-              📈 月次レポート
-            </button>
-            <button className="w-full bg-gray-500 text-white py-2 px-3 rounded text-sm hover:bg-gray-600 transition">
-              🗃️ 関連書類管理
             </button>
           </div>
         </div>
