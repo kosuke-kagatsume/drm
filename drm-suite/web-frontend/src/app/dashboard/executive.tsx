@@ -241,7 +241,9 @@ export default function ExecutiveDashboard({
           {/* 📈 売上推移グラフ */}
           <div className="bg-white rounded-2xl shadow-lg mt-6 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100">
-              <h2 className="text-lg font-semibold">📈 売上・粗利推移（6ヶ月）</h2>
+              <h2 className="text-lg font-semibold">
+                📈 売上・粗利推移（6ヶ月）
+              </h2>
             </div>
             <div className="p-6">
               <ResponsiveContainer width="100%" height={300}>
@@ -593,8 +595,12 @@ export default function ExecutiveDashboard({
               >
                 <div className="flex items-center justify-between">
                   <div className="text-left">
-                    <div className="font-bold text-lg">📊 経理ダッシュボード</div>
-                    <div className="text-sm opacity-90 mt-1">財務詳細・入出金管理・決算情報</div>
+                    <div className="font-bold text-lg">
+                      📊 経理ダッシュボード
+                    </div>
+                    <div className="text-sm opacity-90 mt-1">
+                      財務詳細・入出金管理・決算情報
+                    </div>
                   </div>
                   <div className="text-2xl">→</div>
                 </div>
@@ -680,7 +686,9 @@ export default function ExecutiveDashboard({
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="font-medium text-gray-900">承認管理</p>
-                      <p className="text-xs text-gray-600">見積・契約・発注・請求</p>
+                      <p className="text-xs text-gray-600">
+                        見積・契約・発注・請求
+                      </p>
                     </div>
                     <span className="text-blue-600">→</span>
                   </div>
@@ -694,7 +702,9 @@ export default function ExecutiveDashboard({
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="font-medium text-gray-900">工事台帳</p>
-                      <p className="text-xs text-gray-600">進捗・原価・収支管理</p>
+                      <p className="text-xs text-gray-600">
+                        進捗・原価・収支管理
+                      </p>
                     </div>
                     <span className="text-purple-600">→</span>
                   </div>
@@ -1389,6 +1399,19 @@ export default function ExecutiveDashboard({
                         📊 利用可能なレポートテンプレート
                       </h5>
                       <div className="grid grid-cols-2 gap-3">
+                        <button
+                          onClick={() =>
+                            router.push('/analytics/customer-revenue')
+                          }
+                          className="p-3 border-2 border-blue-200 bg-blue-50 rounded-lg hover:bg-blue-100 text-left transition-all"
+                        >
+                          <div className="font-medium text-blue-900">
+                            💰 顧客別収益分析
+                          </div>
+                          <div className="text-xs text-blue-600">
+                            売上・粗利・LTV・成長率
+                          </div>
+                        </button>
                         <button className="p-3 border rounded-lg hover:bg-gray-50 text-left">
                           <div className="font-medium">月次経営レポート</div>
                           <div className="text-xs text-gray-500">
