@@ -4,9 +4,9 @@
 
 ### 最重要情報
 
-**最新URL**: https://web-frontend-7qpgbbcbi-kosukes-projects-c6ad92ba.vercel.app/
+**最新URL**: https://web-frontend-7nf78p5fo-kosukes-projects-c6ad92ba.vercel.app/
 
-これが2025年10月12日の最新デプロイです。経理ダッシュボードUI改善版。他のURLは古いので使わないこと。
+これが2025年10月12日の最新デプロイです。経理ダッシュボードUI改善版（エクスポートボタン削除済み）。他のURLは古いので使わないこと。
 
 ### プロジェクト概要
 
