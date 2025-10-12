@@ -543,65 +543,41 @@ export default function AccountingDashboard({
   };
 
   return (
-    <div className="flex gap-6">
+    <div className="flex gap-8">
       {/* メインコンテンツエリア - 請求書管理と最近の入金 */}
-      <div className="flex-1 space-y-6">
+      <div className="flex-1 space-y-8">
       {/* Header with Search and Actions */}
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">💰 会計ダッシュボード</h2>
-          <div className="flex space-x-2">
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">💰 経理ダッシュボード</h2>
+          <div className="flex flex-wrap gap-2">
             <button
-              onClick={() => router.push('/construction/ledger')}
-              className="bg-orange-600 text-white px-3 py-2 rounded hover:bg-orange-700 flex items-center space-x-1"
+              onClick={() => router.push('/construction-ledgers')}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
             >
-              <span>📋</span>
+              <span>🏗️</span>
               <span>工事台帳</span>
             </button>
             <button
-              onClick={() => router.push('/construction/analysis')}
-              className="bg-purple-600 text-white px-3 py-2 rounded hover:bg-purple-700 flex items-center space-x-1"
+              onClick={() => router.push('/admin/account-subjects')}
+              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition flex items-center gap-2"
             >
               <span>📊</span>
-              <span>原価分析</span>
-            </button>
-            <button
-              onClick={() => router.push('/accounting/chart')}
-              className="bg-indigo-600 text-white px-3 py-2 rounded hover:bg-indigo-700 flex items-center space-x-1"
-            >
-              <span>⚙️</span>
               <span>勘定科目</span>
             </button>
             <button
-              onClick={() => router.push('/accounting/project')}
-              className="bg-emerald-600 text-white px-3 py-2 rounded hover:bg-emerald-700 flex items-center space-x-1"
+              onClick={handleInvoiceCreate}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center gap-2"
             >
-              <span>🏗️</span>
-              <span>管理会計</span>
+              <span>➕</span>
+              <span>新規請求書</span>
             </button>
             <button
               onClick={() => handleExport('financial-summary')}
-              className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition flex items-center gap-2"
             >
-              📊 レポートエクスポート
-            </button>
-            <button
-              onClick={handleInvoiceCreate}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-            >
-              ➕ 新規請求書
-            </button>
-            <button
-              onClick={handleExpenseCreate}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              💳 経費入力
-            </button>
-            <button
-              onClick={() => router.push('/construction-ledgers')}
-              className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
-            >
-              🏗️ 工事台帳
+              <span>📥</span>
+              <span>エクスポート</span>
             </button>
           </div>
         </div>
@@ -871,7 +847,7 @@ export default function AccountingDashboard({
       </div>
 
       {/* Phase 9: 入金・支払管理ウィジェット */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* 入金予定アラート */}
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-4">
@@ -3080,7 +3056,7 @@ export default function AccountingDashboard({
         </div>
       )}
       </div>
-      <div className="w-96 flex-shrink-0 space-y-6">
+      <div className="w-96 flex-shrink-0 space-y-5">
         <RAGAssistant className="h-auto" userRole="経理担当" />
         
         {/* Cash Flow - 3 months */}
@@ -3241,36 +3217,36 @@ export default function AccountingDashboard({
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="font-semibold text-gray-800 mb-3">⚡ クイックアクション</h3>
-          <div className="space-y-2">
+        <div className="bg-white rounded-lg shadow p-5">
+          <h3 className="font-semibold text-gray-800 mb-4">⚡ クイックアクション</h3>
+          <div className="space-y-3">
             <button
               onClick={() => router.push('/invoices')}
-              className="w-full bg-blue-500 text-white py-2 px-3 rounded text-sm hover:bg-blue-600 transition"
+              className="w-full bg-blue-500 text-white py-3 px-4 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors shadow-sm"
             >
               📋 請求管理
             </button>
             <button
               onClick={() => router.push('/invoices')}
-              className="w-full bg-green-500 text-white py-2 px-3 rounded text-sm hover:bg-green-600 transition"
+              className="w-full bg-green-500 text-white py-3 px-4 rounded-lg text-sm font-medium hover:bg-green-600 transition-colors shadow-sm"
             >
               💰 入金管理
             </button>
             <button
               onClick={() => router.push('/disbursements')}
-              className="w-full bg-purple-500 text-white py-2 px-3 rounded text-sm hover:bg-purple-600 transition"
+              className="w-full bg-purple-500 text-white py-3 px-4 rounded-lg text-sm font-medium hover:bg-purple-600 transition-colors shadow-sm"
             >
               💸 支払管理
             </button>
             <button
               onClick={() => router.push('/cashflow')}
-              className="w-full bg-orange-500 text-white py-2 px-3 rounded text-sm hover:bg-orange-600 transition"
+              className="w-full bg-orange-500 text-white py-3 px-4 rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors shadow-sm"
             >
               📊 資金繰り表
             </button>
             <button
               onClick={() => setShowExpenseForm(true)}
-              className="w-full bg-gray-500 text-white py-2 px-3 rounded text-sm hover:bg-gray-600 transition"
+              className="w-full bg-gray-500 text-white py-3 px-4 rounded-lg text-sm font-medium hover:bg-gray-600 transition-colors shadow-sm"
             >
               📋 経費入力
             </button>
