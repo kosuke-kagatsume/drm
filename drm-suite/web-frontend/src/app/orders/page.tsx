@@ -16,6 +16,8 @@ import {
   Eye,
   Send,
 } from 'lucide-react';
+import TemplateSelector from '@/components/pdf/TemplateSelector';
+import { PdfTemplate } from '@/types/pdf-template';
 
 interface Order {
   id: string;
@@ -55,6 +57,8 @@ export default function OrdersPage() {
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedSyncStatus, setSelectedSyncStatus] = useState<string>('all');
   const [selectedLedger, setSelectedLedger] = useState<string>('all'); // 🔥 工事台帳フィルター
+  const [showPdfTemplateModal, setShowPdfTemplateModal] = useState(false);
+  const [pdfTargetOrder, setPdfTargetOrder] = useState<Order | null>(null);
 
   useEffect(() => {
     loadOrders();
@@ -200,6 +204,23 @@ export default function OrdersPage() {
         あと{daysUntilDeadline}日
       </span>
     );
+  };
+
+  // PDF出力（テンプレート選択モーダル経由）
+  const handlePdfDownload = (order: Order) => {
+    setPdfTargetOrder(order);
+    setShowPdfTemplateModal(true);
+  };
+
+  const handleTemplateSelect = (template: PdfTemplate) => {
+    if (!pdfTargetOrder) return;
+
+    const companyId = 'demo-tenant';
+    const pdfUrl = `/api/pdf/generate/order/${pdfTargetOrder.id}?companyId=${companyId}&templateId=${template.id}`;
+    window.open(pdfUrl, '_blank');
+
+    setShowPdfTemplateModal(false);
+    setPdfTargetOrder(null);
   };
 
   const filteredOrders = orders.filter((order) => {
@@ -513,11 +534,7 @@ export default function OrdersPage() {
                             <Eye className="h-4 w-4" />
                           </button>
                           <button
-                            onClick={() => {
-                              const companyId = 'demo-tenant';
-                              const pdfUrl = `/api/pdf/generate/order/${order.id}?companyId=${companyId}`;
-                              window.open(pdfUrl, '_blank');
-                            }}
+                            onClick={() => handlePdfDownload(order)}
                             className="text-purple-600 hover:text-purple-900"
                             title="PDF生成"
                           >
@@ -548,6 +565,19 @@ export default function OrdersPage() {
             )}
           </div>
         </div>
+
+        {/* PDFテンプレート選択モーダル */}
+        {showPdfTemplateModal && pdfTargetOrder && (
+          <TemplateSelector
+            companyId="demo-tenant"
+            documentType="delivery"
+            onTemplateSelect={handleTemplateSelect}
+            onClose={() => {
+              setShowPdfTemplateModal(false);
+              setPdfTargetOrder(null);
+            }}
+          />
+        )}
       </div>
     </div>
   );

@@ -3,6 +3,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import TemplateSelector from '@/components/pdf/TemplateSelector';
+import { PdfTemplate } from '@/types/pdf-template';
 
 // API型定義からインポート（API側の型を使用）
 interface Invoice {
@@ -100,6 +102,10 @@ export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showPdfTemplateModal, setShowPdfTemplateModal] = useState(false);
+  const [pdfTargetInvoice, setPdfTargetInvoice] = useState<Invoice | null>(
+    null,
+  );
 
   // API: 請求書一覧を取得
   const fetchInvoices = async () => {
@@ -167,6 +173,23 @@ export default function InvoicesPage() {
       thisMonthPaid,
     };
   }, [invoices]);
+
+  // PDF出力（テンプレート選択モーダル経由）
+  const handlePdfDownload = (invoice: Invoice) => {
+    setPdfTargetInvoice(invoice);
+    setShowPdfTemplateModal(true);
+  };
+
+  const handleTemplateSelect = (template: PdfTemplate) => {
+    if (!pdfTargetInvoice) return;
+
+    const companyId = 'demo-tenant';
+    const pdfUrl = `/api/pdf/generate/invoice/${pdfTargetInvoice.id}?companyId=${companyId}&templateId=${template.id}`;
+    window.open(pdfUrl, '_blank');
+
+    setShowPdfTemplateModal(false);
+    setPdfTargetInvoice(null);
+  };
 
   // フィルタリング（API型に合わせて修正）
   const filteredInvoices = useMemo(() => {
@@ -712,11 +735,7 @@ export default function InvoicesPage() {
                             📧
                           </button>
                           <button
-                            onClick={() => {
-                              const companyId = 'demo-tenant';
-                              const pdfUrl = `/api/pdf/generate/invoice/${invoice.id}?companyId=${companyId}`;
-                              window.open(pdfUrl, '_blank');
-                            }}
+                            onClick={() => handlePdfDownload(invoice)}
                             className="p-1 text-purple-600 hover:bg-purple-600 hover:text-white rounded"
                             title="PDF"
                           >
@@ -1003,6 +1022,19 @@ export default function InvoicesPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* PDFテンプレート選択モーダル */}
+      {showPdfTemplateModal && pdfTargetInvoice && (
+        <TemplateSelector
+          companyId="demo-tenant"
+          documentType="invoice"
+          onTemplateSelect={handleTemplateSelect}
+          onClose={() => {
+            setShowPdfTemplateModal(false);
+            setPdfTargetInvoice(null);
+          }}
+        />
       )}
     </div>
   );
