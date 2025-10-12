@@ -1412,6 +1412,19 @@ export default function ExecutiveDashboard({
                             売上・粗利・LTV・成長率
                           </div>
                         </button>
+                        <button
+                          onClick={() =>
+                            router.push('/analytics/profitability')
+                          }
+                          className="p-3 border-2 border-purple-200 bg-purple-50 rounded-lg hover:bg-purple-100 text-left transition-all"
+                        >
+                          <div className="font-medium text-purple-900">
+                            📊 利益率分析
+                          </div>
+                          <div className="text-xs text-purple-600">
+                            プロジェクト別・工種別利益率
+                          </div>
+                        </button>
                         <button className="p-3 border rounded-lg hover:bg-gray-50 text-left">
                           <div className="font-medium">月次経営レポート</div>
                           <div className="text-xs text-gray-500">
