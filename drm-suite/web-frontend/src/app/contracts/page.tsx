@@ -3,6 +3,8 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import TemplateSelector from '@/components/pdf/TemplateSelector';
+import { PdfTemplate } from '@/types/pdf-template';
 
 interface Contract {
   id: string;
@@ -96,6 +98,10 @@ export default function ContractsPage() {
   >('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const [showPdfTemplateModal, setShowPdfTemplateModal] = useState(false);
+  const [pdfTargetContract, setPdfTargetContract] = useState<Contract | null>(
+    null,
+  );
 
   // サンプルデータ（実際の建設業界のデータ構造を反映）
   const contracts: Contract[] = [
@@ -386,6 +392,23 @@ export default function ContractsPage() {
       riskContracts,
     };
   }, [contracts]);
+
+  // PDF出力（テンプレート選択モーダル経由）
+  const handlePdfDownload = (contract: Contract) => {
+    setPdfTargetContract(contract);
+    setShowPdfTemplateModal(true);
+  };
+
+  const handleTemplateSelect = (template: PdfTemplate) => {
+    if (!pdfTargetContract) return;
+
+    const companyId = 'demo-tenant';
+    const pdfUrl = `/api/pdf/generate/contract/${pdfTargetContract.id}?companyId=${companyId}&templateId=${template.id}`;
+    window.open(pdfUrl, '_blank');
+
+    setShowPdfTemplateModal(false);
+    setPdfTargetContract(null);
+  };
 
   // フィルタリング
   const filteredContracts = useMemo(() => {
@@ -1057,11 +1080,7 @@ export default function ContractsPage() {
                           請求
                         </button>
                         <button
-                          onClick={() => {
-                            const companyId = 'demo-tenant';
-                            const pdfUrl = `/api/pdf/generate/contract/${contract.id}?companyId=${companyId}`;
-                            window.open(pdfUrl, '_blank');
-                          }}
+                          onClick={() => handlePdfDownload(contract)}
                           className="text-purple-600 hover:text-purple-700"
                         >
                           📄
@@ -1219,6 +1238,19 @@ export default function ContractsPage() {
               },
             )}
           </div>
+        )}
+
+        {/* PDFテンプレート選択モーダル */}
+        {showPdfTemplateModal && pdfTargetContract && (
+          <TemplateSelector
+            companyId="demo-tenant"
+            documentType="contract"
+            onTemplateSelect={handleTemplateSelect}
+            onClose={() => {
+              setShowPdfTemplateModal(false);
+              setPdfTargetContract(null);
+            }}
+          />
         )}
       </div>
     </div>
