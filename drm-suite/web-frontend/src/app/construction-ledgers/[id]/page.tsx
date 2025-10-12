@@ -19,6 +19,10 @@ import {
   CheckCircle,
   Clock,
   Users,
+  RefreshCw,
+  Download,
+  FileDown,
+  BarChart3,
 } from 'lucide-react';
 import CostDetailsTab from './CostDetailsTab';
 
@@ -237,13 +241,61 @@ export default function ConstructionLedgerDetailPage() {
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => router.push(`/construction-ledgers/${ledgerId}/edit`)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
-            >
-              <Edit className="h-5 w-5" />
-              編集
-            </button>
+            <div className="flex items-center gap-3">
+              {/* クイックアクションボタン */}
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await fetch(
+                      `/api/orders/sync-from-dw?drmOrderId=${ledger.id}`,
+                      { cache: 'no-store' }
+                    );
+                    if (res.ok) {
+                      alert('DWからのデータ同期を開始しました');
+                      await fetchLedger();
+                    }
+                  } catch (error) {
+                    console.error('DW sync error:', error);
+                  }
+                }}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center gap-2"
+                title="DWから最新原価を同期"
+              >
+                <RefreshCw className="h-4 w-4" />
+                DW同期
+              </button>
+              <button
+                onClick={() => {
+                  // CSV出力処理
+                  const csvData = [
+                    ['工事番号', ledger.constructionNo],
+                    ['工事名', ledger.constructionName],
+                    ['契約金額', ledger.totalContractAmount],
+                    ['予算金額', ledger.executionBudget?.totalBudget || 0],
+                    ['実績原価', ledger.actualCost?.totalCost || 0],
+                  ];
+                  const csv = csvData.map((row) => row.join(',')).join('\n');
+                  const blob = new Blob([csv], { type: 'text/csv' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `construction_ledger_${ledger.constructionNo}.csv`;
+                  a.click();
+                }}
+                className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition flex items-center gap-2"
+                title="CSV形式でエクスポート"
+              >
+                <FileDown className="h-4 w-4" />
+                CSV出力
+              </button>
+              <button
+                onClick={() => router.push(`/construction-ledgers/${ledgerId}/edit`)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+              >
+                <Edit className="h-5 w-5" />
+                編集
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -463,6 +515,118 @@ export default function ConstructionLedgerDetailPage() {
                 <p className="text-gray-700 whitespace-pre-wrap">{ledger.notes}</p>
               </div>
             )}
+
+            {/* 🔥 発注サマリー */}
+            {ledger.orders && ledger.orders.length > 0 && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <Package className="h-5 w-5 text-blue-600" />
+                    発注サマリー ({ledger.orders.length}件)
+                  </h2>
+                  <button
+                    onClick={() => setActiveTab('integrated')}
+                    className="text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    詳細を見る →
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {ledger.orders.slice(0, 6).map((order) => (
+                    <div
+                      key={order.orderId}
+                      className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition cursor-pointer"
+                      onClick={() => router.push(`/orders/${order.orderId}`)}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="text-sm font-medium text-gray-900">{order.orderNo}</div>
+                        <span
+                          className={`text-xs px-2 py-1 rounded ${
+                            order.status === 'completed'
+                              ? 'bg-green-100 text-green-700'
+                              : order.status === 'in_progress'
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'bg-gray-100 text-gray-700'
+                          }`}
+                        >
+                          {order.status}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-600 mb-2">{order.partnerName}</div>
+                      <div className="text-base font-bold text-gray-900">
+                        ¥{order.orderAmount.toLocaleString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {ledger.orders.length > 6 && (
+                  <div className="text-center mt-4">
+                    <button
+                      onClick={() => setActiveTab('integrated')}
+                      className="text-sm text-blue-600 hover:text-blue-800"
+                    >
+                      他 {ledger.orders.length - 6} 件の発注を表示 →
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 🔥 請求サマリー */}
+            {ledger.invoices && ledger.invoices.length > 0 && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <Receipt className="h-5 w-5 text-blue-600" />
+                    請求サマリー ({ledger.invoices.length}件)
+                  </h2>
+                  <button
+                    onClick={() => setActiveTab('integrated')}
+                    className="text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    詳細を見る →
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {ledger.invoices.slice(0, 6).map((invoice) => (
+                    <div
+                      key={invoice.invoiceId}
+                      className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition cursor-pointer"
+                      onClick={() => router.push(`/invoices/${invoice.invoiceId}`)}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="text-sm font-medium text-gray-900">{invoice.invoiceNo}</div>
+                        <span
+                          className={`text-xs px-2 py-1 rounded ${
+                            invoice.status === 'paid'
+                              ? 'bg-green-100 text-green-700'
+                              : invoice.status === 'pending'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : 'bg-gray-100 text-gray-700'
+                          }`}
+                        >
+                          {invoice.status}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-600 mb-2">{invoice.invoiceDate}</div>
+                      <div className="text-base font-bold text-gray-900">
+                        ¥{invoice.amount.toLocaleString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {ledger.invoices.length > 6 && (
+                  <div className="text-center mt-4">
+                    <button
+                      onClick={() => setActiveTab('integrated')}
+                      className="text-sm text-blue-600 hover:text-blue-800"
+                    >
+                      他 {ledger.invoices.length - 6} 件の請求を表示 →
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -558,6 +722,180 @@ export default function ConstructionLedgerDetailPage() {
                 )}
               </div>
             </div>
+
+            {/* 🔥 予算vs実績 視覚化チャート */}
+            {ledger.executionBudget && ledger.actualCost && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-blue-600" />
+                  予算vs実績 比較チャート
+                </h2>
+                <div className="space-y-6">
+                  {/* 材料費 */}
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium text-gray-700">材料費</span>
+                      <div className="flex gap-4 text-xs">
+                        <span className="text-blue-600">
+                          予算: ¥{ledger.executionBudget.materialCost.toLocaleString()}
+                        </span>
+                        <span className="text-green-600">
+                          実績: ¥{ledger.actualCost.materialCost.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="relative h-8 bg-gray-100 rounded-lg overflow-hidden">
+                      <div
+                        className="absolute top-0 left-0 h-full bg-blue-400 opacity-50 rounded-lg transition-all"
+                        style={{
+                          width: `${Math.min(
+                            (ledger.executionBudget.materialCost /
+                              ledger.executionBudget.totalBudget) *
+                              100,
+                            100
+                          )}%`,
+                        }}
+                      ></div>
+                      <div
+                        className="absolute top-0 left-0 h-full bg-green-500 rounded-lg transition-all"
+                        style={{
+                          width: `${Math.min(
+                            (ledger.actualCost.materialCost / ledger.executionBudget.totalBudget) *
+                              100,
+                            100
+                          )}%`,
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  {/* 労務費 */}
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium text-gray-700">労務費</span>
+                      <div className="flex gap-4 text-xs">
+                        <span className="text-blue-600">
+                          予算: ¥{ledger.executionBudget.laborCost.toLocaleString()}
+                        </span>
+                        <span className="text-green-600">
+                          実績: ¥{ledger.actualCost.laborCost.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="relative h-8 bg-gray-100 rounded-lg overflow-hidden">
+                      <div
+                        className="absolute top-0 left-0 h-full bg-blue-400 opacity-50 rounded-lg transition-all"
+                        style={{
+                          width: `${Math.min(
+                            (ledger.executionBudget.laborCost / ledger.executionBudget.totalBudget) *
+                              100,
+                            100
+                          )}%`,
+                        }}
+                      ></div>
+                      <div
+                        className="absolute top-0 left-0 h-full bg-green-500 rounded-lg transition-all"
+                        style={{
+                          width: `${Math.min(
+                            (ledger.actualCost.laborCost / ledger.executionBudget.totalBudget) * 100,
+                            100
+                          )}%`,
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  {/* 外注費 */}
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium text-gray-700">外注費</span>
+                      <div className="flex gap-4 text-xs">
+                        <span className="text-blue-600">
+                          予算: ¥{ledger.executionBudget.outsourcingCost.toLocaleString()}
+                        </span>
+                        <span className="text-green-600">
+                          実績: ¥{ledger.actualCost.outsourcingCost.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="relative h-8 bg-gray-100 rounded-lg overflow-hidden">
+                      <div
+                        className="absolute top-0 left-0 h-full bg-blue-400 opacity-50 rounded-lg transition-all"
+                        style={{
+                          width: `${Math.min(
+                            (ledger.executionBudget.outsourcingCost /
+                              ledger.executionBudget.totalBudget) *
+                              100,
+                            100
+                          )}%`,
+                        }}
+                      ></div>
+                      <div
+                        className="absolute top-0 left-0 h-full bg-green-500 rounded-lg transition-all"
+                        style={{
+                          width: `${Math.min(
+                            (ledger.actualCost.outsourcingCost /
+                              ledger.executionBudget.totalBudget) *
+                              100,
+                            100
+                          )}%`,
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  {/* 経費 */}
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium text-gray-700">経費</span>
+                      <div className="flex gap-4 text-xs">
+                        <span className="text-blue-600">
+                          予算: ¥{ledger.executionBudget.expenseCost.toLocaleString()}
+                        </span>
+                        <span className="text-green-600">
+                          実績: ¥{ledger.actualCost.expenseCost.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="relative h-8 bg-gray-100 rounded-lg overflow-hidden">
+                      <div
+                        className="absolute top-0 left-0 h-full bg-blue-400 opacity-50 rounded-lg transition-all"
+                        style={{
+                          width: `${Math.min(
+                            (ledger.executionBudget.expenseCost /
+                              ledger.executionBudget.totalBudget) *
+                              100,
+                            100
+                          )}%`,
+                        }}
+                      ></div>
+                      <div
+                        className="absolute top-0 left-0 h-full bg-green-500 rounded-lg transition-all"
+                        style={{
+                          width: `${Math.min(
+                            (ledger.actualCost.expenseCost / ledger.executionBudget.totalBudget) *
+                              100,
+                            100
+                          )}%`,
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  {/* 凡例 */}
+                  <div className="flex gap-6 justify-center pt-4 border-t">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 bg-blue-400 opacity-50 rounded"></div>
+                      <span className="text-sm text-gray-600">予算</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 bg-green-500 rounded"></div>
+                      <span className="text-sm text-gray-600">実績</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* 実行予算詳細 */}
             {ledger.executionBudget && (
@@ -655,6 +993,145 @@ export default function ConstructionLedgerDetailPage() {
             {ledger.costAnalysis && (
               <div className="bg-white rounded-lg shadow p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">原価差異分析</h2>
+
+                {/* 🔥 差異チャート */}
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                  <div className="text-sm font-medium text-gray-700 mb-4">科目別差異（プラスが予算内、マイナスが予算超過）</div>
+                  <div className="space-y-3">
+                    {/* 材料費差異 */}
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-xs text-gray-600">材料費</span>
+                        <span className={`text-xs font-medium ${
+                          ledger.costAnalysis.budgetVsActual.materialVariance >= 0
+                            ? 'text-green-600'
+                            : 'text-red-600'
+                        }`}>
+                          {ledger.costAnalysis.budgetVsActual.materialVariance >= 0 ? '+' : ''}
+                          ¥{ledger.costAnalysis.budgetVsActual.materialVariance.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="relative h-6 bg-gray-200 rounded">
+                        <div
+                          className={`absolute h-full rounded transition-all ${
+                            ledger.costAnalysis.budgetVsActual.materialVariance >= 0
+                              ? 'bg-green-500 left-1/2'
+                              : 'bg-red-500 right-1/2'
+                          }`}
+                          style={{
+                            width: `${Math.min(
+                              Math.abs(ledger.costAnalysis.budgetVsActual.materialVariance) /
+                                (ledger.executionBudget?.totalBudget || 1) *
+                                50,
+                              50
+                            )}%`,
+                          }}
+                        ></div>
+                        <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gray-400"></div>
+                      </div>
+                    </div>
+
+                    {/* 労務費差異 */}
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-xs text-gray-600">労務費</span>
+                        <span className={`text-xs font-medium ${
+                          ledger.costAnalysis.budgetVsActual.laborVariance >= 0
+                            ? 'text-green-600'
+                            : 'text-red-600'
+                        }`}>
+                          {ledger.costAnalysis.budgetVsActual.laborVariance >= 0 ? '+' : ''}
+                          ¥{ledger.costAnalysis.budgetVsActual.laborVariance.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="relative h-6 bg-gray-200 rounded">
+                        <div
+                          className={`absolute h-full rounded transition-all ${
+                            ledger.costAnalysis.budgetVsActual.laborVariance >= 0
+                              ? 'bg-green-500 left-1/2'
+                              : 'bg-red-500 right-1/2'
+                          }`}
+                          style={{
+                            width: `${Math.min(
+                              Math.abs(ledger.costAnalysis.budgetVsActual.laborVariance) /
+                                (ledger.executionBudget?.totalBudget || 1) *
+                                50,
+                              50
+                            )}%`,
+                          }}
+                        ></div>
+                        <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gray-400"></div>
+                      </div>
+                    </div>
+
+                    {/* 外注費差異 */}
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-xs text-gray-600">外注費</span>
+                        <span className={`text-xs font-medium ${
+                          ledger.costAnalysis.budgetVsActual.outsourcingVariance >= 0
+                            ? 'text-green-600'
+                            : 'text-red-600'
+                        }`}>
+                          {ledger.costAnalysis.budgetVsActual.outsourcingVariance >= 0 ? '+' : ''}
+                          ¥{ledger.costAnalysis.budgetVsActual.outsourcingVariance.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="relative h-6 bg-gray-200 rounded">
+                        <div
+                          className={`absolute h-full rounded transition-all ${
+                            ledger.costAnalysis.budgetVsActual.outsourcingVariance >= 0
+                              ? 'bg-green-500 left-1/2'
+                              : 'bg-red-500 right-1/2'
+                          }`}
+                          style={{
+                            width: `${Math.min(
+                              Math.abs(ledger.costAnalysis.budgetVsActual.outsourcingVariance) /
+                                (ledger.executionBudget?.totalBudget || 1) *
+                                50,
+                              50
+                            )}%`,
+                          }}
+                        ></div>
+                        <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gray-400"></div>
+                      </div>
+                    </div>
+
+                    {/* 経費差異 */}
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-xs text-gray-600">経費</span>
+                        <span className={`text-xs font-medium ${
+                          ledger.costAnalysis.budgetVsActual.expenseVariance >= 0
+                            ? 'text-green-600'
+                            : 'text-red-600'
+                        }`}>
+                          {ledger.costAnalysis.budgetVsActual.expenseVariance >= 0 ? '+' : ''}
+                          ¥{ledger.costAnalysis.budgetVsActual.expenseVariance.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="relative h-6 bg-gray-200 rounded">
+                        <div
+                          className={`absolute h-full rounded transition-all ${
+                            ledger.costAnalysis.budgetVsActual.expenseVariance >= 0
+                              ? 'bg-green-500 left-1/2'
+                              : 'bg-red-500 right-1/2'
+                          }`}
+                          style={{
+                            width: `${Math.min(
+                              Math.abs(ledger.costAnalysis.budgetVsActual.expenseVariance) /
+                                (ledger.executionBudget?.totalBudget || 1) *
+                                50,
+                              50
+                            )}%`,
+                          }}
+                        ></div>
+                        <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gray-400"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="space-y-4">
                   <div className="flex justify-between items-center py-3 border-b">
                     <span className="text-gray-700">材料費差異</span>
@@ -827,6 +1304,163 @@ export default function ConstructionLedgerDetailPage() {
                     <p className="text-lg font-bold text-green-600 mt-1">
                       ¥{ledger.progress.receivedAmount.toLocaleString()}
                     </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 🔥 工事タイムライン */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-blue-600" />
+                工事タイムライン
+              </h2>
+              <div className="space-y-6">
+                {/* タイムライン軸 */}
+                <div className="relative">
+                  {/* 横線 */}
+                  <div className="absolute top-8 left-0 right-0 h-1 bg-gray-200"></div>
+
+                  {/* マイルストーン */}
+                  <div className="relative grid grid-cols-4 gap-4">
+                    {/* 予定開始 */}
+                    <div className="relative">
+                      <div className="flex flex-col items-center">
+                        <div className="w-4 h-4 rounded-full bg-blue-500 border-4 border-white shadow-md relative z-10"></div>
+                        <div className="mt-3 text-center">
+                          <div className="text-xs font-medium text-gray-900">予定開始</div>
+                          <div className="text-xs text-gray-600 mt-1">
+                            {ledger.scheduledStartDate}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 実績開始 */}
+                    <div className="relative">
+                      <div className="flex flex-col items-center">
+                        <div
+                          className={`w-4 h-4 rounded-full border-4 border-white shadow-md relative z-10 ${
+                            ledger.actualStartDate ? 'bg-green-500' : 'bg-gray-300'
+                          }`}
+                        ></div>
+                        <div className="mt-3 text-center">
+                          <div className="text-xs font-medium text-gray-900">実績開始</div>
+                          <div className="text-xs text-gray-600 mt-1">
+                            {ledger.actualStartDate || '未開始'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 現在 */}
+                    <div className="relative">
+                      <div className="flex flex-col items-center">
+                        <div className="w-4 h-4 rounded-full bg-yellow-500 border-4 border-white shadow-md relative z-10 animate-pulse"></div>
+                        <div className="mt-3 text-center">
+                          <div className="text-xs font-medium text-gray-900">現在</div>
+                          <div className="text-xs text-gray-600 mt-1">
+                            {new Date().toISOString().split('T')[0]}
+                          </div>
+                          <div className="text-xs font-bold text-blue-600 mt-1">
+                            {ledger.progress.progressRate}%完了
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 予定完了 */}
+                    <div className="relative">
+                      <div className="flex flex-col items-center">
+                        <div
+                          className={`w-4 h-4 rounded-full border-4 border-white shadow-md relative z-10 ${
+                            ledger.actualEndDate
+                              ? 'bg-green-500'
+                              : ledger.progress.progressRate === 100
+                              ? 'bg-blue-500'
+                              : 'bg-gray-300'
+                          }`}
+                        ></div>
+                        <div className="mt-3 text-center">
+                          <div className="text-xs font-medium text-gray-900">
+                            {ledger.actualEndDate ? '実績完了' : '予定完了'}
+                          </div>
+                          <div className="text-xs text-gray-600 mt-1">
+                            {ledger.actualEndDate || ledger.scheduledEndDate}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 工期情報 */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 border-t">
+                  <div className="p-4 bg-blue-50 rounded-lg">
+                    <div className="text-sm text-gray-600 mb-1">予定工期</div>
+                    <div className="text-lg font-bold text-blue-600">
+                      {ledger.constructionDays}日間
+                    </div>
+                  </div>
+                  <div className="p-4 bg-green-50 rounded-lg">
+                    <div className="text-sm text-gray-600 mb-1">経過日数</div>
+                    <div className="text-lg font-bold text-green-600">
+                      {ledger.actualStartDate
+                        ? Math.floor(
+                            (new Date().getTime() -
+                              new Date(ledger.actualStartDate).getTime()) /
+                              (1000 * 60 * 60 * 24)
+                          )
+                        : 0}
+                      日
+                    </div>
+                  </div>
+                  <div className="p-4 bg-yellow-50 rounded-lg">
+                    <div className="text-sm text-gray-600 mb-1">残日数（予定）</div>
+                    <div className="text-lg font-bold text-yellow-600">
+                      {Math.max(
+                        0,
+                        Math.floor(
+                          (new Date(ledger.scheduledEndDate).getTime() - new Date().getTime()) /
+                            (1000 * 60 * 60 * 24)
+                        )
+                      )}
+                      日
+                    </div>
+                  </div>
+                </div>
+
+                {/* 進捗ステータス */}
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm text-gray-600">工事ステータス</div>
+                      <div className="text-base font-semibold text-gray-900 mt-1">
+                        {ledger.status === 'planning'
+                          ? '計画中'
+                          : ledger.status === 'ongoing'
+                          ? '施工中'
+                          : ledger.status === 'completed'
+                          ? '完了'
+                          : ledger.status === 'suspended'
+                          ? '中断'
+                          : '不明'}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-gray-600">進捗状況</div>
+                      <div className="text-base font-semibold text-blue-600 mt-1">
+                        {ledger.progress.progressRate < 25
+                          ? '着工初期'
+                          : ledger.progress.progressRate < 50
+                          ? '前半'
+                          : ledger.progress.progressRate < 75
+                          ? '中盤'
+                          : ledger.progress.progressRate < 100
+                          ? '終盤'
+                          : '完工'}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
