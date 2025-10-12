@@ -3,14 +3,46 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  User, Phone, Mail, MapPin, Building2, Calendar, Tag,
-  Users, Home, Activity, FileText, Edit, Trash2,
-  ChevronLeft, Plus, MessageSquare, X, Upload, Download, Eye, File,
-  Calculator, ScrollText, Hammer
+  User,
+  Phone,
+  Mail,
+  MapPin,
+  Building2,
+  Calendar,
+  Tag,
+  Users,
+  Home,
+  Activity,
+  FileText,
+  Edit,
+  Trash2,
+  ChevronLeft,
+  Plus,
+  MessageSquare,
+  X,
+  Upload,
+  Download,
+  Eye,
+  File,
+  Calculator,
+  ScrollText,
+  Hammer,
 } from 'lucide-react';
-import type { Customer, Property, Activity as ActivityType } from '@/types/customer';
+import type {
+  Customer,
+  Property,
+  Activity as ActivityType,
+} from '@/types/customer';
 
-type TabType = 'overview' | 'family' | 'properties' | 'activities' | 'documents' | 'estimates' | 'contracts' | 'construction-ledgers';
+type TabType =
+  | 'overview'
+  | 'family'
+  | 'properties'
+  | 'activities'
+  | 'documents'
+  | 'estimates'
+  | 'contracts'
+  | 'construction-ledgers';
 
 export default function CustomerDetailPage() {
   const params = useParams();
@@ -28,9 +60,13 @@ export default function CustomerDetailPage() {
   const [editingProperty, setEditingProperty] = useState<any>(null);
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [editingActivity, setEditingActivity] = useState<any>(null);
-  const [activityTypeFilter, setActivityTypeFilter] = useState<string | null>(null);
+  const [activityTypeFilter, setActivityTypeFilter] = useState<string | null>(
+    null,
+  );
   const [showDocumentModal, setShowDocumentModal] = useState(false);
-  const [documentCategoryFilter, setDocumentCategoryFilter] = useState<string | null>(null);
+  const [documentCategoryFilter, setDocumentCategoryFilter] = useState<
+    string | null
+  >(null);
   const [documents, setDocuments] = useState<any[]>([]);
 
   // Phase 10: 見積・契約・工事台帳
@@ -59,7 +95,9 @@ export default function CustomerDetailPage() {
       }
 
       // 活動履歴
-      const activitiesRes = await fetch(`/api/customers/${customerId}/activities`);
+      const activitiesRes = await fetch(
+        `/api/customers/${customerId}/activities`,
+      );
       const activitiesData = await activitiesRes.json();
       if (activitiesData.success) {
         setActivities(activitiesData.data);
@@ -148,28 +186,39 @@ export default function CustomerDetailPage() {
       ]);
 
       // Phase 10: 見積・契約・工事台帳データの取得
-      // 見積一覧（顧客IDでフィルタ）
+      // 見積一覧（顧客IDで正確にフィルタ、後方互換性あり）
       try {
         const estimatesRes = await fetch(`/api/estimates`);
         const estimatesData = await estimatesRes.json();
         if (estimatesData.success && estimatesData.data) {
-          // 顧客IDまたは顧客名でフィルタ（実装時は顧客IDで正確にフィルタ）
-          const customerEstimates = estimatesData.data.filter((est: any) =>
-            est.customerName === customer.name || est.customerId === customerId
-          );
+          const customerEstimates = estimatesData.data.filter((est: any) => {
+            // customerId がある場合は正確なID一致を優先
+            if (est.customerId) {
+              return est.customerId === customerId;
+            }
+            // customerId がない場合は顧客名でマッチング（後方互換性）
+            return est.customerName === customer.name;
+          });
           setEstimates(customerEstimates);
         }
       } catch (error) {
         console.error('Failed to fetch estimates:', error);
       }
 
-      // 契約一覧（顧客IDでフィルタ）
+      // 契約一覧（顧客IDで正確にフィルタ、後方互換性あり）
       try {
         const contractsRes = await fetch(`/api/contracts`);
         const contractsData = await contractsRes.json();
         if (contractsData.success && contractsData.data) {
-          const customerContracts = contractsData.data.filter((contract: any) =>
-            contract.customerName === customer.name || contract.customerId === customerId
+          const customerContracts = contractsData.data.filter(
+            (contract: any) => {
+              // customerId がある場合は正確なID一致を優先
+              if (contract.customerId) {
+                return contract.customerId === customerId;
+              }
+              // customerId がない場合は顧客名でマッチング（後方互換性）
+              return contract.customerName === customer.name;
+            },
           );
           setContracts(customerContracts);
         }
@@ -177,14 +226,19 @@ export default function CustomerDetailPage() {
         console.error('Failed to fetch contracts:', error);
       }
 
-      // 工事台帳一覧（顧客IDでフィルタ）
+      // 工事台帳一覧（顧客IDで正確にフィルタ、後方互換性あり）
       try {
         const ledgersRes = await fetch(`/api/construction-ledgers`);
         const ledgersData = await ledgersRes.json();
         if (ledgersData.success && ledgersData.data) {
-          const customerLedgers = ledgersData.data.filter((ledger: any) =>
-            ledger.customerName === customer.name || ledger.customerId === customerId
-          );
+          const customerLedgers = ledgersData.data.filter((ledger: any) => {
+            // customerId がある場合は正確なID一致を優先
+            if (ledger.customerId) {
+              return ledger.customerId === customerId;
+            }
+            // customerId がない場合は顧客名でマッチング（後方互換性）
+            return ledger.customerName === customer.name;
+          });
           setConstructionLedgers(customerLedgers);
         }
       } catch (error) {
@@ -211,12 +265,37 @@ export default function CustomerDetailPage() {
 
   const tabs = [
     { id: 'overview', label: '概要', icon: User },
-    { id: 'family', label: '家族関係', icon: Users, count: customer.familyRelations?.length || 0 },
+    {
+      id: 'family',
+      label: '家族関係',
+      icon: Users,
+      count: customer.familyRelations?.length || 0,
+    },
     { id: 'properties', label: '物件', icon: Home, count: properties.length },
-    { id: 'estimates', label: '見積', icon: Calculator, count: estimates.length },
-    { id: 'contracts', label: '契約', icon: ScrollText, count: contracts.length },
-    { id: 'construction-ledgers', label: '工事台帳', icon: Hammer, count: constructionLedgers.length },
-    { id: 'activities', label: '活動履歴', icon: Activity, count: activities.length },
+    {
+      id: 'estimates',
+      label: '見積',
+      icon: Calculator,
+      count: estimates.length,
+    },
+    {
+      id: 'contracts',
+      label: '契約',
+      icon: ScrollText,
+      count: contracts.length,
+    },
+    {
+      id: 'construction-ledgers',
+      label: '工事台帳',
+      icon: Hammer,
+      count: constructionLedgers.length,
+    },
+    {
+      id: 'activities',
+      label: '活動履歴',
+      icon: Activity,
+      count: activities.length,
+    },
     { id: 'documents', label: '資料', icon: FileText },
   ];
 
@@ -228,7 +307,13 @@ export default function CustomerDetailPage() {
       inactive: { label: '休眠', class: 'bg-orange-500' },
     };
     const c = config[status as keyof typeof config] || config.lead;
-    return <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${c.class}`}>{c.label}</span>;
+    return (
+      <span
+        className={`px-3 py-1 rounded-full text-xs font-bold text-white ${c.class}`}
+      >
+        {c.label}
+      </span>
+    );
   };
 
   const getPropertyTypeBadge = (type: string) => {
@@ -241,7 +326,11 @@ export default function CustomerDetailPage() {
       other: { label: 'その他', class: 'bg-gray-100 text-gray-800' },
     };
     const c = config[type] || config.other;
-    return <span className={`px-2 py-1 rounded text-xs font-medium ${c.class}`}>{c.label}</span>;
+    return (
+      <span className={`px-2 py-1 rounded text-xs font-medium ${c.class}`}>
+        {c.label}
+      </span>
+    );
   };
 
   const getPropertyStatusBadge = (status: string) => {
@@ -254,7 +343,11 @@ export default function CustomerDetailPage() {
       cancelled: { label: 'キャンセル', class: 'bg-red-100 text-red-800' },
     };
     const c = config[status] || config.planning;
-    return <span className={`px-2 py-1 rounded text-xs font-medium ${c.class}`}>{c.label}</span>;
+    return (
+      <span className={`px-2 py-1 rounded text-xs font-medium ${c.class}`}>
+        {c.label}
+      </span>
+    );
   };
 
   const getActivityIcon = (type: string) => {
@@ -343,11 +436,13 @@ export default function CustomerDetailPage() {
                   <Icon className="h-5 w-5" />
                   <span>{tab.label}</span>
                   {tab.count !== undefined && tab.count > 0 && (
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                      isActive
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-200 text-gray-700'
-                    }`}>
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                        isActive
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-200 text-gray-700'
+                      }`}
+                    >
                       {tab.count}
                     </span>
                   )}
@@ -383,11 +478,22 @@ export default function CustomerDetailPage() {
                       電話番号
                     </h4>
                     {customer.phones?.map((phone) => (
-                      <div key={phone.id} className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
-                        <p className="text-sm font-bold text-gray-900">{phone.number}</p>
-                        <p className="text-xs text-gray-500 mt-1">{phone.type} {phone.isPrimary && '✨ (主)'}</p>
+                      <div
+                        key={phone.id}
+                        className="bg-white rounded-lg p-3 shadow-sm border border-gray-100"
+                      >
+                        <p className="text-sm font-bold text-gray-900">
+                          {phone.number}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {phone.type} {phone.isPrimary && '✨ (主)'}
+                        </p>
                       </div>
-                    )) || <p className="text-sm text-gray-900 bg-white rounded-lg p-3">{customer.phone}</p>}
+                    )) || (
+                      <p className="text-sm text-gray-900 bg-white rounded-lg p-3">
+                        {customer.phone}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-3">
                     <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
@@ -395,11 +501,22 @@ export default function CustomerDetailPage() {
                       メールアドレス
                     </h4>
                     {customer.emails?.map((email) => (
-                      <div key={email.id} className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
-                        <p className="text-sm font-bold text-gray-900">{email.email}</p>
-                        <p className="text-xs text-gray-500 mt-1">{email.type} {email.isPrimary && '✨ (主)'}</p>
+                      <div
+                        key={email.id}
+                        className="bg-white rounded-lg p-3 shadow-sm border border-gray-100"
+                      >
+                        <p className="text-sm font-bold text-gray-900">
+                          {email.email}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {email.type} {email.isPrimary && '✨ (主)'}
+                        </p>
                       </div>
-                    )) || <p className="text-sm text-gray-900 bg-white rounded-lg p-3">{customer.email}</p>}
+                    )) || (
+                      <p className="text-sm text-gray-900 bg-white rounded-lg p-3">
+                        {customer.email}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -414,21 +531,33 @@ export default function CustomerDetailPage() {
                 </h3>
                 <div className="space-y-4">
                   <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                    <h4 className="text-sm font-bold text-green-700 mb-2">🏠 現住所</h4>
+                    <h4 className="text-sm font-bold text-green-700 mb-2">
+                      🏠 現住所
+                    </h4>
                     <p className="text-sm text-gray-900">
-                      {customer.currentAddress?.fullAddress || customer.address || '未登録'}
+                      {customer.currentAddress?.fullAddress ||
+                        customer.address ||
+                        '未登録'}
                     </p>
                   </div>
                   {customer.familyHomeAddress && (
                     <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                      <h4 className="text-sm font-bold text-green-700 mb-2">👨‍👩‍👧‍👦 実家住所</h4>
-                      <p className="text-sm text-gray-900">{customer.familyHomeAddress.fullAddress}</p>
+                      <h4 className="text-sm font-bold text-green-700 mb-2">
+                        👨‍👩‍👧‍👦 実家住所
+                      </h4>
+                      <p className="text-sm text-gray-900">
+                        {customer.familyHomeAddress.fullAddress}
+                      </p>
                     </div>
                   )}
                   {customer.workAddress && (
                     <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                      <h4 className="text-sm font-bold text-green-700 mb-2">🏢 勤務先住所</h4>
-                      <p className="text-sm text-gray-900">{customer.workAddress.fullAddress}</p>
+                      <h4 className="text-sm font-bold text-green-700 mb-2">
+                        🏢 勤務先住所
+                      </h4>
+                      <p className="text-sm text-gray-900">
+                        {customer.workAddress.fullAddress}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -467,19 +596,27 @@ export default function CustomerDetailPage() {
                 <div className="space-y-4">
                   <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex justify-between items-center">
                     <span className="text-sm font-medium">🏠 物件数</span>
-                    <span className="text-2xl font-bold">{customer.propertiesCount || 0}</span>
+                    <span className="text-2xl font-bold">
+                      {customer.propertiesCount || 0}
+                    </span>
                   </div>
                   <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex justify-between items-center">
                     <span className="text-sm font-medium">📋 見積数</span>
-                    <span className="text-2xl font-bold">{customer.estimatesCount || 0}</span>
+                    <span className="text-2xl font-bold">
+                      {customer.estimatesCount || 0}
+                    </span>
                   </div>
                   <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex justify-between items-center">
                     <span className="text-sm font-medium">✍️ 契約数</span>
-                    <span className="text-2xl font-bold">{customer.contractsCount || 0}</span>
+                    <span className="text-2xl font-bold">
+                      {customer.contractsCount || 0}
+                    </span>
                   </div>
                   <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex justify-between items-center">
                     <span className="text-sm font-medium">⚡ 活動回数</span>
-                    <span className="text-2xl font-bold">{customer.activitiesCount || 0}</span>
+                    <span className="text-2xl font-bold">
+                      {customer.activitiesCount || 0}
+                    </span>
                   </div>
                   <div className="bg-white/20 backdrop-blur-sm rounded-xl p-5 mt-4">
                     <div className="flex justify-between items-center">
@@ -502,7 +639,9 @@ export default function CustomerDetailPage() {
                 </h3>
                 <div className="space-y-4">
                   <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                    <span className="text-xs font-bold text-gray-500 uppercase">担当者</span>
+                    <span className="text-xs font-bold text-gray-500 uppercase">
+                      担当者
+                    </span>
                     <p className="text-sm font-bold text-gray-900 mt-1 flex items-center gap-2">
                       <span className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
                         {customer.assignee.charAt(0)}
@@ -511,12 +650,18 @@ export default function CustomerDetailPage() {
                     </p>
                   </div>
                   <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                    <span className="text-xs font-bold text-gray-500 uppercase">獲得チャネル</span>
-                    <p className="text-sm font-bold text-indigo-600 mt-1">📢 {customer.source}</p>
+                    <span className="text-xs font-bold text-gray-500 uppercase">
+                      獲得チャネル
+                    </span>
+                    <p className="text-sm font-bold text-indigo-600 mt-1">
+                      📢 {customer.source}
+                    </p>
                   </div>
                   {customer.leadScore && (
                     <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg p-4 shadow-sm border border-yellow-200">
-                      <span className="text-xs font-bold text-orange-700 uppercase">リードスコア</span>
+                      <span className="text-xs font-bold text-orange-700 uppercase">
+                        リードスコア
+                      </span>
                       <div className="mt-2 flex items-center gap-2">
                         <div className="flex-1 bg-gray-200 rounded-full h-3">
                           <div
@@ -524,14 +669,20 @@ export default function CustomerDetailPage() {
                             style={{ width: `${customer.leadScore}%` }}
                           />
                         </div>
-                        <span className="text-2xl font-bold text-orange-600">{customer.leadScore}</span>
+                        <span className="text-2xl font-bold text-orange-600">
+                          {customer.leadScore}
+                        </span>
                       </div>
                     </div>
                   )}
                   {customer.referredByName && (
                     <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                      <span className="text-xs font-bold text-gray-500 uppercase">紹介者</span>
-                      <p className="text-sm font-bold text-gray-900 mt-1">🤝 {customer.referredByName}</p>
+                      <span className="text-xs font-bold text-gray-500 uppercase">
+                        紹介者
+                      </span>
+                      <p className="text-sm font-bold text-gray-900 mt-1">
+                        🤝 {customer.referredByName}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -594,14 +745,18 @@ export default function CustomerDetailPage() {
                           child: '👶',
                           parent: '👨‍👩',
                           sibling: '👫',
-                          other: '👤'
+                          other: '👤',
                         };
 
                         return (
                           <div key={relation.id} className="relative group">
-                            <div className={`bg-gradient-to-br ${color} rounded-2xl shadow-lg p-6 text-white hover:shadow-2xl transform hover:scale-105 transition-all`}>
+                            <div
+                              className={`bg-gradient-to-br ${color} rounded-2xl shadow-lg p-6 text-white hover:shadow-2xl transform hover:scale-105 transition-all`}
+                            >
                               <div className="flex justify-between items-start mb-3">
-                                <div className="text-3xl">{icons[relation.relationType] || icons.other}</div>
+                                <div className="text-3xl">
+                                  {icons[relation.relationType] || icons.other}
+                                </div>
                                 <div className="flex gap-2">
                                   <button
                                     onClick={() => {
@@ -617,7 +772,9 @@ export default function CustomerDetailPage() {
                                   </button>
                                 </div>
                               </div>
-                              <h4 className="text-lg font-bold">{relation.relatedCustomerName}</h4>
+                              <h4 className="text-lg font-bold">
+                                {relation.relatedCustomerName}
+                              </h4>
                               <p className="text-sm text-white/90 mt-1">
                                 {relation.relationName || relation.relationType}
                               </p>
@@ -627,7 +784,11 @@ export default function CustomerDetailPage() {
                                 </p>
                               )}
                               <button
-                                onClick={() => router.push(`/customers/${relation.relatedCustomerId}`)}
+                                onClick={() =>
+                                  router.push(
+                                    `/customers/${relation.relatedCustomerId}`,
+                                  )
+                                }
                                 className="mt-4 w-full py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-bold transition-colors"
                               >
                                 詳細を見る →
@@ -647,24 +808,37 @@ export default function CustomerDetailPage() {
                   </h3>
                   <div className="space-y-3">
                     {customer.familyRelations.map((relation) => (
-                      <div key={relation.id} className="border-2 border-gray-200 rounded-xl p-4 hover:border-purple-300 hover:bg-purple-50 transition-all">
+                      <div
+                        key={relation.id}
+                        className="border-2 border-gray-200 rounded-xl p-4 hover:border-purple-300 hover:bg-purple-50 transition-all"
+                      >
                         <div className="flex justify-between items-start">
                           <div className="flex items-center gap-4">
                             <div className="w-12 h-12 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center text-white text-xl font-bold">
                               {relation.relatedCustomerName.charAt(0)}
                             </div>
                             <div>
-                              <h4 className="font-bold text-gray-900">{relation.relatedCustomerName}</h4>
+                              <h4 className="font-bold text-gray-900">
+                                {relation.relatedCustomerName}
+                              </h4>
                               <p className="text-sm text-gray-600 mt-1">
-                                {relation.relationType} {relation.relationName && `(${relation.relationName})`}
+                                {relation.relationType}{' '}
+                                {relation.relationName &&
+                                  `(${relation.relationName})`}
                               </p>
                               {relation.note && (
-                                <p className="text-sm text-gray-500 mt-2 italic">{relation.note}</p>
+                                <p className="text-sm text-gray-500 mt-2 italic">
+                                  {relation.note}
+                                </p>
                               )}
                             </div>
                           </div>
                           <button
-                            onClick={() => router.push(`/customers/${relation.relatedCustomerId}`)}
+                            onClick={() =>
+                              router.push(
+                                `/customers/${relation.relatedCustomerId}`,
+                              )
+                            }
                             className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all font-bold text-sm"
                           >
                             詳細を見る →
@@ -678,8 +852,12 @@ export default function CustomerDetailPage() {
             ) : (
               <div className="bg-gradient-to-br from-pink-50 to-purple-50 rounded-2xl shadow-lg p-16 text-center border-2 border-dashed border-purple-300">
                 <Users className="h-24 w-24 mx-auto mb-6 text-purple-400" />
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">家族関係が未登録です</h3>
-                <p className="text-gray-600 mb-6">家族や関係者を登録して、より詳細な顧客管理を始めましょう</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                  家族関係が未登録です
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  家族や関係者を登録して、より詳細な顧客管理を始めましょう
+                </p>
                 <button
                   onClick={() => setShowFamilyModal(true)}
                   className="px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl hover:shadow-2xl transform hover:scale-105 transition-all font-bold flex items-center gap-2 mx-auto"
@@ -727,7 +905,9 @@ export default function CustomerDetailPage() {
                     { key: 'construction', label: '施工', icon: '🏗️' },
                     { key: 'completed', label: '竣工', icon: '🏡' },
                   ];
-                  const currentStepIndex = statusSteps.findIndex(s => s.key === property.status);
+                  const currentStepIndex = statusSteps.findIndex(
+                    (s) => s.key === property.status,
+                  );
 
                   return (
                     <div
@@ -735,7 +915,9 @@ export default function CustomerDetailPage() {
                       className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all overflow-hidden group"
                     >
                       {/* Header with Gradient */}
-                      <div className={`bg-gradient-to-r ${gradient} p-6 text-white relative overflow-hidden`}>
+                      <div
+                        className={`bg-gradient-to-r ${gradient} p-6 text-white relative overflow-hidden`}
+                      >
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
                         <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12"></div>
 
@@ -759,17 +941,26 @@ export default function CustomerDetailPage() {
                           <div className="mt-4 bg-white/20 backdrop-blur-sm rounded-xl p-3">
                             <div className="flex justify-between items-center mb-2">
                               {statusSteps.map((step, i) => (
-                                <div key={step.key} className="flex flex-col items-center flex-1">
-                                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-lg transition-all ${
-                                    i <= currentStepIndex
-                                      ? 'bg-white text-emerald-600 scale-110 shadow-lg'
-                                      : 'bg-white/30 text-white/60'
-                                  }`}>
+                                <div
+                                  key={step.key}
+                                  className="flex flex-col items-center flex-1"
+                                >
+                                  <div
+                                    className={`w-8 h-8 rounded-full flex items-center justify-center text-lg transition-all ${
+                                      i <= currentStepIndex
+                                        ? 'bg-white text-emerald-600 scale-110 shadow-lg'
+                                        : 'bg-white/30 text-white/60'
+                                    }`}
+                                  >
                                     {step.icon}
                                   </div>
-                                  <span className={`text-xs mt-1 font-bold ${
-                                    i <= currentStepIndex ? 'text-white' : 'text-white/60'
-                                  }`}>
+                                  <span
+                                    className={`text-xs mt-1 font-bold ${
+                                      i <= currentStepIndex
+                                        ? 'text-white'
+                                        : 'text-white/60'
+                                    }`}
+                                  >
                                     {step.label}
                                   </span>
                                 </div>
@@ -778,7 +969,9 @@ export default function CustomerDetailPage() {
                             <div className="relative h-1 bg-white/30 rounded-full mt-2">
                               <div
                                 className="absolute h-full bg-white rounded-full transition-all duration-500"
-                                style={{ width: `${(currentStepIndex / (statusSteps.length - 1)) * 100}%` }}
+                                style={{
+                                  width: `${(currentStepIndex / (statusSteps.length - 1)) * 100}%`,
+                                }}
                               />
                             </div>
                           </div>
@@ -791,10 +984,14 @@ export default function CustomerDetailPage() {
                           <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-4">
                             <div className="flex items-center gap-2 text-blue-600 mb-2">
                               <span className="text-2xl">📐</span>
-                              <span className="text-xs font-bold text-gray-600">土地面積</span>
+                              <span className="text-xs font-bold text-gray-600">
+                                土地面積
+                              </span>
                             </div>
                             <p className="text-lg font-bold text-gray-900">
-                              {property.land.area ? `${property.land.area}㎡` : '未登録'}
+                              {property.land.area
+                                ? `${property.land.area}㎡`
+                                : '未登録'}
                             </p>
                             {property.land.areaInTsubo && (
                               <p className="text-xs text-gray-500 mt-1">
@@ -806,10 +1003,14 @@ export default function CustomerDetailPage() {
                           <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4">
                             <div className="flex items-center gap-2 text-purple-600 mb-2">
                               <span className="text-2xl">🏠</span>
-                              <span className="text-xs font-bold text-gray-600">延床面積</span>
+                              <span className="text-xs font-bold text-gray-600">
+                                延床面積
+                              </span>
                             </div>
                             <p className="text-lg font-bold text-gray-900">
-                              {property.building.totalFloorArea ? `${property.building.totalFloorArea}㎡` : '未登録'}
+                              {property.building.totalFloorArea
+                                ? `${property.building.totalFloorArea}㎡`
+                                : '未登録'}
                             </p>
                             {property.building.floors && (
                               <p className="text-xs text-gray-500 mt-1">
@@ -821,21 +1022,33 @@ export default function CustomerDetailPage() {
                           <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-4">
                             <div className="flex items-center gap-2 text-orange-600 mb-2">
                               <span className="text-2xl">💰</span>
-                              <span className="text-xs font-bold text-gray-600">希望予算</span>
+                              <span className="text-xs font-bold text-gray-600">
+                                希望予算
+                              </span>
                             </div>
                             <p className="text-lg font-bold text-gray-900">
-                              {property.desiredBudget ? `¥${(property.desiredBudget / 10000).toFixed(0)}万` : '未設定'}
+                              {property.desiredBudget
+                                ? `¥${(property.desiredBudget / 10000).toFixed(0)}万`
+                                : '未設定'}
                             </p>
                           </div>
 
                           <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4">
                             <div className="flex items-center gap-2 text-green-600 mb-2">
                               <span className="text-2xl">📅</span>
-                              <span className="text-xs font-bold text-gray-600">着工予定</span>
+                              <span className="text-xs font-bold text-gray-600">
+                                着工予定
+                              </span>
                             </div>
                             <p className="text-sm font-bold text-gray-900">
                               {property.scheduledStartDate
-                                ? new Date(property.scheduledStartDate).toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric' })
+                                ? new Date(
+                                    property.scheduledStartDate,
+                                  ).toLocaleDateString('ja-JP', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric',
+                                  })
                                 : '未定'}
                             </p>
                           </div>
@@ -845,13 +1058,24 @@ export default function CustomerDetailPage() {
                         {property.building.structure && (
                           <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
                             <Building2 className="h-4 w-4" />
-                            <span>構造: {property.building.structure === 'wood' ? '木造' : property.building.structure === 'steel' ? '鉄骨' : property.building.structure === 'rc' ? 'RC' : property.building.structure}</span>
+                            <span>
+                              構造:{' '}
+                              {property.building.structure === 'wood'
+                                ? '木造'
+                                : property.building.structure === 'steel'
+                                  ? '鉄骨'
+                                  : property.building.structure === 'rc'
+                                    ? 'RC'
+                                    : property.building.structure}
+                            </span>
                           </div>
                         )}
 
                         {property.notes && (
                           <div className="mt-4 p-4 bg-gray-50 rounded-xl border-l-4 border-emerald-500">
-                            <p className="text-sm text-gray-700">{property.notes}</p>
+                            <p className="text-sm text-gray-700">
+                              {property.notes}
+                            </p>
                           </div>
                         )}
 
@@ -883,9 +1107,12 @@ export default function CustomerDetailPage() {
                   <div className="w-24 h-24 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full mx-auto mb-6 flex items-center justify-center shadow-xl">
                     <Home className="h-12 w-12 text-white" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">物件が登録されていません</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    物件が登録されていません
+                  </h3>
                   <p className="text-gray-600 mb-6">
-                    {customer?.name}様の物件情報を登録して、<br />
+                    {customer?.name}様の物件情報を登録して、
+                    <br />
                     プロジェクトを管理しましょう
                   </p>
                   <button
@@ -931,14 +1158,46 @@ export default function CustomerDetailPage() {
                 すべて ({activities.length})
               </button>
               {[
-                { type: 'visit', label: '訪問', icon: '🏠', color: 'from-blue-500 to-cyan-500' },
-                { type: 'call', label: '電話', icon: '📞', color: 'from-green-500 to-emerald-500' },
-                { type: 'meeting', label: '打ち合わせ', icon: '👥', color: 'from-purple-500 to-pink-500' },
-                { type: 'estimate', label: '見積', icon: '💰', color: 'from-orange-500 to-red-500' },
-                { type: 'contract', label: '契約', icon: '📝', color: 'from-yellow-500 to-amber-500' },
-                { type: 'note', label: 'メモ', icon: '📋', color: 'from-gray-500 to-slate-500' },
+                {
+                  type: 'visit',
+                  label: '訪問',
+                  icon: '🏠',
+                  color: 'from-blue-500 to-cyan-500',
+                },
+                {
+                  type: 'call',
+                  label: '電話',
+                  icon: '📞',
+                  color: 'from-green-500 to-emerald-500',
+                },
+                {
+                  type: 'meeting',
+                  label: '打ち合わせ',
+                  icon: '👥',
+                  color: 'from-purple-500 to-pink-500',
+                },
+                {
+                  type: 'estimate',
+                  label: '見積',
+                  icon: '💰',
+                  color: 'from-orange-500 to-red-500',
+                },
+                {
+                  type: 'contract',
+                  label: '契約',
+                  icon: '📝',
+                  color: 'from-yellow-500 to-amber-500',
+                },
+                {
+                  type: 'note',
+                  label: 'メモ',
+                  icon: '📋',
+                  color: 'from-gray-500 to-slate-500',
+                },
               ].map((filter) => {
-                const count = activities.filter(a => a.type === filter.type).length;
+                const count = activities.filter(
+                  (a) => a.type === filter.type,
+                ).length;
                 return (
                   <button
                     key={filter.type}
@@ -959,38 +1218,88 @@ export default function CustomerDetailPage() {
             {activities.length > 0 ? (
               <div className="space-y-6">
                 {activities
-                  .filter(activity => !activityTypeFilter || activity.type === activityTypeFilter)
+                  .filter(
+                    (activity) =>
+                      !activityTypeFilter ||
+                      activity.type === activityTypeFilter,
+                  )
                   .map((activity, idx) => {
-                    const activityColors: Record<string, { gradient: string; bg: string; border: string }> = {
-                      visit: { gradient: 'from-blue-500 to-cyan-600', bg: 'from-blue-50 to-cyan-50', border: 'border-blue-200' },
-                      call: { gradient: 'from-green-500 to-emerald-600', bg: 'from-green-50 to-emerald-50', border: 'border-green-200' },
-                      meeting: { gradient: 'from-purple-500 to-pink-600', bg: 'from-purple-50 to-pink-50', border: 'border-purple-200' },
-                      estimate: { gradient: 'from-orange-500 to-red-600', bg: 'from-orange-50 to-red-50', border: 'border-orange-200' },
-                      contract: { gradient: 'from-yellow-500 to-amber-600', bg: 'from-yellow-50 to-amber-50', border: 'border-yellow-200' },
-                      note: { gradient: 'from-gray-500 to-slate-600', bg: 'from-gray-50 to-slate-50', border: 'border-gray-200' },
-                      ma_action: { gradient: 'from-indigo-500 to-purple-600', bg: 'from-indigo-50 to-purple-50', border: 'border-indigo-200' },
+                    const activityColors: Record<
+                      string,
+                      { gradient: string; bg: string; border: string }
+                    > = {
+                      visit: {
+                        gradient: 'from-blue-500 to-cyan-600',
+                        bg: 'from-blue-50 to-cyan-50',
+                        border: 'border-blue-200',
+                      },
+                      call: {
+                        gradient: 'from-green-500 to-emerald-600',
+                        bg: 'from-green-50 to-emerald-50',
+                        border: 'border-green-200',
+                      },
+                      meeting: {
+                        gradient: 'from-purple-500 to-pink-600',
+                        bg: 'from-purple-50 to-pink-50',
+                        border: 'border-purple-200',
+                      },
+                      estimate: {
+                        gradient: 'from-orange-500 to-red-600',
+                        bg: 'from-orange-50 to-red-50',
+                        border: 'border-orange-200',
+                      },
+                      contract: {
+                        gradient: 'from-yellow-500 to-amber-600',
+                        bg: 'from-yellow-50 to-amber-50',
+                        border: 'border-yellow-200',
+                      },
+                      note: {
+                        gradient: 'from-gray-500 to-slate-600',
+                        bg: 'from-gray-50 to-slate-50',
+                        border: 'border-gray-200',
+                      },
+                      ma_action: {
+                        gradient: 'from-indigo-500 to-purple-600',
+                        bg: 'from-indigo-50 to-purple-50',
+                        border: 'border-indigo-200',
+                      },
                     };
-                    const colors = activityColors[activity.type] || activityColors.note;
+                    const colors =
+                      activityColors[activity.type] || activityColors.note;
 
                     return (
                       <div key={activity.id} className="relative pl-8">
                         {/* Timeline Line */}
-                        {idx < activities.filter(a => !activityTypeFilter || a.type === activityTypeFilter).length - 1 && (
+                        {idx <
+                          activities.filter(
+                            (a) =>
+                              !activityTypeFilter ||
+                              a.type === activityTypeFilter,
+                          ).length -
+                            1 && (
                           <div className="absolute left-[15px] top-12 bottom-0 w-0.5 bg-gradient-to-b from-indigo-300 to-purple-300"></div>
                         )}
 
                         {/* Timeline Dot */}
-                        <div className={`absolute left-0 top-2 w-8 h-8 rounded-full bg-gradient-to-br ${colors.gradient} flex items-center justify-center text-white font-bold shadow-lg`}>
-                          <span className="text-lg">{getActivityIcon(activity.type)}</span>
+                        <div
+                          className={`absolute left-0 top-2 w-8 h-8 rounded-full bg-gradient-to-br ${colors.gradient} flex items-center justify-center text-white font-bold shadow-lg`}
+                        >
+                          <span className="text-lg">
+                            {getActivityIcon(activity.type)}
+                          </span>
                         </div>
 
                         {/* Activity Card */}
-                        <div className={`bg-gradient-to-br ${colors.bg} rounded-2xl shadow-lg hover:shadow-xl transition-all overflow-hidden border-2 ${colors.border}`}>
+                        <div
+                          className={`bg-gradient-to-br ${colors.bg} rounded-2xl shadow-lg hover:shadow-xl transition-all overflow-hidden border-2 ${colors.border}`}
+                        >
                           <div className="p-6">
                             <div className="flex justify-between items-start mb-3">
                               <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-2">
-                                  <h4 className="text-xl font-bold text-gray-900">{activity.title}</h4>
+                                  <h4 className="text-xl font-bold text-gray-900">
+                                    {activity.title}
+                                  </h4>
                                   {activity.isAutomatic && (
                                     <span className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold">
                                       自動記録
@@ -1002,14 +1311,26 @@ export default function CustomerDetailPage() {
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-gray-700 leading-relaxed">{activity.content}</p>
+                                <p className="text-gray-700 leading-relaxed">
+                                  {activity.content}
+                                </p>
                               </div>
                               <div className="ml-4 text-right whitespace-nowrap">
                                 <div className="text-sm font-bold text-gray-900">
-                                  {new Date(activity.createdAt).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })}
+                                  {new Date(
+                                    activity.createdAt,
+                                  ).toLocaleDateString('ja-JP', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                  })}
                                 </div>
                                 <div className="text-xs text-gray-500">
-                                  {new Date(activity.createdAt).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
+                                  {new Date(
+                                    activity.createdAt,
+                                  ).toLocaleTimeString('ja-JP', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
                                 </div>
                               </div>
                             </div>
@@ -1018,7 +1339,9 @@ export default function CustomerDetailPage() {
                             <div className="flex items-center gap-4 text-sm mt-4 pt-4 border-t border-gray-200">
                               <div className="flex items-center gap-2 text-gray-600">
                                 <User className="h-4 w-4" />
-                                <span className="font-medium">{activity.createdByName || '不明'}</span>
+                                <span className="font-medium">
+                                  {activity.createdByName || '不明'}
+                                </span>
                               </div>
                               {activity.duration && (
                                 <div className="flex items-center gap-2 text-gray-600">
@@ -1037,12 +1360,23 @@ export default function CustomerDetailPage() {
                             {activity.nextAction && (
                               <div className="mt-4 p-4 bg-gradient-to-r from-yellow-100 to-amber-100 border-l-4 border-yellow-500 rounded-xl">
                                 <div className="flex items-start gap-2">
-                                  <div className="text-yellow-600 font-bold text-sm">⚡ 次のアクション:</div>
+                                  <div className="text-yellow-600 font-bold text-sm">
+                                    ⚡ 次のアクション:
+                                  </div>
                                   <div className="flex-1">
-                                    <p className="text-sm font-bold text-gray-900">{activity.nextAction}</p>
+                                    <p className="text-sm font-bold text-gray-900">
+                                      {activity.nextAction}
+                                    </p>
                                     {activity.nextActionDate && (
                                       <p className="text-xs text-gray-600 mt-1">
-                                        期限: {new Date(activity.nextActionDate).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                        期限:{' '}
+                                        {new Date(
+                                          activity.nextActionDate,
+                                        ).toLocaleDateString('ja-JP', {
+                                          year: 'numeric',
+                                          month: 'long',
+                                          day: 'numeric',
+                                        })}
                                       </p>
                                     )}
                                   </div>
@@ -1061,9 +1395,12 @@ export default function CustomerDetailPage() {
                   <div className="w-24 h-24 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full mx-auto mb-6 flex items-center justify-center shadow-xl">
                     <Activity className="h-12 w-12 text-white" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">活動履歴がありません</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    活動履歴がありません
+                  </h3>
                   <p className="text-gray-600 mb-6">
-                    {customer?.name}様との活動を記録して、<br />
+                    {customer?.name}様との活動を記録して、
+                    <br />
                     営業活動を可視化しましょう
                   </p>
                   <button
@@ -1109,14 +1446,46 @@ export default function CustomerDetailPage() {
                 すべて ({documents.length})
               </button>
               {[
-                { type: 'estimate', label: '見積書', icon: '💰', color: 'from-orange-500 to-red-500' },
-                { type: 'contract', label: '契約書', icon: '📝', color: 'from-yellow-500 to-amber-500' },
-                { type: 'drawing', label: '図面', icon: '📐', color: 'from-purple-500 to-pink-500' },
-                { type: 'photo', label: '写真', icon: '📷', color: 'from-green-500 to-emerald-500' },
-                { type: 'identity', label: '身分証', icon: '🪪', color: 'from-blue-500 to-cyan-500' },
-                { type: 'other', label: 'その他', icon: '📄', color: 'from-gray-500 to-slate-500' },
+                {
+                  type: 'estimate',
+                  label: '見積書',
+                  icon: '💰',
+                  color: 'from-orange-500 to-red-500',
+                },
+                {
+                  type: 'contract',
+                  label: '契約書',
+                  icon: '📝',
+                  color: 'from-yellow-500 to-amber-500',
+                },
+                {
+                  type: 'drawing',
+                  label: '図面',
+                  icon: '📐',
+                  color: 'from-purple-500 to-pink-500',
+                },
+                {
+                  type: 'photo',
+                  label: '写真',
+                  icon: '📷',
+                  color: 'from-green-500 to-emerald-500',
+                },
+                {
+                  type: 'identity',
+                  label: '身分証',
+                  icon: '🪪',
+                  color: 'from-blue-500 to-cyan-500',
+                },
+                {
+                  type: 'other',
+                  label: 'その他',
+                  icon: '📄',
+                  color: 'from-gray-500 to-slate-500',
+                },
               ].map((filter) => {
-                const count = documents.filter(d => d.category === filter.type).length;
+                const count = documents.filter(
+                  (d) => d.category === filter.type,
+                ).length;
                 return (
                   <button
                     key={filter.type}
@@ -1137,21 +1506,62 @@ export default function CustomerDetailPage() {
             {documents.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {documents
-                  .filter(doc => !documentCategoryFilter || doc.category === documentCategoryFilter)
+                  .filter(
+                    (doc) =>
+                      !documentCategoryFilter ||
+                      doc.category === documentCategoryFilter,
+                  )
                   .map((doc) => {
-                    const categoryConfig: Record<string, { icon: string; gradient: string; bg: string }> = {
-                      estimate: { icon: '💰', gradient: 'from-orange-500 to-red-600', bg: 'from-orange-50 to-red-50' },
-                      contract: { icon: '📝', gradient: 'from-yellow-500 to-amber-600', bg: 'from-yellow-50 to-amber-50' },
-                      drawing: { icon: '📐', gradient: 'from-purple-500 to-pink-600', bg: 'from-purple-50 to-pink-50' },
-                      photo: { icon: '📷', gradient: 'from-green-500 to-emerald-600', bg: 'from-green-50 to-emerald-50' },
-                      identity: { icon: '🪪', gradient: 'from-blue-500 to-cyan-600', bg: 'from-blue-50 to-cyan-50' },
-                      other: { icon: '📄', gradient: 'from-gray-500 to-slate-600', bg: 'from-gray-50 to-slate-50' },
+                    const categoryConfig: Record<
+                      string,
+                      { icon: string; gradient: string; bg: string }
+                    > = {
+                      estimate: {
+                        icon: '💰',
+                        gradient: 'from-orange-500 to-red-600',
+                        bg: 'from-orange-50 to-red-50',
+                      },
+                      contract: {
+                        icon: '📝',
+                        gradient: 'from-yellow-500 to-amber-600',
+                        bg: 'from-yellow-50 to-amber-50',
+                      },
+                      drawing: {
+                        icon: '📐',
+                        gradient: 'from-purple-500 to-pink-600',
+                        bg: 'from-purple-50 to-pink-50',
+                      },
+                      photo: {
+                        icon: '📷',
+                        gradient: 'from-green-500 to-emerald-600',
+                        bg: 'from-green-50 to-emerald-50',
+                      },
+                      identity: {
+                        icon: '🪪',
+                        gradient: 'from-blue-500 to-cyan-600',
+                        bg: 'from-blue-50 to-cyan-50',
+                      },
+                      other: {
+                        icon: '📄',
+                        gradient: 'from-gray-500 to-slate-600',
+                        bg: 'from-gray-50 to-slate-50',
+                      },
                     };
-                    const config = categoryConfig[doc.category] || categoryConfig.other;
+                    const config =
+                      categoryConfig[doc.category] || categoryConfig.other;
 
-                    const fileExtension = doc.name.split('.').pop()?.toLowerCase();
+                    const fileExtension = doc.name
+                      .split('.')
+                      .pop()
+                      ?.toLowerCase();
                     const isPDF = fileExtension === 'pdf';
-                    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension || '');
+                    const isImage = [
+                      'jpg',
+                      'jpeg',
+                      'png',
+                      'gif',
+                      'webp',
+                    ].includes(fileExtension || '');
 
                     return (
                       <div
@@ -1159,7 +1569,9 @@ export default function CustomerDetailPage() {
                         className={`bg-gradient-to-br ${config.bg} rounded-2xl shadow-lg hover:shadow-xl transition-all overflow-hidden border-2 border-gray-200 group`}
                       >
                         {/* Icon Header */}
-                        <div className={`bg-gradient-to-r ${config.gradient} p-4 text-white`}>
+                        <div
+                          className={`bg-gradient-to-r ${config.gradient} p-4 text-white`}
+                        >
                           <div className="flex items-center justify-between">
                             <div className="text-4xl">{config.icon}</div>
                             <div className="flex gap-1">
@@ -1178,7 +1590,10 @@ export default function CustomerDetailPage() {
 
                         {/* Document Info */}
                         <div className="p-4">
-                          <h4 className="font-bold text-gray-900 mb-2 truncate" title={doc.name}>
+                          <h4
+                            className="font-bold text-gray-900 mb-2 truncate"
+                            title={doc.name}
+                          >
                             {doc.name}
                           </h4>
 
@@ -1206,11 +1621,14 @@ export default function CustomerDetailPage() {
                             <div className="flex items-center gap-2 text-gray-600">
                               <Calendar className="h-4 w-4" />
                               <span>
-                                {new Date(doc.uploadedAt).toLocaleDateString('ja-JP', {
-                                  year: 'numeric',
-                                  month: 'short',
-                                  day: 'numeric'
-                                })}
+                                {new Date(doc.uploadedAt).toLocaleDateString(
+                                  'ja-JP',
+                                  {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric',
+                                  },
+                                )}
                               </span>
                             </div>
 
@@ -1218,7 +1636,9 @@ export default function CustomerDetailPage() {
                               <div className="mt-3 pt-3 border-t border-gray-200">
                                 <div className="flex items-center gap-2 text-gray-700">
                                   <Home className="h-4 w-4" />
-                                  <span className="text-xs font-bold truncate">{doc.propertyName}</span>
+                                  <span className="text-xs font-bold truncate">
+                                    {doc.propertyName}
+                                  </span>
                                 </div>
                               </div>
                             )}
@@ -1234,9 +1654,12 @@ export default function CustomerDetailPage() {
                   <div className="w-24 h-24 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full mx-auto mb-6 flex items-center justify-center shadow-xl">
                     <FileText className="h-12 w-12 text-white" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">資料がありません</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    資料がありません
+                  </h3>
                   <p className="text-gray-600 mb-6">
-                    {customer?.name}様の見積書、契約書、図面などを<br />
+                    {customer?.name}様の見積書、契約書、図面などを
+                    <br />
                     アップロードして一元管理しましょう
                   </p>
                   <button
@@ -1261,7 +1684,11 @@ export default function CustomerDetailPage() {
                 見積一覧
               </h2>
               <button
-                onClick={() => router.push(`/estimates/create-v2?customerId=${customerId}&customerName=${encodeURIComponent(customer.name)}&skipCustomerSelection=true`)}
+                onClick={() =>
+                  router.push(
+                    `/estimates/create-v2?customerId=${customerId}&customerName=${encodeURIComponent(customer.name)}&skipCustomerSelection=true`,
+                  )
+                }
                 className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:shadow-2xl transform hover:scale-105 transition-all font-bold flex items-center gap-2"
               >
                 <Plus className="h-5 w-5" />
@@ -1274,7 +1701,9 @@ export default function CustomerDetailPage() {
                 {estimates.map((estimate) => (
                   <div
                     key={estimate.id}
-                    onClick={() => router.push(`/estimates/editor-v3/${estimate.id}`)}
+                    onClick={() =>
+                      router.push(`/estimates/editor-v3/${estimate.id}`)
+                    }
                     className="bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-lg hover:shadow-xl transition-all p-6 border border-blue-100 cursor-pointer group"
                   >
                     <div className="flex justify-between items-start mb-4">
@@ -1286,17 +1715,28 @@ export default function CustomerDetailPage() {
                           見積番号: {estimate.estimateNo || estimate.id}
                         </p>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        estimate.status === 'draft' ? 'bg-gray-200 text-gray-700' :
-                        estimate.status === 'submitted' ? 'bg-blue-200 text-blue-700' :
-                        estimate.status === 'negotiating' ? 'bg-yellow-200 text-yellow-700' :
-                        estimate.status === 'accepted' ? 'bg-green-200 text-green-700' :
-                        'bg-red-200 text-red-700'
-                      }`}>
-                        {estimate.status === 'draft' ? '下書き' :
-                         estimate.status === 'submitted' ? '提出済み' :
-                         estimate.status === 'negotiating' ? '交渉中' :
-                         estimate.status === 'accepted' ? '受注' : '失注'}
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          estimate.status === 'draft'
+                            ? 'bg-gray-200 text-gray-700'
+                            : estimate.status === 'submitted'
+                              ? 'bg-blue-200 text-blue-700'
+                              : estimate.status === 'negotiating'
+                                ? 'bg-yellow-200 text-yellow-700'
+                                : estimate.status === 'accepted'
+                                  ? 'bg-green-200 text-green-700'
+                                  : 'bg-red-200 text-red-700'
+                        }`}
+                      >
+                        {estimate.status === 'draft'
+                          ? '下書き'
+                          : estimate.status === 'submitted'
+                            ? '提出済み'
+                            : estimate.status === 'negotiating'
+                              ? '交渉中'
+                              : estimate.status === 'accepted'
+                                ? '受注'
+                                : '失注'}
                       </span>
                     </div>
 
@@ -1311,14 +1751,20 @@ export default function CustomerDetailPage() {
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">粗利:</span>
                           <span className="text-sm font-bold text-green-600">
-                            ¥{estimate.grossProfit.toLocaleString()} ({estimate.profitRate}%)
+                            ¥{estimate.grossProfit.toLocaleString()} (
+                            {estimate.profitRate}%)
                           </span>
                         </div>
                       )}
                     </div>
 
                     <div className="flex items-center justify-between text-xs text-gray-500 pt-4 border-t border-gray-200">
-                      <span>作成日: {new Date(estimate.createdAt).toLocaleDateString('ja-JP')}</span>
+                      <span>
+                        作成日:{' '}
+                        {new Date(estimate.createdAt).toLocaleDateString(
+                          'ja-JP',
+                        )}
+                      </span>
                       <span className="flex items-center gap-1">
                         <User className="h-3 w-3" />
                         {estimate.createdBy || '担当者'}
@@ -1332,12 +1778,18 @@ export default function CustomerDetailPage() {
                 <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full mx-auto mb-6 flex items-center justify-center shadow-xl">
                   <Calculator className="h-12 w-12 text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">見積がありません</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  見積がありません
+                </h3>
                 <p className="text-gray-600 mb-6">
                   {customer?.name}様への見積を作成しましょう
                 </p>
                 <button
-                  onClick={() => router.push(`/estimates/create-v2?customerId=${customerId}&customerName=${encodeURIComponent(customer.name)}&skipCustomerSelection=true`)}
+                  onClick={() =>
+                    router.push(
+                      `/estimates/create-v2?customerId=${customerId}&customerName=${encodeURIComponent(customer.name)}&skipCustomerSelection=true`,
+                    )
+                  }
                   className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:shadow-2xl transform hover:scale-105 transition-all font-bold inline-flex items-center gap-2"
                 >
                   <Plus className="h-5 w-5" />
@@ -1376,23 +1828,36 @@ export default function CustomerDetailPage() {
                     <div className="flex justify-between items-start mb-4">
                       <div>
                         <h3 className="text-xl font-bold text-gray-900 group-hover:text-green-600 transition-colors">
-                          {contract.title || contract.projectName || '工事請負契約'}
+                          {contract.title ||
+                            contract.projectName ||
+                            '工事請負契約'}
                         </h3>
                         <p className="text-sm text-gray-600 mt-1">
                           契約番号: {contract.contractNo || contract.id}
                         </p>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        contract.status === 'draft' ? 'bg-gray-200 text-gray-700' :
-                        contract.status === 'pending' ? 'bg-yellow-200 text-yellow-700' :
-                        contract.status === 'signed' ? 'bg-green-200 text-green-700' :
-                        contract.status === 'active' ? 'bg-blue-200 text-blue-700' :
-                        'bg-purple-200 text-purple-700'
-                      }`}>
-                        {contract.status === 'draft' ? '下書き' :
-                         contract.status === 'pending' ? '承認待ち' :
-                         contract.status === 'signed' ? '締結済' :
-                         contract.status === 'active' ? '進行中' : '完了'}
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          contract.status === 'draft'
+                            ? 'bg-gray-200 text-gray-700'
+                            : contract.status === 'pending'
+                              ? 'bg-yellow-200 text-yellow-700'
+                              : contract.status === 'signed'
+                                ? 'bg-green-200 text-green-700'
+                                : contract.status === 'active'
+                                  ? 'bg-blue-200 text-blue-700'
+                                  : 'bg-purple-200 text-purple-700'
+                        }`}
+                      >
+                        {contract.status === 'draft'
+                          ? '下書き'
+                          : contract.status === 'pending'
+                            ? '承認待ち'
+                            : contract.status === 'signed'
+                              ? '締結済'
+                              : contract.status === 'active'
+                                ? '進行中'
+                                : '完了'}
                       </span>
                     </div>
 
@@ -1407,15 +1872,27 @@ export default function CustomerDetailPage() {
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">工期:</span>
                           <span className="text-sm text-gray-700">
-                            {new Date(contract.startDate).toLocaleDateString('ja-JP')} 〜
-                            {new Date(contract.endDate).toLocaleDateString('ja-JP')}
+                            {new Date(contract.startDate).toLocaleDateString(
+                              'ja-JP',
+                            )}{' '}
+                            〜
+                            {new Date(contract.endDate).toLocaleDateString(
+                              'ja-JP',
+                            )}
                           </span>
                         </div>
                       )}
                     </div>
 
                     <div className="flex items-center justify-between text-xs text-gray-500 pt-4 border-t border-gray-200">
-                      <span>締結日: {contract.signedAt ? new Date(contract.signedAt).toLocaleDateString('ja-JP') : '未締結'}</span>
+                      <span>
+                        締結日:{' '}
+                        {contract.signedAt
+                          ? new Date(contract.signedAt).toLocaleDateString(
+                              'ja-JP',
+                            )
+                          : '未締結'}
+                      </span>
                       <span className="flex items-center gap-1">
                         <User className="h-3 w-3" />
                         {contract.createdBy || '担当者'}
@@ -1429,7 +1906,9 @@ export default function CustomerDetailPage() {
                 <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full mx-auto mb-6 flex items-center justify-center shadow-xl">
                   <ScrollText className="h-12 w-12 text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">契約がありません</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  契約がありません
+                </h3>
                 <p className="text-gray-600 mb-6">
                   {customer?.name}様との契約を作成しましょう
                 </p>
@@ -1467,7 +1946,9 @@ export default function CustomerDetailPage() {
                 {constructionLedgers.map((ledger) => (
                   <div
                     key={ledger.id}
-                    onClick={() => router.push(`/construction-ledgers/${ledger.id}`)}
+                    onClick={() =>
+                      router.push(`/construction-ledgers/${ledger.id}`)
+                    }
                     className="bg-gradient-to-br from-white to-orange-50 rounded-2xl shadow-lg hover:shadow-xl transition-all p-6 border border-orange-100 cursor-pointer group"
                   >
                     <div className="flex justify-between items-start mb-4">
@@ -1479,17 +1960,28 @@ export default function CustomerDetailPage() {
                           工事番号: {ledger.ledgerNo || ledger.id}
                         </p>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        ledger.status === 'planning' ? 'bg-gray-200 text-gray-700' :
-                        ledger.status === 'pending' ? 'bg-yellow-200 text-yellow-700' :
-                        ledger.status === 'approved' ? 'bg-blue-200 text-blue-700' :
-                        ledger.status === 'in-progress' ? 'bg-orange-200 text-orange-700' :
-                        'bg-green-200 text-green-700'
-                      }`}>
-                        {ledger.status === 'planning' ? '計画中' :
-                         ledger.status === 'pending' ? '承認待ち' :
-                         ledger.status === 'approved' ? '承認済' :
-                         ledger.status === 'in-progress' ? '施工中' : '完工'}
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          ledger.status === 'planning'
+                            ? 'bg-gray-200 text-gray-700'
+                            : ledger.status === 'pending'
+                              ? 'bg-yellow-200 text-yellow-700'
+                              : ledger.status === 'approved'
+                                ? 'bg-blue-200 text-blue-700'
+                                : ledger.status === 'in-progress'
+                                  ? 'bg-orange-200 text-orange-700'
+                                  : 'bg-green-200 text-green-700'
+                        }`}
+                      >
+                        {ledger.status === 'planning'
+                          ? '計画中'
+                          : ledger.status === 'pending'
+                            ? '承認待ち'
+                            : ledger.status === 'approved'
+                              ? '承認済'
+                              : ledger.status === 'in-progress'
+                                ? '施工中'
+                                : '完工'}
                       </span>
                     </div>
 
@@ -1502,7 +1994,9 @@ export default function CustomerDetailPage() {
                       </div>
                       {ledger.actualCost !== undefined && (
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600">実績原価:</span>
+                          <span className="text-sm text-gray-600">
+                            実績原価:
+                          </span>
                           <span className="text-sm font-bold text-red-600">
                             ¥{ledger.actualCost.toLocaleString()}
                           </span>
@@ -1511,7 +2005,9 @@ export default function CustomerDetailPage() {
                       {ledger.grossProfit !== undefined && (
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">粗利:</span>
-                          <span className={`text-sm font-bold ${ledger.grossProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          <span
+                            className={`text-sm font-bold ${ledger.grossProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                          >
                             ¥{ledger.grossProfit.toLocaleString()}
                           </span>
                         </div>
@@ -1519,7 +2015,16 @@ export default function CustomerDetailPage() {
                     </div>
 
                     <div className="flex items-center justify-between text-xs text-gray-500 pt-4 border-t border-gray-200">
-                      <span>工期: {ledger.startDate && new Date(ledger.startDate).toLocaleDateString('ja-JP')} 〜 {ledger.endDate && new Date(ledger.endDate).toLocaleDateString('ja-JP')}</span>
+                      <span>
+                        工期:{' '}
+                        {ledger.startDate &&
+                          new Date(ledger.startDate).toLocaleDateString(
+                            'ja-JP',
+                          )}{' '}
+                        〜{' '}
+                        {ledger.endDate &&
+                          new Date(ledger.endDate).toLocaleDateString('ja-JP')}
+                      </span>
                       <span className="flex items-center gap-1">
                         <User className="h-3 w-3" />
                         {ledger.projectManager || '現場監督'}
@@ -1549,7 +2054,9 @@ export default function CustomerDetailPage() {
                 <div className="w-24 h-24 bg-gradient-to-br from-orange-400 to-red-500 rounded-full mx-auto mb-6 flex items-center justify-center shadow-xl">
                   <Hammer className="h-12 w-12 text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">工事台帳がありません</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  工事台帳がありません
+                </h3>
                 <p className="text-gray-600 mb-6">
                   {customer?.name}様の工事台帳を作成しましょう
                 </p>
@@ -1638,8 +2145,18 @@ export default function CustomerDetailPage() {
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     />
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      <svg
+                        className="h-5 w-5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
                       </svg>
                     </div>
                   </div>
@@ -1654,7 +2171,9 @@ export default function CustomerDetailPage() {
                     <div className="w-full border-t border-gray-300"></div>
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-4 bg-white text-gray-500 font-medium">または</span>
+                    <span className="px-4 bg-white text-gray-500 font-medium">
+                      または
+                    </span>
                   </div>
                 </div>
 
@@ -1673,11 +2192,12 @@ export default function CustomerDetailPage() {
                 {/* Relation Name (Custom) */}
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">
-                    続柄の詳細 <span className="text-gray-400 text-xs">(任意)</span>
+                    続柄の詳細{' '}
+                    <span className="text-gray-400 text-xs">(任意)</span>
                   </label>
                   <input
                     type="text"
-                    placeholder='例: 長男、次女、父、母 など'
+                    placeholder="例: 長男、次女、父、母 など"
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                 </div>
@@ -1707,9 +2227,7 @@ export default function CustomerDetailPage() {
               >
                 キャンセル
               </button>
-              <button
-                className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all font-bold"
-              >
+              <button className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all font-bold">
                 {editingFamily ? '更新する' : '追加する'}
               </button>
             </div>
@@ -1756,7 +2274,8 @@ export default function CustomerDetailPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">
                       <label className="block text-sm font-bold text-gray-700 mb-2">
-                        物件名 <span className="text-gray-400 text-xs">(任意)</span>
+                        物件名{' '}
+                        <span className="text-gray-400 text-xs">(任意)</span>
                       </label>
                       <input
                         type="text"
@@ -1773,7 +2292,11 @@ export default function CustomerDetailPage() {
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                         {[
                           { value: 'newBuild', label: '新築', icon: '🏗️' },
-                          { value: 'renovation', label: 'リフォーム', icon: '🔨' },
+                          {
+                            value: 'renovation',
+                            label: 'リフォーム',
+                            icon: '🔨',
+                          },
                           { value: 'extension', label: '増築', icon: '📐' },
                           { value: 'repair', label: '修繕', icon: '🔧' },
                           { value: 'exterior', label: '外構', icon: '🌳' },
@@ -1934,7 +2457,10 @@ export default function CustomerDetailPage() {
                     </div>
                     <div>
                       <label className="block text-sm font-bold text-gray-700 mb-2">
-                        築年数 <span className="text-gray-400 text-xs">(リフォームの場合)</span>
+                        築年数{' '}
+                        <span className="text-gray-400 text-xs">
+                          (リフォームの場合)
+                        </span>
                       </label>
                       <input
                         type="number"
@@ -2012,9 +2538,7 @@ export default function CustomerDetailPage() {
               >
                 キャンセル
               </button>
-              <button
-                className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all font-bold"
-              >
+              <button className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all font-bold">
                 {editingProperty ? '更新する' : '追加する'}
               </button>
             </div>
@@ -2060,14 +2584,54 @@ export default function CustomerDetailPage() {
                   </label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {[
-                      { value: 'visit', label: '訪問', icon: '🏠', color: 'hover:border-blue-500 hover:bg-blue-50' },
-                      { value: 'call', label: '電話', icon: '📞', color: 'hover:border-green-500 hover:bg-green-50' },
-                      { value: 'email', label: 'メール', icon: '📧', color: 'hover:border-cyan-500 hover:bg-cyan-50' },
-                      { value: 'meeting', label: '打ち合わせ', icon: '👥', color: 'hover:border-purple-500 hover:bg-purple-50' },
-                      { value: 'presentation', label: 'プレゼン', icon: '📊', color: 'hover:border-pink-500 hover:bg-pink-50' },
-                      { value: 'estimate', label: '見積提出', icon: '💰', color: 'hover:border-orange-500 hover:bg-orange-50' },
-                      { value: 'contract', label: '契約', icon: '📝', color: 'hover:border-yellow-500 hover:bg-yellow-50' },
-                      { value: 'note', label: 'メモ', icon: '📋', color: 'hover:border-gray-500 hover:bg-gray-50' },
+                      {
+                        value: 'visit',
+                        label: '訪問',
+                        icon: '🏠',
+                        color: 'hover:border-blue-500 hover:bg-blue-50',
+                      },
+                      {
+                        value: 'call',
+                        label: '電話',
+                        icon: '📞',
+                        color: 'hover:border-green-500 hover:bg-green-50',
+                      },
+                      {
+                        value: 'email',
+                        label: 'メール',
+                        icon: '📧',
+                        color: 'hover:border-cyan-500 hover:bg-cyan-50',
+                      },
+                      {
+                        value: 'meeting',
+                        label: '打ち合わせ',
+                        icon: '👥',
+                        color: 'hover:border-purple-500 hover:bg-purple-50',
+                      },
+                      {
+                        value: 'presentation',
+                        label: 'プレゼン',
+                        icon: '📊',
+                        color: 'hover:border-pink-500 hover:bg-pink-50',
+                      },
+                      {
+                        value: 'estimate',
+                        label: '見積提出',
+                        icon: '💰',
+                        color: 'hover:border-orange-500 hover:bg-orange-50',
+                      },
+                      {
+                        value: 'contract',
+                        label: '契約',
+                        icon: '📝',
+                        color: 'hover:border-yellow-500 hover:bg-yellow-50',
+                      },
+                      {
+                        value: 'note',
+                        label: 'メモ',
+                        icon: '📋',
+                        color: 'hover:border-gray-500 hover:bg-gray-50',
+                      },
                     ].map((type) => (
                       <button
                         key={type.value}
@@ -2204,9 +2768,7 @@ export default function CustomerDetailPage() {
               >
                 キャンセル
               </button>
-              <button
-                className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all font-bold"
-              >
+              <button className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all font-bold">
                 {editingActivity ? '更新する' : '記録する'}
               </button>
             </div>
@@ -2271,12 +2833,42 @@ export default function CustomerDetailPage() {
                   </label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {[
-                      { value: 'estimate', label: '見積書', icon: '💰', color: 'hover:border-orange-500 hover:bg-orange-50' },
-                      { value: 'contract', label: '契約書', icon: '📝', color: 'hover:border-yellow-500 hover:bg-yellow-50' },
-                      { value: 'drawing', label: '図面', icon: '📐', color: 'hover:border-purple-500 hover:bg-purple-50' },
-                      { value: 'photo', label: '写真', icon: '📷', color: 'hover:border-green-500 hover:bg-green-50' },
-                      { value: 'identity', label: '身分証', icon: '🪪', color: 'hover:border-blue-500 hover:bg-blue-50' },
-                      { value: 'other', label: 'その他', icon: '📄', color: 'hover:border-gray-500 hover:bg-gray-50' },
+                      {
+                        value: 'estimate',
+                        label: '見積書',
+                        icon: '💰',
+                        color: 'hover:border-orange-500 hover:bg-orange-50',
+                      },
+                      {
+                        value: 'contract',
+                        label: '契約書',
+                        icon: '📝',
+                        color: 'hover:border-yellow-500 hover:bg-yellow-50',
+                      },
+                      {
+                        value: 'drawing',
+                        label: '図面',
+                        icon: '📐',
+                        color: 'hover:border-purple-500 hover:bg-purple-50',
+                      },
+                      {
+                        value: 'photo',
+                        label: '写真',
+                        icon: '📷',
+                        color: 'hover:border-green-500 hover:bg-green-50',
+                      },
+                      {
+                        value: 'identity',
+                        label: '身分証',
+                        icon: '🪪',
+                        color: 'hover:border-blue-500 hover:bg-blue-50',
+                      },
+                      {
+                        value: 'other',
+                        label: 'その他',
+                        icon: '📄',
+                        color: 'hover:border-gray-500 hover:bg-gray-50',
+                      },
                     ].map((cat) => (
                       <button
                         key={cat.value}
@@ -2333,9 +2925,7 @@ export default function CustomerDetailPage() {
               >
                 キャンセル
               </button>
-              <button
-                className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all font-bold"
-              >
+              <button className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all font-bold">
                 アップロード
               </button>
             </div>
