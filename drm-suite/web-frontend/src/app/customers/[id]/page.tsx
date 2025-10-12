@@ -5,11 +5,12 @@ import { useParams, useRouter } from 'next/navigation';
 import {
   User, Phone, Mail, MapPin, Building2, Calendar, Tag,
   Users, Home, Activity, FileText, Edit, Trash2,
-  ChevronLeft, Plus, MessageSquare, X, Upload, Download, Eye, File
+  ChevronLeft, Plus, MessageSquare, X, Upload, Download, Eye, File,
+  Calculator, ScrollText, Hammer
 } from 'lucide-react';
 import type { Customer, Property, Activity as ActivityType } from '@/types/customer';
 
-type TabType = 'overview' | 'family' | 'properties' | 'activities' | 'documents';
+type TabType = 'overview' | 'family' | 'properties' | 'activities' | 'documents' | 'estimates' | 'contracts' | 'construction-ledgers';
 
 export default function CustomerDetailPage() {
   const params = useParams();
@@ -31,6 +32,11 @@ export default function CustomerDetailPage() {
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [documentCategoryFilter, setDocumentCategoryFilter] = useState<string | null>(null);
   const [documents, setDocuments] = useState<any[]>([]);
+
+  // Phase 10: 見積・契約・工事台帳
+  const [estimates, setEstimates] = useState<any[]>([]);
+  const [contracts, setContracts] = useState<any[]>([]);
+  const [constructionLedgers, setConstructionLedgers] = useState<any[]>([]);
 
   useEffect(() => {
     fetchCustomerData();
@@ -141,6 +147,50 @@ export default function CustomerDetailPage() {
         },
       ]);
 
+      // Phase 10: 見積・契約・工事台帳データの取得
+      // 見積一覧（顧客IDでフィルタ）
+      try {
+        const estimatesRes = await fetch(`/api/estimates`);
+        const estimatesData = await estimatesRes.json();
+        if (estimatesData.success && estimatesData.data) {
+          // 顧客IDまたは顧客名でフィルタ（実装時は顧客IDで正確にフィルタ）
+          const customerEstimates = estimatesData.data.filter((est: any) =>
+            est.customerName === customer.name || est.customerId === customerId
+          );
+          setEstimates(customerEstimates);
+        }
+      } catch (error) {
+        console.error('Failed to fetch estimates:', error);
+      }
+
+      // 契約一覧（顧客IDでフィルタ）
+      try {
+        const contractsRes = await fetch(`/api/contracts`);
+        const contractsData = await contractsRes.json();
+        if (contractsData.success && contractsData.data) {
+          const customerContracts = contractsData.data.filter((contract: any) =>
+            contract.customerName === customer.name || contract.customerId === customerId
+          );
+          setContracts(customerContracts);
+        }
+      } catch (error) {
+        console.error('Failed to fetch contracts:', error);
+      }
+
+      // 工事台帳一覧（顧客IDでフィルタ）
+      try {
+        const ledgersRes = await fetch(`/api/construction-ledgers`);
+        const ledgersData = await ledgersRes.json();
+        if (ledgersData.success && ledgersData.data) {
+          const customerLedgers = ledgersData.data.filter((ledger: any) =>
+            ledger.customerName === customer.name || ledger.customerId === customerId
+          );
+          setConstructionLedgers(customerLedgers);
+        }
+      } catch (error) {
+        console.error('Failed to fetch construction ledgers:', error);
+      }
+
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch customer data:', error);
@@ -163,6 +213,9 @@ export default function CustomerDetailPage() {
     { id: 'overview', label: '概要', icon: User },
     { id: 'family', label: '家族関係', icon: Users, count: customer.familyRelations?.length || 0 },
     { id: 'properties', label: '物件', icon: Home, count: properties.length },
+    { id: 'estimates', label: '見積', icon: Calculator, count: estimates.length },
+    { id: 'contracts', label: '契約', icon: ScrollText, count: contracts.length },
+    { id: 'construction-ledgers', label: '工事台帳', icon: Hammer, count: constructionLedgers.length },
     { id: 'activities', label: '活動履歴', icon: Activity, count: activities.length },
     { id: 'documents', label: '資料', icon: FileText },
   ];
@@ -1194,6 +1247,319 @@ export default function CustomerDetailPage() {
                     最初の資料をアップロード
                   </button>
                 </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Estimates Tab - Phase 10 */}
+        {activeTab === 'estimates' && (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex items-center gap-3">
+                <Calculator className="h-8 w-8 text-blue-600" />
+                見積一覧
+              </h2>
+              <button
+                onClick={() => router.push('/estimates/create-v2')}
+                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:shadow-2xl transform hover:scale-105 transition-all font-bold flex items-center gap-2"
+              >
+                <Plus className="h-5 w-5" />
+                新規見積作成
+              </button>
+            </div>
+
+            {estimates.length > 0 ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {estimates.map((estimate) => (
+                  <div
+                    key={estimate.id}
+                    onClick={() => router.push(`/estimates/editor-v3/${estimate.id}`)}
+                    className="bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-lg hover:shadow-xl transition-all p-6 border border-blue-100 cursor-pointer group"
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                          {estimate.title || estimate.projectName || '見積書'}
+                        </h3>
+                        <p className="text-sm text-gray-600 mt-1">
+                          見積番号: {estimate.estimateNo || estimate.id}
+                        </p>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                        estimate.status === 'draft' ? 'bg-gray-200 text-gray-700' :
+                        estimate.status === 'submitted' ? 'bg-blue-200 text-blue-700' :
+                        estimate.status === 'negotiating' ? 'bg-yellow-200 text-yellow-700' :
+                        estimate.status === 'accepted' ? 'bg-green-200 text-green-700' :
+                        'bg-red-200 text-red-700'
+                      }`}>
+                        {estimate.status === 'draft' ? '下書き' :
+                         estimate.status === 'submitted' ? '提出済み' :
+                         estimate.status === 'negotiating' ? '交渉中' :
+                         estimate.status === 'accepted' ? '受注' : '失注'}
+                      </span>
+                    </div>
+
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">見積金額:</span>
+                        <span className="text-lg font-bold text-blue-600">
+                          ¥{(estimate.totalAmount || 0).toLocaleString()}
+                        </span>
+                      </div>
+                      {estimate.grossProfit && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">粗利:</span>
+                          <span className="text-sm font-bold text-green-600">
+                            ¥{estimate.grossProfit.toLocaleString()} ({estimate.profitRate}%)
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-gray-500 pt-4 border-t border-gray-200">
+                      <span>作成日: {new Date(estimate.createdAt).toLocaleDateString('ja-JP')}</span>
+                      <span className="flex items-center gap-1">
+                        <User className="h-3 w-3" />
+                        {estimate.createdBy || '担当者'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-12 text-center border-2 border-dashed border-blue-300">
+                <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full mx-auto mb-6 flex items-center justify-center shadow-xl">
+                  <Calculator className="h-12 w-12 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">見積がありません</h3>
+                <p className="text-gray-600 mb-6">
+                  {customer?.name}様への見積を作成しましょう
+                </p>
+                <button
+                  onClick={() => router.push('/estimates/create-v2')}
+                  className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:shadow-2xl transform hover:scale-105 transition-all font-bold inline-flex items-center gap-2"
+                >
+                  <Plus className="h-5 w-5" />
+                  最初の見積を作成
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Contracts Tab - Phase 10 */}
+        {activeTab === 'contracts' && (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent flex items-center gap-3">
+                <ScrollText className="h-8 w-8 text-green-600" />
+                契約一覧
+              </h2>
+              <button
+                onClick={() => router.push('/contracts/create')}
+                className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:shadow-2xl transform hover:scale-105 transition-all font-bold flex items-center gap-2"
+              >
+                <Plus className="h-5 w-5" />
+                新規契約作成
+              </button>
+            </div>
+
+            {contracts.length > 0 ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {contracts.map((contract) => (
+                  <div
+                    key={contract.id}
+                    onClick={() => router.push(`/contracts/${contract.id}`)}
+                    className="bg-gradient-to-br from-white to-green-50 rounded-2xl shadow-lg hover:shadow-xl transition-all p-6 border border-green-100 cursor-pointer group"
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900 group-hover:text-green-600 transition-colors">
+                          {contract.title || contract.projectName || '工事請負契約'}
+                        </h3>
+                        <p className="text-sm text-gray-600 mt-1">
+                          契約番号: {contract.contractNo || contract.id}
+                        </p>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                        contract.status === 'draft' ? 'bg-gray-200 text-gray-700' :
+                        contract.status === 'pending' ? 'bg-yellow-200 text-yellow-700' :
+                        contract.status === 'signed' ? 'bg-green-200 text-green-700' :
+                        contract.status === 'active' ? 'bg-blue-200 text-blue-700' :
+                        'bg-purple-200 text-purple-700'
+                      }`}>
+                        {contract.status === 'draft' ? '下書き' :
+                         contract.status === 'pending' ? '承認待ち' :
+                         contract.status === 'signed' ? '締結済' :
+                         contract.status === 'active' ? '進行中' : '完了'}
+                      </span>
+                    </div>
+
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">契約金額:</span>
+                        <span className="text-lg font-bold text-green-600">
+                          ¥{(contract.contractAmount || 0).toLocaleString()}
+                        </span>
+                      </div>
+                      {contract.startDate && contract.endDate && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">工期:</span>
+                          <span className="text-sm text-gray-700">
+                            {new Date(contract.startDate).toLocaleDateString('ja-JP')} 〜
+                            {new Date(contract.endDate).toLocaleDateString('ja-JP')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-gray-500 pt-4 border-t border-gray-200">
+                      <span>締結日: {contract.signedAt ? new Date(contract.signedAt).toLocaleDateString('ja-JP') : '未締結'}</span>
+                      <span className="flex items-center gap-1">
+                        <User className="h-3 w-3" />
+                        {contract.createdBy || '担当者'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-12 text-center border-2 border-dashed border-green-300">
+                <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full mx-auto mb-6 flex items-center justify-center shadow-xl">
+                  <ScrollText className="h-12 w-12 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">契約がありません</h3>
+                <p className="text-gray-600 mb-6">
+                  {customer?.name}様との契約を作成しましょう
+                </p>
+                <button
+                  onClick={() => router.push('/contracts/create')}
+                  className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:shadow-2xl transform hover:scale-105 transition-all font-bold inline-flex items-center gap-2"
+                >
+                  <Plus className="h-5 w-5" />
+                  最初の契約を作成
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Construction Ledgers Tab - Phase 10 */}
+        {activeTab === 'construction-ledgers' && (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent flex items-center gap-3">
+                <Hammer className="h-8 w-8 text-orange-600" />
+                工事台帳
+              </h2>
+              <button
+                onClick={() => router.push('/construction-ledgers/create')}
+                className="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-xl hover:shadow-2xl transform hover:scale-105 transition-all font-bold flex items-center gap-2"
+              >
+                <Plus className="h-5 w-5" />
+                新規工事台帳作成
+              </button>
+            </div>
+
+            {constructionLedgers.length > 0 ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {constructionLedgers.map((ledger) => (
+                  <div
+                    key={ledger.id}
+                    onClick={() => router.push(`/construction-ledgers/${ledger.id}`)}
+                    className="bg-gradient-to-br from-white to-orange-50 rounded-2xl shadow-lg hover:shadow-xl transition-all p-6 border border-orange-100 cursor-pointer group"
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900 group-hover:text-orange-600 transition-colors">
+                          {ledger.projectName || '工事台帳'}
+                        </h3>
+                        <p className="text-sm text-gray-600 mt-1">
+                          工事番号: {ledger.ledgerNo || ledger.id}
+                        </p>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                        ledger.status === 'planning' ? 'bg-gray-200 text-gray-700' :
+                        ledger.status === 'pending' ? 'bg-yellow-200 text-yellow-700' :
+                        ledger.status === 'approved' ? 'bg-blue-200 text-blue-700' :
+                        ledger.status === 'in-progress' ? 'bg-orange-200 text-orange-700' :
+                        'bg-green-200 text-green-700'
+                      }`}>
+                        {ledger.status === 'planning' ? '計画中' :
+                         ledger.status === 'pending' ? '承認待ち' :
+                         ledger.status === 'approved' ? '承認済' :
+                         ledger.status === 'in-progress' ? '施工中' : '完工'}
+                      </span>
+                    </div>
+
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">受注金額:</span>
+                        <span className="text-lg font-bold text-orange-600">
+                          ¥{(ledger.contractAmount || 0).toLocaleString()}
+                        </span>
+                      </div>
+                      {ledger.actualCost !== undefined && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">実績原価:</span>
+                          <span className="text-sm font-bold text-red-600">
+                            ¥{ledger.actualCost.toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                      {ledger.grossProfit !== undefined && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">粗利:</span>
+                          <span className={`text-sm font-bold ${ledger.grossProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            ¥{ledger.grossProfit.toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-gray-500 pt-4 border-t border-gray-200">
+                      <span>工期: {ledger.startDate && new Date(ledger.startDate).toLocaleDateString('ja-JP')} 〜 {ledger.endDate && new Date(ledger.endDate).toLocaleDateString('ja-JP')}</span>
+                      <span className="flex items-center gap-1">
+                        <User className="h-3 w-3" />
+                        {ledger.projectManager || '現場監督'}
+                      </span>
+                    </div>
+
+                    {/* Progress Bar */}
+                    {ledger.progress !== undefined && (
+                      <div className="mt-4">
+                        <div className="flex justify-between text-xs text-gray-600 mb-1">
+                          <span>進捗率</span>
+                          <span className="font-bold">{ledger.progress}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-gradient-to-r from-orange-500 to-red-600 h-2 rounded-full transition-all"
+                            style={{ width: `${ledger.progress}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-12 text-center border-2 border-dashed border-orange-300">
+                <div className="w-24 h-24 bg-gradient-to-br from-orange-400 to-red-500 rounded-full mx-auto mb-6 flex items-center justify-center shadow-xl">
+                  <Hammer className="h-12 w-12 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">工事台帳がありません</h3>
+                <p className="text-gray-600 mb-6">
+                  {customer?.name}様の工事台帳を作成しましょう
+                </p>
+                <button
+                  onClick={() => router.push('/construction-ledgers/create')}
+                  className="px-8 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-xl hover:shadow-2xl transform hover:scale-105 transition-all font-bold inline-flex items-center gap-2"
+                >
+                  <Plus className="h-5 w-5" />
+                  最初の工事台帳を作成
+                </button>
               </div>
             )}
           </div>
