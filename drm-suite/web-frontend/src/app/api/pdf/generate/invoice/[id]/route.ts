@@ -199,9 +199,13 @@ export async function GET(
 ) {
   try {
     const { id } = params;
+    const { searchParams } = new URL(request.url);
+    const preview = searchParams.get('preview') === 'true';
     const tenantId = request.cookies.get('tenantId')?.value || 'demo-tenant';
 
-    console.log(`[PDF生成] 請求書ID: ${id}, テナントID: ${tenantId}`);
+    console.log(
+      `[PDF生成] 請求書ID: ${id}, プレビュー: ${preview}, テナントID: ${tenantId}`,
+    );
 
     // データ取得
     const invoice = await getInvoiceData(tenantId, id);
@@ -237,7 +241,9 @@ export async function GET(
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="invoice-${invoice.invoiceNo}.pdf"`,
+        'Content-Disposition': preview
+          ? `inline; filename="invoice-${invoice.invoiceNo}.pdf"`
+          : `attachment; filename="invoice-${invoice.invoiceNo}.pdf"`,
         'Content-Length': pdfBuffer.length.toString(),
       },
     });
