@@ -1054,6 +1054,59 @@ export default function ManagerDashboard({ userEmail }: ManagerDashboardProps) {
           </div>
         </div>
       )}
+
+      {/* マネージャー分析ダッシュボード */}
+      <div className="bg-white rounded-lg shadow mt-6">
+        <div className="px-6 py-4 border-b bg-gradient-to-r from-indigo-50 to-purple-50">
+          <h2 className="text-lg font-semibold text-gray-900">
+            📊 マネージャー分析ダッシュボード
+          </h2>
+          <p className="text-sm text-gray-600 mt-1">
+            プロジェクトとチームを多角的に分析
+          </p>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* 利益率分析 */}
+            <button
+              onClick={() => router.push('/analytics/profitability')}
+              className="p-4 border-2 border-purple-200 bg-purple-50 rounded-lg hover:bg-purple-100 text-left transition-all hover:shadow-md"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center text-white text-lg">
+                  📊
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-purple-900">利益率分析</h3>
+                </div>
+              </div>
+              <p className="text-sm text-purple-700">
+                プロジェクト別の進捗・原価・利益率を管理
+              </p>
+            </button>
+
+            {/* 営業パフォーマンス分析 */}
+            <button
+              onClick={() => router.push('/analytics/sales-performance')}
+              className="p-4 border-2 border-green-200 bg-green-50 rounded-lg hover:bg-green-100 text-left transition-all hover:shadow-md"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center text-white text-lg">
+                  📈
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-green-900">
+                    営業パフォーマンス分析
+                  </h3>
+                </div>
+              </div>
+              <p className="text-sm text-green-700">
+                チームメンバーの受注実績・目標達成率を分析
+              </p>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

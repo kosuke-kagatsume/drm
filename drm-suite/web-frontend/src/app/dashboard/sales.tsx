@@ -456,6 +456,81 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
             </div>
           </div>
 
+          {/* 営業分析ダッシュボード */}
+          <div className="bg-white rounded-lg shadow mt-6">
+            <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+              <h2 className="text-lg font-semibold text-gray-900">
+                📊 営業分析ダッシュボード
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                データドリブンな営業戦略をサポート
+              </p>
+            </div>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* 営業パフォーマンス分析 */}
+                <button
+                  onClick={() => router.push('/analytics/sales-performance')}
+                  className="p-4 border-2 border-green-200 bg-green-50 rounded-lg hover:bg-green-100 text-left transition-all hover:shadow-md"
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center text-white text-lg">
+                      📈
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-green-900">
+                        営業パフォーマンス分析
+                      </h3>
+                    </div>
+                  </div>
+                  <p className="text-sm text-green-700">
+                    受注実績・パイプライン・目標達成率を分析
+                  </p>
+                </button>
+
+                {/* 顧客別収益分析 */}
+                <button
+                  onClick={() => router.push('/analytics/customer-revenue')}
+                  className="p-4 border-2 border-blue-200 bg-blue-50 rounded-lg hover:bg-blue-100 text-left transition-all hover:shadow-md"
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white text-lg">
+                      💰
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-blue-900">
+                        顧客別収益分析
+                      </h3>
+                    </div>
+                  </div>
+                  <p className="text-sm text-blue-700">
+                    売上・粗利・LTV・成長率を顧客別に可視化
+                  </p>
+                </button>
+
+                {/* AI受注予測 */}
+                <button
+                  onClick={() => router.push('/analytics/win-prediction')}
+                  className="p-4 border-2 border-orange-200 bg-orange-50 rounded-lg hover:bg-orange-100 text-left transition-all hover:shadow-md"
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center text-white text-lg">
+                      🤖
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-orange-900">
+                        AI受注予測
+                      </h3>
+                    </div>
+                  </div>
+                  <p className="text-sm text-orange-700">
+                    機械学習による見積案件の受注確度予測
+                  </p>
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* 統合財務分析ダッシュボード */}
           <div className="bg-white rounded-2xl shadow-lg mt-6 overflow-hidden">
             <div className="px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
