@@ -961,7 +961,7 @@ export default function AccountingDashboard({
           </div>
 
           {/* キャッシュフロー予測サマリー */}
-          <div className="bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-lg shadow p-6">
+          <div className="bg-gradient-to-br from-dandori-blue to-dandori-sky text-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">📊 キャッシュフロー予測</h3>
               <button
@@ -1003,7 +1003,7 @@ export default function AccountingDashboard({
         {/* Advanced Financial Analytics Dashboard */}
 
         {/* Executive Financial Summary */}
-        <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg shadow-xl p-6 mb-6">
+        <div className="bg-gradient-to-r from-dandori-pink to-dandori-orange text-white rounded-lg shadow-xl p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-2xl font-bold">
@@ -1083,7 +1083,7 @@ export default function AccountingDashboard({
         {/* Real-time Financial Monitoring */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="bg-white rounded-lg shadow-lg">
-            <div className="px-6 py-4 border-b bg-gradient-to-r from-green-50 to-emerald-50">
+            <div className="px-6 py-4 border-b bg-gradient-to-r from-dandori-orange/5 to-dandori-yellow/5">
               <h3 className="text-lg font-semibold text-green-800 flex items-center">
                 📊 リアルタイム収益分析
                 <span className="ml-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
@@ -1140,7 +1140,7 @@ export default function AccountingDashboard({
           </div>
 
           <div className="bg-white rounded-lg shadow-lg">
-            <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-cyan-50">
+            <div className="px-6 py-4 border-b bg-gradient-to-r from-dandori-blue/5 to-dandori-sky/5">
               <h3 className="text-lg font-semibold text-blue-800 flex items-center">
                 💰 キャッシュポジション分析
                 <span className="ml-2 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
@@ -1150,7 +1150,7 @@ export default function AccountingDashboard({
             </div>
             <div className="p-6">
               <div className="space-y-4">
-                <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg">
+                <div className="text-center p-4 bg-gradient-to-r from-dandori-blue/5 to-dandori-sky/5 rounded-lg">
                   <p className="text-sm text-gray-600 mb-1">現在の現金残高</p>
                   <p className="text-3xl font-bold text-blue-600">
                     ¥28,450,000
@@ -1279,7 +1279,7 @@ export default function AccountingDashboard({
 
         {/* AI-Powered Budget vs Actual Analysis */}
         <div className="bg-white rounded-lg shadow-xl">
-          <div className="px-6 py-4 border-b bg-gradient-to-r from-green-50 to-emerald-50">
+          <div className="px-6 py-4 border-b bg-gradient-to-r from-dandori-orange/5 to-dandori-yellow/5">
             <div className="flex justify-between items-center">
               <div>
                 <h2 className="text-lg font-semibold text-green-800 flex items-center">
@@ -1526,7 +1526,7 @@ export default function AccountingDashboard({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* AI-Enhanced Cash Flow Forecasting */}
           <div className="bg-white rounded-lg shadow-xl">
-            <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-cyan-50">
+            <div className="px-6 py-4 border-b bg-gradient-to-r from-dandori-blue/5 to-dandori-sky/5">
               <div className="flex justify-between items-center">
                 <div>
                   <h2 className="text-lg font-semibold text-blue-800 flex items-center">
@@ -1548,7 +1548,7 @@ export default function AccountingDashboard({
               </div>
             </div>
             <div className="p-6">
-              <div className="mb-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border-l-4 border-green-400">
+              <div className="mb-4 p-3 bg-gradient-to-r from-dandori-orange/5 to-dandori-yellow/5 rounded-lg border-l-4 border-green-400">
                 <div className="flex items-center">
                   <div className="bg-green-500 p-2 rounded-full mr-3">
                     <span className="text-white text-xs font-bold">🎯</span>

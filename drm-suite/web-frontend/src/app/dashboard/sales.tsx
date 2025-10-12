@@ -458,7 +458,7 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
 
           {/* 営業分析ダッシュボード */}
           <div className="bg-white rounded-lg shadow mt-6">
-            <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+            <div className="px-6 py-4 border-b bg-gradient-to-r from-dandori-blue/5 to-dandori-sky/5">
               <h2 className="text-lg font-semibold text-gray-900">
                 📊 営業分析ダッシュボード
               </h2>
@@ -533,7 +533,7 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
 
           {/* 統合財務分析ダッシュボード */}
           <div className="bg-white rounded-2xl shadow-lg mt-6 overflow-hidden">
-            <div className="px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+            <div className="px-6 py-4 bg-gradient-to-r from-dandori-pink to-dandori-orange text-white">
               <h3 className="font-semibold">📊 営業財務分析</h3>
             </div>
             <div className="p-6">
@@ -697,7 +697,7 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
         {/* RAGアシスタント */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow sticky top-6">
-            <div className="px-6 py-4 border-b bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-t-lg">
+            <div className="px-6 py-4 border-b bg-gradient-to-r from-dandori-pink to-dandori-orange text-white rounded-t-lg">
               <h2 className="text-lg font-semibold">🤖 RAGアシスタント</h2>
             </div>
             <div className="p-6">
@@ -753,7 +753,7 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
       </div>
 
       {/* 営業活動センター */}
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl shadow-xl p-6 mb-6">
+      <div className="bg-gradient-to-r from-dandori-blue to-dandori-sky text-white rounded-2xl shadow-xl p-6 mb-6">
         <h2 className="text-2xl font-bold mb-4 flex items-center">
           <span className="text-3xl mr-3">🎯</span>
           営業活動センター
@@ -810,7 +810,7 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
         </p>
         <button
           onClick={() => router.push('/contracts')}
-          className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
+          className="w-full bg-gradient-to-r from-dandori-blue to-dandori-sky text-white py-3 rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
         >
           <span className="text-xl">📄</span>
           <span className="font-medium">契約一覧を見る</span>

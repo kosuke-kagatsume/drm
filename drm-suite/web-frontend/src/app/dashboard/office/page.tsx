@@ -219,7 +219,7 @@ export default function OfficeDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* ヘッダー */}
-      <nav className="bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg">
+      <nav className="bg-gradient-to-r from-dandori-pink to-dandori-orange text-white shadow-lg">
         <div className="max-w-full-hd mx-auto px-4 lg:px-6 xl:px-8 2xl:px-12 py-4">
           <div className="flex justify-center items-center">
             <div className="flex items-center gap-4">
@@ -288,7 +288,7 @@ export default function OfficeDashboard() {
             </div>
 
             {/* 事務処理分析 */}
-            <div className="bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl shadow-lg p-6 mb-8">
+            <div className="bg-gradient-to-r from-dandori-pink to-dandori-orange text-white rounded-xl shadow-lg p-6 mb-8">
               <h2 className="text-xl font-bold mb-4 flex items-center">
                 <TrendingUp className="h-6 w-6 mr-2" />
                 事務処理分析
@@ -360,7 +360,7 @@ export default function OfficeDashboard() {
                     </div>
                     <div className="w-full h-3 bg-white/20 rounded-full">
                       <div
-                        className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full"
+                        className="h-full bg-gradient-to-r from-dandori-yellow to-dandori-orange rounded-full"
                         style={{ width: '88%' }}
                       ></div>
                     </div>
@@ -373,7 +373,7 @@ export default function OfficeDashboard() {
                     </div>
                     <div className="w-full h-3 bg-white/20 rounded-full">
                       <div
-                        className="h-full bg-gradient-to-r from-green-400 to-blue-500 rounded-full"
+                        className="h-full bg-gradient-to-r from-dandori-orange to-dandori-blue rounded-full"
                         style={{ width: '100%' }}
                       ></div>
                     </div>
@@ -399,7 +399,7 @@ export default function OfficeDashboard() {
             </div>
 
             {/* 事務活動センター */}
-            <div className="bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-xl shadow-lg p-6 mb-8">
+            <div className="bg-gradient-to-r from-dandori-pink to-dandori-orange text-white rounded-xl shadow-lg p-6 mb-8">
               <h2 className="text-xl font-bold mb-4 flex items-center">
                 🏢 事務活動センター
               </h2>
@@ -539,7 +539,7 @@ export default function OfficeDashboard() {
                       <h3 className="text-lg font-bold">来店中のお客様</h3>
                       <button
                         onClick={() => setShowReceptionModal(true)}
-                        className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:shadow-lg transition"
+                        className="px-4 py-2 bg-gradient-to-r from-dandori-pink to-dandori-orange text-white rounded-lg hover:shadow-lg transition"
                       >
                         <UserPlus className="inline h-4 w-4 mr-2" />
                         新規受付
@@ -805,7 +805,7 @@ export default function OfficeDashboard() {
 
           {/* RAG事務アシスタントサイドバー（右側1カラム） */}
           <div className="lg:col-span-1">
-            <div className="bg-gradient-to-br from-pink-600 to-purple-600 text-white rounded-xl shadow-lg p-6 mb-6">
+            <div className="bg-gradient-to-br from-dandori-pink to-dandori-orange text-white rounded-xl shadow-lg p-6 mb-6">
               <h3 className="font-bold text-lg mb-4 flex items-center">
                 🤖 RAG事務アシスタント
               </h3>
@@ -831,7 +831,7 @@ export default function OfficeDashboard() {
                     placeholder="例: 見積書作成時の注意点を教えて..."
                     className="w-full h-20 p-3 rounded-lg text-gray-800 text-sm resize-none"
                   />
-                  <button className="w-full mt-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-2 rounded-lg hover:shadow-lg transition-all">
+                  <button className="w-full mt-3 bg-gradient-to-r from-dandori-pink to-dandori-orange text-white py-2 rounded-lg hover:shadow-lg transition-all">
                     RAGに聞く
                   </button>
                 </div>
@@ -918,7 +918,7 @@ export default function OfficeDashboard() {
                 </div>
                 <div className="w-full h-2 bg-gray-200 rounded-full">
                   <div
-                    className="h-full bg-gradient-to-r from-green-500 to-blue-500 rounded-full"
+                    className="h-full bg-gradient-to-r from-dandori-orange to-dandori-blue rounded-full"
                     style={{ width: '85%' }}
                   ></div>
                 </div>
@@ -979,7 +979,7 @@ export default function OfficeDashboard() {
                 </select>
               </div>
               <div className="flex gap-3 pt-4">
-                <button className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:shadow-lg transition">
+                <button className="flex-1 px-4 py-2 bg-gradient-to-r from-dandori-pink to-dandori-orange text-white rounded-lg hover:shadow-lg transition">
                   受付完了
                 </button>
                 <button
@@ -1042,7 +1042,7 @@ export default function OfficeDashboard() {
                 ※ 現場住所は見積/契約時に追加されます
               </p>
               <div className="flex gap-3 pt-4">
-                <button className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:shadow-lg transition">
+                <button className="flex-1 px-4 py-2 bg-gradient-to-r from-dandori-pink to-dandori-orange text-white rounded-lg hover:shadow-lg transition">
                   登録
                 </button>
                 <button
@@ -1095,7 +1095,7 @@ export default function OfficeDashboard() {
                 </div>
               </div>
               <div className="flex gap-3 pt-4">
-                <button className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:shadow-lg transition">
+                <button className="flex-1 px-4 py-2 bg-gradient-to-r from-dandori-pink to-dandori-orange text-white rounded-lg hover:shadow-lg transition">
                   担当者を割り当て
                 </button>
                 <button

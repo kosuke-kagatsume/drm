@@ -133,15 +133,15 @@ export default function OrderAnalytics({
 
   const { summary, monthlyTrend, salesPerformance, lostReasons } = data;
 
-  // 失注理由のチャートカラー
-  const COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6'];
+  // 失注理由のチャートカラー（Dandoriブランドカラー）
+  const COLORS = ['#0099CC', '#FF9933', '#FF3366', '#FFCC33', '#66CCFF'];
 
   return (
     <div className="space-y-6">
       {/* サマリーカード */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* 受注率 */}
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl shadow-lg p-6">
+        <div className="bg-gradient-to-br from-dandori-blue to-dandori-sky text-white rounded-2xl shadow-lg p-6">
           <div className="flex items-center justify-between mb-2">
             <p className="text-white/80 text-sm">受注率</p>
             {summary.winRate >= 60 ? (
@@ -157,7 +157,7 @@ export default function OrderAnalytics({
         </div>
 
         {/* 受注金額 */}
-        <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-2xl shadow-lg p-6">
+        <div className="bg-gradient-to-br from-dandori-orange to-dandori-yellow text-white rounded-2xl shadow-lg p-6">
           <div className="flex items-center justify-between mb-2">
             <p className="text-white/80 text-sm">受注金額</p>
             <DollarSign className="w-5 h-5 text-white/80" />
@@ -171,7 +171,7 @@ export default function OrderAnalytics({
         </div>
 
         {/* 平均受注単価 */}
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-2xl shadow-lg p-6">
+        <div className="bg-gradient-to-br from-dandori-pink to-dandori-orange text-white rounded-2xl shadow-lg p-6">
           <div className="flex items-center justify-between mb-2">
             <p className="text-white/80 text-sm">平均受注単価</p>
             <Award className="w-5 h-5 text-white/80" />
@@ -185,7 +185,7 @@ export default function OrderAnalytics({
         </div>
 
         {/* 交渉中案件 */}
-        <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-2xl shadow-lg p-6">
+        <div className="bg-gradient-to-br from-dandori-yellow to-dandori-orange text-white rounded-2xl shadow-lg p-6">
           <div className="flex items-center justify-between mb-2">
             <p className="text-white/80 text-sm">交渉中案件</p>
             <Users className="w-5 h-5 text-white/80" />
@@ -224,7 +224,7 @@ export default function OrderAnalytics({
               <Line
                 type="monotone"
                 dataKey="winRate"
-                stroke="#3b82f6"
+                stroke="#0099CC"
                 strokeWidth={3}
                 name="受注率(%)"
                 dot={{ r: 5 }}
@@ -312,8 +312,8 @@ export default function OrderAnalytics({
                     borderRadius: '8px',
                   }}
                 />
-                <Bar dataKey="won" fill="#22c55e" name="受注" />
-                <Bar dataKey="lost" fill="#ef4444" name="失注" />
+                <Bar dataKey="won" fill="#FF9933" name="受注" />
+                <Bar dataKey="lost" fill="#FF3366" name="失注" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -353,7 +353,7 @@ export default function OrderAnalytics({
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-blue-600">
+                    <p className="text-2xl font-bold text-dandori-blue">
                       {sales.winRate.toFixed(1)}%
                     </p>
                     <p className="text-xs text-gray-500">

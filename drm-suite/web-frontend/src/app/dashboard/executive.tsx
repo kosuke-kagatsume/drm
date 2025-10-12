@@ -14,7 +14,6 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import OrderAnalytics from '@/components/analytics/OrderAnalytics';
 
 interface ExecutiveDashboardProps {
   userEmail: string;
@@ -323,19 +322,139 @@ export default function ExecutiveDashboard({
             </div>
           </div>
 
-          {/* 📊 受注率分析ダッシュボード */}
-          <div className="bg-white rounded-2xl shadow-lg mt-6 overflow-hidden">
-            <div className="px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-              <h3 className="font-semibold">📊 受注率分析</h3>
-            </div>
-            <div className="p-6">
-              <OrderAnalytics tenantId="demo-tenant" period="monthly" />
+          {/* 📊 分析サマリーセクション */}
+          <div className="mt-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              📊 詳細分析
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* 受注率分析カード */}
+              <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                <div className="px-6 py-4 bg-gradient-to-r from-dandori-blue to-dandori-sky text-white">
+                  <h3 className="font-semibold text-lg">📊 受注率分析</h3>
+                </div>
+                <div className="p-6">
+                  <div className="mb-4">
+                    <p className="text-3xl font-bold text-dandori-blue">
+                      45.2%
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">今月の受注率</p>
+                  </div>
+                  <div className="space-y-2 text-sm text-gray-600 mb-4">
+                    <div className="flex justify-between">
+                      <span>受注件数</span>
+                      <span className="font-semibold text-gray-900">5件</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>受注金額</span>
+                      <span className="font-semibold text-gray-900">¥32M</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => router.push('/analytics/orders')}
+                    className="w-full py-2 px-4 bg-gradient-to-r from-dandori-blue to-dandori-sky text-white rounded-lg font-semibold hover:opacity-90 transition-opacity"
+                  >
+                    詳細を見る →
+                  </button>
+                </div>
+              </div>
+
+              {/* 工事収益分析カード */}
+              <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                <div className="px-6 py-4 bg-gradient-to-r from-dandori-orange to-dandori-yellow text-white">
+                  <h3 className="font-semibold text-lg">💰 工事収益分析</h3>
+                </div>
+                <div className="p-6">
+                  <div className="mb-4">
+                    <p className="text-3xl font-bold text-dandori-orange">
+                      3.4%
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">平均粗利率</p>
+                  </div>
+                  <div className="space-y-2 text-sm text-gray-600 mb-4">
+                    <div className="flex justify-between">
+                      <span>総工事数</span>
+                      <span className="font-semibold text-gray-900">6件</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>アラート</span>
+                      <span className="font-semibold text-red-600">2件</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => router.push('/analytics/profitability')}
+                    className="w-full py-2 px-4 bg-gradient-to-r from-dandori-orange to-dandori-yellow text-white rounded-lg font-semibold hover:opacity-90 transition-opacity"
+                  >
+                    詳細を見る →
+                  </button>
+                </div>
+              </div>
+
+              {/* 顧客分析カード */}
+              <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                <div className="px-6 py-4 bg-gradient-to-r from-dandori-pink to-dandori-orange text-white">
+                  <h3 className="font-semibold text-lg">👥 顧客分析</h3>
+                </div>
+                <div className="p-6">
+                  <div className="mb-4">
+                    <p className="text-3xl font-bold text-dandori-pink">12社</p>
+                    <p className="text-sm text-gray-600 mt-1">総顧客数</p>
+                  </div>
+                  <div className="space-y-2 text-sm text-gray-600 mb-4">
+                    <div className="flex justify-between">
+                      <span>リピート率</span>
+                      <span className="font-semibold text-gray-900">41.7%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>リスク顧客</span>
+                      <span className="font-semibold text-red-600">2社</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => router.push('/analytics/customers')}
+                    className="w-full py-2 px-4 bg-gradient-to-r from-dandori-pink to-dandori-orange text-white rounded-lg font-semibold hover:opacity-90 transition-opacity"
+                  >
+                    詳細を見る →
+                  </button>
+                </div>
+              </div>
+
+              {/* 営業活動分析カード */}
+              <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                <div className="px-6 py-4 bg-gradient-to-r from-dandori-blue to-dandori-pink text-white">
+                  <h3 className="font-semibold text-lg">📊 営業活動分析</h3>
+                </div>
+                <div className="p-6">
+                  <div className="mb-4">
+                    <p className="text-3xl font-bold text-dandori-blue">80%</p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      コンバージョン率
+                    </p>
+                  </div>
+                  <div className="space-y-2 text-sm text-gray-600 mb-4">
+                    <div className="flex justify-between">
+                      <span>総活動数</span>
+                      <span className="font-semibold text-gray-900">10件</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>平均リードタイム</span>
+                      <span className="font-semibold text-gray-900">15日</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => router.push('/analytics/activities')}
+                    className="w-full py-2 px-4 bg-gradient-to-r from-dandori-blue to-dandori-pink text-white rounded-lg font-semibold hover:opacity-90 transition-opacity"
+                  >
+                    詳細を見る →
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* 統合財務分析ダッシュボード */}
           <div className="bg-white rounded-2xl shadow-lg mt-6 overflow-hidden">
-            <div className="px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+            <div className="px-6 py-4 bg-gradient-to-r from-dandori-pink to-dandori-orange text-white">
               <h3 className="font-semibold">📊 経営統合財務分析</h3>
             </div>
             <div className="p-6">
@@ -536,7 +655,7 @@ export default function ExecutiveDashboard({
         {/* 右サイドバー */}
         <div className="lg:col-span-1">
           {/* 顧客データベース */}
-          <div className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white rounded-2xl shadow-lg mb-6 overflow-hidden">
+          <div className="bg-gradient-to-br from-dandori-blue to-dandori-sky text-white rounded-2xl shadow-lg mb-6 overflow-hidden">
             <div className="p-6">
               <h3 className="font-bold text-xl mb-4 flex items-center">
                 <span className="text-2xl mr-2">👥</span>
@@ -556,7 +675,7 @@ export default function ExecutiveDashboard({
                 onClick={() => {
                   router.push('/customers');
                 }}
-                className="w-full bg-white text-purple-600 py-3 rounded-xl font-bold hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                className="w-full bg-white text-dandori-blue py-3 rounded-xl font-bold hover:shadow-lg transform hover:scale-105 transition-all duration-200"
               >
                 顧客管理センターへ →
               </button>
@@ -564,7 +683,7 @@ export default function ExecutiveDashboard({
           </div>
 
           {/* マーケティング分析 */}
-          <div className="bg-gradient-to-br from-yellow-500 to-orange-500 text-white rounded-2xl shadow-lg mb-6 overflow-hidden">
+          <div className="bg-gradient-to-br from-dandori-yellow to-dandori-orange text-white rounded-2xl shadow-lg mb-6 overflow-hidden">
             <div className="p-6">
               <h3 className="font-bold text-xl mb-4 flex items-center">
                 <span className="text-2xl mr-2">📢</span>
@@ -602,7 +721,7 @@ export default function ExecutiveDashboard({
                 onClick={() => {
                   window.open('/dashboard/view-accounting', '_blank');
                 }}
-                className="w-full mb-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white p-4 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                className="w-full mb-4 bg-gradient-to-r from-dandori-pink to-dandori-orange text-white p-4 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"
               >
                 <div className="flex items-center justify-between">
                   <div className="text-left">
@@ -620,7 +739,7 @@ export default function ExecutiveDashboard({
               <div className="space-y-3">
                 <button
                   onClick={() => setActiveModal('financial-analysis')}
-                  className="w-full text-left bg-gradient-to-r from-purple-50 to-indigo-50 p-3 rounded-lg hover:from-purple-100 hover:to-indigo-100 transition-all duration-200 border border-purple-200"
+                  className="w-full text-left bg-gradient-to-r from-dandori-blue/5 to-dandori-sky/5 p-3 rounded-lg hover:from-dandori-blue/10 hover:to-dandori-sky/10 transition-all duration-200 border border-dandori-blue/20"
                 >
                   <div className="flex justify-between items-center">
                     <div>
@@ -634,7 +753,7 @@ export default function ExecutiveDashboard({
                 </button>
                 <button
                   onClick={() => setActiveModal('strategy-analysis')}
-                  className="w-full text-left bg-gradient-to-r from-indigo-50 to-blue-50 p-3 rounded-lg hover:from-indigo-100 hover:to-blue-100 transition-all duration-200 border border-indigo-200"
+                  className="w-full text-left bg-gradient-to-r from-dandori-blue/5 to-dandori-sky/5 p-3 rounded-lg hover:from-dandori-blue/10 hover:to-dandori-sky/10 transition-all duration-200 border border-dandori-blue/20"
                 >
                   <div className="flex justify-between items-center">
                     <div>
@@ -664,7 +783,7 @@ export default function ExecutiveDashboard({
                     alert('入金管理画面へ移動します');
                     router.push('/payments');
                   }}
-                  className="w-full text-left bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-lg hover:from-green-100 hover:to-emerald-100 transition-all duration-200"
+                  className="w-full text-left bg-gradient-to-r from-dandori-orange/5 to-dandori-yellow/5 p-3 rounded-lg hover:from-dandori-orange/10 hover:to-dandori-yellow/10 transition-all duration-200"
                 >
                   <div className="flex justify-between items-center">
                     <div>
@@ -692,7 +811,7 @@ export default function ExecutiveDashboard({
                   onClick={() => {
                     router.push('/approvals');
                   }}
-                  className="w-full text-left bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-lg hover:from-blue-100 hover:to-indigo-100 transition-all duration-200"
+                  className="w-full text-left bg-gradient-to-r from-dandori-blue/5 to-dandori-sky/5 p-3 rounded-lg hover:from-dandori-blue/10 hover:to-dandori-sky/10 transition-all duration-200"
                 >
                   <div className="flex justify-between items-center">
                     <div>
@@ -708,7 +827,7 @@ export default function ExecutiveDashboard({
                   onClick={() => {
                     router.push('/construction-ledgers');
                   }}
-                  className="w-full text-left bg-gradient-to-r from-purple-50 to-pink-50 p-3 rounded-lg hover:from-purple-100 hover:to-pink-100 transition-all duration-200"
+                  className="w-full text-left bg-gradient-to-r from-dandori-pink/5 to-dandori-orange/5 p-3 rounded-lg hover:from-dandori-pink/10 hover:to-dandori-orange/10 transition-all duration-200"
                 >
                   <div className="flex justify-between items-center">
                     <div>
@@ -835,7 +954,7 @@ export default function ExecutiveDashboard({
               {activeModal === 'financial-analysis' && (
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-4 rounded-lg">
+                    <div className="bg-gradient-to-r from-dandori-blue/5 to-dandori-sky/5 p-4 rounded-lg">
                       <h4 className="font-bold text-purple-800 mb-3">
                         💰 財務健全性スコア
                       </h4>
@@ -869,7 +988,7 @@ export default function ExecutiveDashboard({
                       </div>
                     </div>
 
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg">
+                    <div className="bg-gradient-to-r from-dandori-orange/5 to-dandori-yellow/5 p-4 rounded-lg">
                       <h4 className="font-bold text-green-800 mb-3">
                         📈 成長性指標
                       </h4>
@@ -941,7 +1060,7 @@ export default function ExecutiveDashboard({
 
               {activeModal === 'strategy-analysis' && (
                 <div className="space-y-6">
-                  <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-lg">
+                  <div className="bg-gradient-to-r from-dandori-blue/5 to-dandori-sky/5 p-4 rounded-lg">
                     <h4 className="font-bold text-blue-800 mb-3">
                       🎯 戦略目標達成状況
                     </h4>
@@ -1047,7 +1166,7 @@ export default function ExecutiveDashboard({
 
               {activeModal === 'ai-consultation' && (
                 <div className="space-y-6">
-                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg">
+                  <div className="bg-gradient-to-r from-dandori-pink/5 to-dandori-orange/5 p-4 rounded-lg">
                     <h4 className="font-bold text-purple-800 mb-3">
                       🤖 AI経営アドバイザー
                     </h4>
@@ -1126,7 +1245,7 @@ export default function ExecutiveDashboard({
 
               {activeModal === 'year-comparison' && (
                 <div className="space-y-6">
-                  <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-lg">
+                  <div className="bg-gradient-to-r from-dandori-blue/5 to-dandori-sky/5 p-4 rounded-lg">
                     <h4 className="font-bold text-indigo-800 mb-3">
                       📊 前年同期比較分析
                     </h4>
@@ -1398,7 +1517,7 @@ export default function ExecutiveDashboard({
 
               {activeModal === 'analysis-report' && (
                 <div className="space-y-6">
-                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 rounded-lg">
+                  <div className="bg-gradient-to-r from-dandori-blue/5 to-dandori-sky/5 p-4 rounded-lg">
                     <h4 className="font-bold text-indigo-800 mb-3">
                       📝 AI分析レポート生成
                     </h4>

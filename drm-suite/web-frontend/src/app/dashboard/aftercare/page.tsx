@@ -313,7 +313,7 @@ export default function AftercareDashboard() {
                     </div>
                     <div className="w-full h-3 bg-white/20 rounded-full">
                       <div
-                        className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full"
+                        className="h-full bg-gradient-to-r from-dandori-yellow to-dandori-orange rounded-full"
                         style={{ width: '75%' }}
                       ></div>
                     </div>
@@ -326,7 +326,7 @@ export default function AftercareDashboard() {
                     </div>
                     <div className="w-full h-3 bg-white/20 rounded-full">
                       <div
-                        className="h-full bg-gradient-to-r from-green-400 to-blue-500 rounded-full"
+                        className="h-full bg-gradient-to-r from-dandori-orange to-dandori-blue rounded-full"
                         style={{ width: '100%' }}
                       ></div>
                     </div>
@@ -352,7 +352,7 @@ export default function AftercareDashboard() {
             </div>
 
             {/* アフター活動センター */}
-            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl shadow-lg p-6 mb-8">
+            <div className="bg-gradient-to-r from-dandori-blue to-dandori-sky text-white rounded-xl shadow-lg p-6 mb-8">
               <h2 className="text-xl font-bold mb-4 flex items-center">
                 🏠 アフター活動センター
               </h2>
@@ -945,7 +945,7 @@ export default function AftercareDashboard() {
                     placeholder="例: 築10年の屋根点検で注意すべき点は？"
                     className="w-full h-20 p-3 rounded-lg text-gray-800 text-sm resize-none"
                   />
-                  <button className="w-full mt-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white py-2 rounded-lg hover:shadow-lg transition-all">
+                  <button className="w-full mt-3 bg-gradient-to-r from-dandori-blue to-dandori-sky text-white py-2 rounded-lg hover:shadow-lg transition-all">
                     RAGに聞く
                   </button>
                 </div>
@@ -1017,7 +1017,7 @@ export default function AftercareDashboard() {
                 </div>
                 <div className="w-full h-2 bg-gray-200 rounded-full">
                   <div
-                    className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"
+                    className="h-full bg-gradient-to-r from-dandori-blue to-dandori-sky rounded-full"
                     style={{ width: '86%' }}
                   ></div>
                 </div>
@@ -1304,7 +1304,7 @@ export default function AftercareDashboard() {
                 >
                   点検開始
                 </button>
-                <button className="flex-1 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:shadow-lg transition">
+                <button className="flex-1 px-4 py-2 bg-gradient-to-r from-dandori-orange to-dandori-yellow text-white rounded-lg hover:shadow-lg transition">
                   電話連絡
                 </button>
                 <button
