@@ -1,14 +1,105 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PdfTemplate, CreatePdfTemplateRequest, UpdatePdfTemplateRequest, DocumentType, PdfTemplateListResponse } from '@/types/pdf-template';
+import {
+  PdfTemplate,
+  CreatePdfTemplateRequest,
+  UpdatePdfTemplateRequest,
+  DocumentType,
+  PdfTemplateListResponse,
+} from '@/types/pdf-template';
 
 // 模拟数据存储（実際の運用ではデータベースを使用）
 let templateStore: Record<string, PdfTemplate> = {};
+
+/**
+ * デフォルトテンプレートの初期化
+ */
+function initializeDefaultTemplates() {
+  if (Object.keys(templateStore).length > 0) {
+    return; // すでに初期化済み
+  }
+
+  const companyId = 'demo-tenant';
+  const now = new Date().toISOString();
+
+  const defaultTemplates: Array<{
+    documentType: DocumentType;
+    name: string;
+    description: string;
+  }> = [
+    {
+      documentType: 'estimate',
+      name: 'デフォルト見積書テンプレート',
+      description: '標準的な見積書のレイアウト',
+    },
+    {
+      documentType: 'contract',
+      name: 'デフォルト契約書テンプレート',
+      description: '工事請負契約書の標準レイアウト',
+    },
+    {
+      documentType: 'delivery',
+      name: 'デフォルト発注書テンプレート',
+      description: '発注書・納品書の標準レイアウト',
+    },
+    {
+      documentType: 'invoice',
+      name: 'デフォルト請求書テンプレート',
+      description: '請求書の標準レイアウト',
+    },
+  ];
+
+  defaultTemplates.forEach((tmpl, index) => {
+    const templateId = `default_${tmpl.documentType}_${Date.now()}_${index}`;
+    const template: PdfTemplate = {
+      id: templateId,
+      companyId,
+      name: tmpl.name,
+      description: tmpl.description,
+      documentType: tmpl.documentType,
+      status: 'active',
+      version: '1.0.0',
+      layout: {
+        pageSize: 'A4',
+        orientation: 'portrait',
+        margins: { top: 20, right: 20, bottom: 20, left: 20 },
+        header: { enabled: true, height: 80, content: '' },
+        footer: { enabled: true, height: 60, content: '' },
+        showPageNumbers: true,
+        pageNumberPosition: 'footer',
+        showWatermark: false,
+      },
+      sections: getDefaultSections(tmpl.documentType),
+      styles: {
+        globalCss: '',
+        useCompanyBranding: true,
+      },
+      permissions: {
+        allowedRoles: [],
+        isPublic: true,
+        requiresApproval: false,
+      },
+      isDefault: true,
+      usageCount: 0,
+      createdBy: 'system',
+      createdAt: now,
+      updatedAt: now,
+    };
+    templateStore[templateId] = template;
+  });
+
+  console.log(
+    `✅ デフォルトテンプレート ${defaultTemplates.length}件を初期化しました`,
+  );
+}
 
 /**
  * GET /api/pdf/templates - PDFテンプレート一覧の取得
  */
 export async function GET(request: NextRequest) {
   try {
+    // デフォルトテンプレートの初期化
+    initializeDefaultTemplates();
+
     const { searchParams } = new URL(request.url);
     const companyId = searchParams.get('companyId');
     const documentType = searchParams.get('documentType') as DocumentType;
@@ -19,21 +110,23 @@ export async function GET(request: NextRequest) {
     if (!companyId) {
       return NextResponse.json(
         { error: 'companyIdが必要です' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // フィルタリング
-    let templates = Object.values(templateStore).filter(template =>
-      template.companyId === companyId
+    let templates = Object.values(templateStore).filter(
+      (template) => template.companyId === companyId,
     );
 
     if (documentType) {
-      templates = templates.filter(template => template.documentType === documentType);
+      templates = templates.filter(
+        (template) => template.documentType === documentType,
+      );
     }
 
     if (status) {
-      templates = templates.filter(template => template.status === status);
+      templates = templates.filter((template) => template.status === status);
     }
 
     // ソート（デフォルト使用、更新日順）
@@ -52,16 +145,15 @@ export async function GET(request: NextRequest) {
       templates: paginatedTemplates,
       total,
       page,
-      limit
+      limit,
     };
 
     return NextResponse.json(response);
-
   } catch (error) {
     console.error('テンプレート一覧取得エラー:', error);
     return NextResponse.json(
       { error: 'テンプレート一覧の取得に失敗しました' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -71,12 +163,13 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body: CreatePdfTemplateRequest & { companyId: string } = await request.json();
+    const body: CreatePdfTemplateRequest & { companyId: string } =
+      await request.json();
 
     if (!body.companyId) {
       return NextResponse.json(
         { error: 'companyIdが必要です' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -84,7 +177,7 @@ export async function POST(request: NextRequest) {
     if (!body.name || !body.documentType) {
       return NextResponse.json(
         { error: 'テンプレート名と文書タイプは必須です' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -95,7 +188,7 @@ export async function POST(request: NextRequest) {
       ...body,
       usageCount: 0,
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
 
     // デフォルトレイアウトの設定
@@ -108,7 +201,7 @@ export async function POST(request: NextRequest) {
         footer: { enabled: true, height: 60, content: '' },
         showPageNumbers: true,
         pageNumberPosition: 'footer',
-        showWatermark: false
+        showWatermark: false,
       };
     }
 
@@ -120,12 +213,11 @@ export async function POST(request: NextRequest) {
     templateStore[templateId] = newTemplate;
 
     return NextResponse.json(newTemplate, { status: 201 });
-
   } catch (error) {
     console.error('テンプレート作成エラー:', error);
     return NextResponse.json(
       { error: 'テンプレートの作成に失敗しました' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -147,12 +239,12 @@ function getDefaultSections(documentType: DocumentType) {
         alignment: 'left' as const,
         padding: 0,
         marginTop: 0,
-        marginBottom: 20
+        marginBottom: 20,
       },
       content: {
         template: '<div class="company-header">{{companyName}}</div>',
-        variables: ['companyName', 'logoUrl', 'address', 'phone']
-      }
+        variables: ['companyName', 'logoUrl', 'address', 'phone'],
+      },
     },
     {
       id: 'title',
@@ -166,12 +258,12 @@ function getDefaultSections(documentType: DocumentType) {
         alignment: 'center' as const,
         padding: 0,
         marginTop: 20,
-        marginBottom: 20
+        marginBottom: 20,
       },
       content: {
         template: '<h1 class="document-title">{{title}}</h1>',
-        variables: ['title', 'documentNumber']
-      }
+        variables: ['title', 'documentNumber'],
+      },
     },
     {
       id: 'document_info',
@@ -185,76 +277,109 @@ function getDefaultSections(documentType: DocumentType) {
         alignment: 'right' as const,
         padding: 0,
         marginTop: 0,
-        marginBottom: 20
+        marginBottom: 20,
       },
       content: {
-        template: '<div class="document-info">作成日: {{date}}<br>有効期限: {{validUntil}}</div>',
-        variables: ['date', 'validUntil', 'documentNumber']
-      }
-    }
+        template:
+          '<div class="document-info">作成日: {{date}}<br>有効期限: {{validUntil}}</div>',
+        variables: ['date', 'validUntil', 'documentNumber'],
+      },
+    },
   ];
 
   // 文書タイプ別の追加セクション
-  if (documentType === 'estimate') {
-    baseSections.push(
-      {
-        id: 'customer_info',
-        name: '顧客情報',
-        type: 'customer_info' as const,
-        order: 4,
-        isRequired: true,
-        isVisible: true,
-        layout: {
-          width: '50%' as const,
-          alignment: 'left' as const,
-          padding: 10,
-          marginTop: 0,
-          marginBottom: 20
-        },
-        content: {
-          template: '<div class="customer-info"><strong>{{customerName}}</strong><br>{{customerAddress}}</div>',
-          variables: ['customerName', 'customerAddress', 'customerPhone']
-        }
+  const commonSections = [
+    {
+      id: 'customer_info',
+      name: '顧客情報',
+      type: 'customer_info' as const,
+      order: 4,
+      isRequired: true,
+      isVisible: true,
+      layout: {
+        width: '50%' as const,
+        alignment: 'left' as const,
+        padding: 10,
+        marginTop: 0,
+        marginBottom: 20,
       },
-      {
-        id: 'items_table',
-        name: '明細テーブル',
-        type: 'items_table' as const,
-        order: 5,
-        isRequired: true,
+      content: {
+        template:
+          '<div class="customer-info"><strong>{{customerName}}</strong><br>{{customerAddress}}</div>',
+        variables: ['customerName', 'customerAddress', 'customerPhone'],
+      },
+    },
+    {
+      id: 'items_table',
+      name: '明細テーブル',
+      type: 'items_table' as const,
+      order: 5,
+      isRequired: true,
+      isVisible: true,
+      layout: {
+        width: '100%' as const,
+        alignment: 'left' as const,
+        padding: 0,
+        marginTop: 20,
+        marginBottom: 20,
+      },
+      content: {
+        template: '<table class="items-table">{{itemsTable}}</table>',
+        variables: ['items', 'itemsTable'],
+      },
+    },
+    {
+      id: 'totals',
+      name: '合計',
+      type: 'totals' as const,
+      order: 6,
+      isRequired: true,
+      isVisible: true,
+      layout: {
+        width: '50%' as const,
+        alignment: 'right' as const,
+        padding: 10,
+        marginTop: 0,
+        marginBottom: 20,
+      },
+      content: {
+        template:
+          '<div class="totals">小計: {{subtotal}}<br>税額: {{tax}}<br><strong>合計: {{total}}</strong></div>',
+        variables: ['subtotal', 'tax', 'total'],
+      },
+    },
+  ];
+
+  if (
+    documentType === 'estimate' ||
+    documentType === 'contract' ||
+    documentType === 'delivery' ||
+    documentType === 'invoice'
+  ) {
+    baseSections.push(...commonSections);
+
+    // 特記事項セクション（契約書・請求書用）
+    if (documentType === 'contract' || documentType === 'invoice') {
+      baseSections.push({
+        id: 'terms',
+        name: '特記事項',
+        type: 'notes' as const,
+        order: 7,
+        isRequired: false,
         isVisible: true,
         layout: {
           width: '100%' as const,
           alignment: 'left' as const,
-          padding: 0,
-          marginTop: 20,
-          marginBottom: 20
-        },
-        content: {
-          template: '<table class="items-table">{{itemsTable}}</table>',
-          variables: ['items', 'itemsTable']
-        }
-      },
-      {
-        id: 'totals',
-        name: '合計',
-        type: 'totals' as const,
-        order: 6,
-        isRequired: true,
-        isVisible: true,
-        layout: {
-          width: '50%' as const,
-          alignment: 'right' as const,
           padding: 10,
-          marginTop: 0,
-          marginBottom: 20
+          marginTop: 20,
+          marginBottom: 20,
         },
         content: {
-          template: '<div class="totals">小計: {{subtotal}}<br>税額: {{tax}}<br><strong>合計: {{total}}</strong></div>',
-          variables: ['subtotal', 'tax', 'total']
-        }
-      }
-    );
+          template: '<div class="terms">{{terms}}</div>',
+          variables: ['terms', 'notes'],
+        },
+      });
+    }
   }
 
   return baseSections;
