@@ -151,7 +151,11 @@ function getMonthEnd(date: Date): Date {
 /**
  * 入金予定データを取得（ダミーデータ）
  */
-async function getPaymentSchedules(tenantId: string, startDate: string, endDate: string): Promise<any[]> {
+async function getPaymentSchedules(
+  tenantId: string,
+  startDate: string,
+  endDate: string,
+): Promise<any[]> {
   // 実際の実装では /api/payment-schedules を呼び出す
   // ここではダミーデータを返す
   return [
@@ -185,7 +189,11 @@ async function getPaymentSchedules(tenantId: string, startDate: string, endDate:
 /**
  * 支払予定データを取得（ダミーデータ）
  */
-async function getDisbursementSchedules(tenantId: string, startDate: string, endDate: string): Promise<any[]> {
+async function getDisbursementSchedules(
+  tenantId: string,
+  startDate: string,
+  endDate: string,
+): Promise<any[]> {
   // 実際の実装では /api/disbursement-schedules を呼び出す
   // ここではダミーデータを返す
   return [
@@ -221,7 +229,7 @@ async function getDisbursementSchedules(tenantId: string, startDate: string, end
  */
 function createCashFlowItems(
   paymentSchedules: any[],
-  disbursementSchedules: any[]
+  disbursementSchedules: any[],
 ): CashFlowItem[] {
   const items: CashFlowItem[] = [];
 
@@ -270,7 +278,7 @@ function calculateDailyCashFlows(
   items: CashFlowItem[],
   startDate: Date,
   endDate: Date,
-  openingBalance: number
+  openingBalance: number,
 ): DailyCashFlow[] {
   const dailyFlows: Map<string, DailyCashFlow> = new Map();
   let currentBalance = openingBalance;
@@ -312,13 +320,17 @@ function calculateDailyCashFlows(
     flow.balance = currentBalance;
   });
 
-  return Array.from(dailyFlows.values()).sort((a, b) => a.date.localeCompare(b.date));
+  return Array.from(dailyFlows.values()).sort((a, b) =>
+    a.date.localeCompare(b.date),
+  );
 }
 
 /**
  * 週次キャッシュフローを計算
  */
-function calculateWeeklyCashFlows(dailyFlows: DailyCashFlow[]): WeeklyCashFlow[] {
+function calculateWeeklyCashFlows(
+  dailyFlows: DailyCashFlow[],
+): WeeklyCashFlow[] {
   const weeklyFlows: Map<string, WeeklyCashFlow> = new Map();
 
   dailyFlows.forEach((daily) => {
@@ -351,13 +363,17 @@ function calculateWeeklyCashFlows(dailyFlows: DailyCashFlow[]): WeeklyCashFlow[]
     weekly.dailyFlows.push(daily);
   });
 
-  return Array.from(weeklyFlows.values()).sort((a, b) => a.weekStart.localeCompare(b.weekStart));
+  return Array.from(weeklyFlows.values()).sort((a, b) =>
+    a.weekStart.localeCompare(b.weekStart),
+  );
 }
 
 /**
  * 月次キャッシュフローを計算
  */
-function calculateMonthlyCashFlows(dailyFlows: DailyCashFlow[]): MonthlyCashFlow[] {
+function calculateMonthlyCashFlows(
+  dailyFlows: DailyCashFlow[],
+): MonthlyCashFlow[] {
   const monthlyFlows: Map<string, MonthlyCashFlow> = new Map();
 
   dailyFlows.forEach((daily) => {
@@ -383,12 +399,17 @@ function calculateMonthlyCashFlows(dailyFlows: DailyCashFlow[]): MonthlyCashFlow
     monthly.dailyFlows!.push(daily);
   });
 
-  return Array.from(monthlyFlows.values()).sort((a, b) => a.month.localeCompare(b.month));
+  return Array.from(monthlyFlows.values()).sort((a, b) =>
+    a.month.localeCompare(b.month),
+  );
 }
 
 // ============================================================================
 // APIハンドラー
 // ============================================================================
+
+// Next.jsにこのルートを動的にレンダリングさせる
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/cashflow/schedule
@@ -412,8 +433,14 @@ export async function GET(request: NextRequest) {
 
     const startDate = searchParams.get('startDate') || formatDate(today);
     const endDate = searchParams.get('endDate') || formatDate(threeMonthsLater);
-    const periodType = (searchParams.get('periodType') || 'monthly') as 'daily' | 'weekly' | 'monthly';
-    const openingBalance = parseInt(searchParams.get('openingBalance') || '10000000', 10);
+    const periodType = (searchParams.get('periodType') || 'monthly') as
+      | 'daily'
+      | 'weekly'
+      | 'monthly';
+    const openingBalance = parseInt(
+      searchParams.get('openingBalance') || '10000000',
+      10,
+    );
 
     // データ取得
     const [paymentSchedules, disbursementSchedules] = await Promise.all([
@@ -427,13 +454,24 @@ export async function GET(request: NextRequest) {
     // 日次キャッシュフローを計算
     const startDateObj = new Date(startDate);
     const endDateObj = new Date(endDate);
-    const dailyFlows = calculateDailyCashFlows(items, startDateObj, endDateObj, openingBalance);
+    const dailyFlows = calculateDailyCashFlows(
+      items,
+      startDateObj,
+      endDateObj,
+      openingBalance,
+    );
 
     // サマリー計算
     const totalInflow = dailyFlows.reduce((sum, flow) => sum + flow.inflow, 0);
-    const totalOutflow = dailyFlows.reduce((sum, flow) => sum + flow.outflow, 0);
+    const totalOutflow = dailyFlows.reduce(
+      (sum, flow) => sum + flow.outflow,
+      0,
+    );
     const netCashFlow = totalInflow - totalOutflow;
-    const closingBalance = dailyFlows.length > 0 ? dailyFlows[dailyFlows.length - 1].balance : openingBalance;
+    const closingBalance =
+      dailyFlows.length > 0
+        ? dailyFlows[dailyFlows.length - 1].balance
+        : openingBalance;
 
     let minimumBalance = openingBalance;
     let minimumBalanceDate = startDate;
@@ -481,9 +519,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'キャッシュフロー予定表の取得に失敗しました',
+        error:
+          error instanceof Error
+            ? error.message
+            : 'キャッシュフロー予定表の取得に失敗しました',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

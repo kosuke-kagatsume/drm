@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -115,7 +115,7 @@ const SAMPLE_CUSTOMERS = [
   },
 ];
 
-export default function EstimateCreateV2Page() {
+function EstimateCreateV2Content() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [step, setStep] = useState<'initial' | 'customer' | 'type'>('initial');
@@ -577,5 +577,23 @@ export default function EstimateCreateV2Page() {
         </div>
       )}
     </div>
+  );
+}
+
+// Suspenseでラップしたメインコンポーネント
+export default function EstimateCreateV2Page() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">読み込み中...</p>
+          </div>
+        </div>
+      }
+    >
+      <EstimateCreateV2Content />
+    </Suspense>
   );
 }

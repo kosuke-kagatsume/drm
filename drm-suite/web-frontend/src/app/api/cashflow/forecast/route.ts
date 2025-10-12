@@ -141,7 +141,7 @@ async function getHistoricalData(tenantId: string): Promise<{
     avgMonthlyInflow: 15000000,
     avgMonthlyOutflow: 12000000,
     inflowVolatility: 0.15, // 15%の変動
-    outflowVolatility: 0.10, // 10%の変動
+    outflowVolatility: 0.1, // 10%の変動
   };
 }
 
@@ -173,7 +173,7 @@ async function getScheduledTransactions(tenantId: string): Promise<{
 function calculateScenarioValue(
   baseValue: number,
   volatility: number,
-  scenario: ForecastScenario
+  scenario: ForecastScenario,
 ): number {
   switch (scenario) {
     case 'optimistic':
@@ -193,7 +193,7 @@ function generateMonthlyForecasts(
   months: number,
   currentBalance: number,
   historicalData: any,
-  scheduledTransactions: any
+  scheduledTransactions: any,
 ): MonthlyForecast[] {
   const forecasts: MonthlyForecast[] = [];
   let optimisticBalance = currentBalance;
@@ -206,8 +206,10 @@ function generateMonthlyForecasts(
     const monthStr = formatMonth(currentDate);
 
     // 確定予定があればそれを使用、なければ過去平均を使用
-    const scheduledInflow = scheduledTransactions.scheduledInflows.get(monthStr);
-    const scheduledOutflow = scheduledTransactions.scheduledOutflows.get(monthStr);
+    const scheduledInflow =
+      scheduledTransactions.scheduledInflows.get(monthStr);
+    const scheduledOutflow =
+      scheduledTransactions.scheduledOutflows.get(monthStr);
 
     const baseInflow = scheduledInflow || historicalData.avgMonthlyInflow;
     const baseOutflow = scheduledOutflow || historicalData.avgMonthlyOutflow;
@@ -216,33 +218,33 @@ function generateMonthlyForecasts(
     const optimisticInflow = calculateScenarioValue(
       baseInflow,
       historicalData.inflowVolatility,
-      'optimistic'
+      'optimistic',
     );
     const realisticInflow = calculateScenarioValue(
       baseInflow,
       historicalData.inflowVolatility,
-      'realistic'
+      'realistic',
     );
     const pessimisticInflow = calculateScenarioValue(
       baseInflow,
       historicalData.inflowVolatility,
-      'pessimistic'
+      'pessimistic',
     );
 
     const optimisticOutflow = calculateScenarioValue(
       baseOutflow,
       historicalData.outflowVolatility,
-      'pessimistic' // 支出は楽観的シナリオでは少なくなる
+      'pessimistic', // 支出は楽観的シナリオでは少なくなる
     );
     const realisticOutflow = calculateScenarioValue(
       baseOutflow,
       historicalData.outflowVolatility,
-      'realistic'
+      'realistic',
     );
     const pessimisticOutflow = calculateScenarioValue(
       baseOutflow,
       historicalData.outflowVolatility,
-      'optimistic' // 支出は悲観的シナリオでは多くなる
+      'optimistic', // 支出は悲観的シナリオでは多くなる
     );
 
     // 純キャッシュフローと残高
@@ -255,7 +257,8 @@ function generateMonthlyForecasts(
     pessimisticBalance += pessimisticNetFlow;
 
     // 信頼度の計算（確定予定がある場合は高く、遠い将来ほど低く）
-    const hasScheduled = scheduledInflow !== undefined || scheduledOutflow !== undefined;
+    const hasScheduled =
+      scheduledInflow !== undefined || scheduledOutflow !== undefined;
     const baseConfidence = hasScheduled ? 85 : 60;
     const confidence = Math.max(30, baseConfidence - i * 5);
 
@@ -307,13 +310,17 @@ function generateMonthlyForecasts(
  */
 function generateRiskAssessment(forecasts: MonthlyForecast[]): RiskAssessment {
   // 悲観的シナリオで残高がマイナスになる月を検索
-  const shortfallMonth = forecasts.find((f) => f.scenarios.pessimistic.balance < 0);
+  const shortfallMonth = forecasts.find(
+    (f) => f.scenarios.pessimistic.balance < 0,
+  );
 
   if (shortfallMonth) {
     return {
       level: 'critical',
       description: '悲観的シナリオで資金ショートの可能性があります',
-      potentialShortfall: Math.abs(shortfallMonth.scenarios.pessimistic.balance),
+      potentialShortfall: Math.abs(
+        shortfallMonth.scenarios.pessimistic.balance,
+      ),
       shortfallMonth: shortfallMonth.month,
       mitigationActions: [
         '早期入金の促進（請求書の早期発行、支払条件の見直し）',
@@ -325,7 +332,9 @@ function generateRiskAssessment(forecasts: MonthlyForecast[]): RiskAssessment {
   }
 
   // 現実的シナリオで残高が一定額を下回る月を検索
-  const lowBalanceMonth = forecasts.find((f) => f.scenarios.realistic.balance < 5000000);
+  const lowBalanceMonth = forecasts.find(
+    (f) => f.scenarios.realistic.balance < 5000000,
+  );
 
   if (lowBalanceMonth) {
     return {
@@ -345,7 +354,10 @@ function generateRiskAssessment(forecasts: MonthlyForecast[]): RiskAssessment {
   const firstMonth = forecasts[0];
   const lastMonth = forecasts[forecasts.length - 1];
 
-  if (lastMonth.scenarios.optimistic.balance < firstMonth.scenarios.optimistic.balance) {
+  if (
+    lastMonth.scenarios.optimistic.balance <
+    firstMonth.scenarios.optimistic.balance
+  ) {
     return {
       level: 'medium',
       description: '楽観的シナリオでも残高が減少傾向にあります',
@@ -371,7 +383,7 @@ function generateRiskAssessment(forecasts: MonthlyForecast[]): RiskAssessment {
  */
 function generateRecommendations(
   forecasts: MonthlyForecast[],
-  riskAssessment: RiskAssessment
+  riskAssessment: RiskAssessment,
 ): Recommendation[] {
   const recommendations: Recommendation[] = [];
 
@@ -416,7 +428,8 @@ function generateRecommendations(
 
   // 余剰資金の活用（低リスクの場合）
   if (riskAssessment.level === 'low') {
-    const lastMonthBalance = forecasts[forecasts.length - 1].scenarios.realistic.balance;
+    const lastMonthBalance =
+      forecasts[forecasts.length - 1].scenarios.realistic.balance;
     if (lastMonthBalance > 20000000) {
       recommendations.push({
         priority: 'low',
@@ -435,6 +448,9 @@ function generateRecommendations(
 // APIハンドラー
 // ============================================================================
 
+// Next.jsにこのルートを動的にレンダリングさせる
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/cashflow/forecast
  * キャッシュフロー予測を取得
@@ -450,7 +466,10 @@ export async function GET(request: NextRequest) {
 
     // パラメータ取得
     const months = parseInt(searchParams.get('months') || '6', 10);
-    const currentBalance = parseInt(searchParams.get('currentBalance') || '10000000', 10);
+    const currentBalance = parseInt(
+      searchParams.get('currentBalance') || '10000000',
+      10,
+    );
 
     // データ取得
     const [historicalData, scheduledTransactions] = await Promise.all([
@@ -469,40 +488,64 @@ export async function GET(request: NextRequest) {
       months,
       currentBalance,
       historicalData,
-      scheduledTransactions
+      scheduledTransactions,
     );
 
     // サマリー計算
     const summary = {
       optimistic: {
         averageMonthlyInflow:
-          monthlyForecasts.reduce((sum, f) => sum + f.scenarios.optimistic.inflow, 0) / months,
+          monthlyForecasts.reduce(
+            (sum, f) => sum + f.scenarios.optimistic.inflow,
+            0,
+          ) / months,
         averageMonthlyOutflow:
-          monthlyForecasts.reduce((sum, f) => sum + f.scenarios.optimistic.outflow, 0) / months,
+          monthlyForecasts.reduce(
+            (sum, f) => sum + f.scenarios.optimistic.outflow,
+            0,
+          ) / months,
         projectedEndingBalance:
-          monthlyForecasts[monthlyForecasts.length - 1].scenarios.optimistic.balance,
+          monthlyForecasts[monthlyForecasts.length - 1].scenarios.optimistic
+            .balance,
       },
       realistic: {
         averageMonthlyInflow:
-          monthlyForecasts.reduce((sum, f) => sum + f.scenarios.realistic.inflow, 0) / months,
+          monthlyForecasts.reduce(
+            (sum, f) => sum + f.scenarios.realistic.inflow,
+            0,
+          ) / months,
         averageMonthlyOutflow:
-          monthlyForecasts.reduce((sum, f) => sum + f.scenarios.realistic.outflow, 0) / months,
+          monthlyForecasts.reduce(
+            (sum, f) => sum + f.scenarios.realistic.outflow,
+            0,
+          ) / months,
         projectedEndingBalance:
-          monthlyForecasts[monthlyForecasts.length - 1].scenarios.realistic.balance,
+          monthlyForecasts[monthlyForecasts.length - 1].scenarios.realistic
+            .balance,
       },
       pessimistic: {
         averageMonthlyInflow:
-          monthlyForecasts.reduce((sum, f) => sum + f.scenarios.pessimistic.inflow, 0) / months,
+          monthlyForecasts.reduce(
+            (sum, f) => sum + f.scenarios.pessimistic.inflow,
+            0,
+          ) / months,
         averageMonthlyOutflow:
-          monthlyForecasts.reduce((sum, f) => sum + f.scenarios.pessimistic.outflow, 0) / months,
+          monthlyForecasts.reduce(
+            (sum, f) => sum + f.scenarios.pessimistic.outflow,
+            0,
+          ) / months,
         projectedEndingBalance:
-          monthlyForecasts[monthlyForecasts.length - 1].scenarios.pessimistic.balance,
+          monthlyForecasts[monthlyForecasts.length - 1].scenarios.pessimistic
+            .balance,
       },
     };
 
     // リスク評価と推奨アクションを生成
     const riskAssessment = generateRiskAssessment(monthlyForecasts);
-    const recommendations = generateRecommendations(monthlyForecasts, riskAssessment);
+    const recommendations = generateRecommendations(
+      monthlyForecasts,
+      riskAssessment,
+    );
 
     // 前提条件
     const assumptions = [
@@ -540,9 +583,11 @@ export async function GET(request: NextRequest) {
       {
         success: false,
         error:
-          error instanceof Error ? error.message : 'キャッシュフロー予測の取得に失敗しました',
+          error instanceof Error
+            ? error.message
+            : 'キャッシュフロー予測の取得に失敗しました',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

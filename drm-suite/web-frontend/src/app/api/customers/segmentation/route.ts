@@ -260,6 +260,9 @@ function calculateSegmentation(
   };
 }
 
+// Next.jsにこのルートを動的にレンダリングさせる
+export const dynamic = 'force-dynamic';
+
 /**
  * 顧客セグメンテーション分析API
  */
