@@ -4,9 +4,9 @@
 
 ### 最重要情報
 
-**最新URL**: https://web-frontend-flyxskjnw-kosukes-projects-c6ad92ba.vercel.app/
+**最新URL**: https://web-frontend-m9iry4hq5-kosukes-projects-c6ad92ba.vercel.app/
 
-これが2025年10月12日の最新デプロイです。Phase 11完了版（PDF管理システム統合・ブランディング機能強化）。他のURLは古いので使わないこと。
+これが2025年10月12日の最新デプロイです。Phase 11完了版（PDF管理統合・ブランディング強化・Vercelビルドエラー修正済み）。他のURLは古いので使わないこと。
 
 ### プロジェクト概要
 
