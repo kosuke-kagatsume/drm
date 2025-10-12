@@ -1,33 +1,63 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
+// API型定義からインポート（API側の型を使用）
 interface Invoice {
   id: string;
+  tenantId: string;
+  invoiceNo: string;
+  invoiceDate: string;
+  dueDate: string;
+  contractId: string;
+  contractNo: string;
+  customerName: string;
+  customerCompany: string;
+  customerAddress: string;
+  customerPhone?: string;
+  customerEmail?: string;
   projectName: string;
-  customer: string;
-  customerEmail: string;
-  customerPhone: string;
-  amount: number;
+  projectType: string;
+  items: {
+    id: string;
+    category: string;
+    description: string;
+    quantity: number;
+    unit: string;
+    unitPrice: number;
+    amount: number;
+  }[];
+  subtotal: number;
+  taxRate: number;
   taxAmount: number;
   totalAmount: number;
-  issuedDate: string;
-  dueDate: string;
+  paymentTerms: string;
+  paymentMethod: string;
+  bankInfo?: {
+    bankName: string;
+    branchName: string;
+    accountType: string;
+    accountNumber: string;
+    accountHolder: string;
+  };
+  status: 'draft' | 'issued' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  paymentStatus: 'unpaid' | 'partially_paid' | 'paid';
+  paidAmount: number;
   paidDate?: string;
-  status: 'draft' | 'sent' | 'viewed' | 'overdue' | 'paid' | 'cancelled';
-  paymentProgress: number;
-  items: InvoiceItem[];
+  approvalStatus?: 'pending' | 'approved' | 'rejected';
+  approvedBy?: string;
+  approvedAt?: string;
+  sentDate?: string;
+  sentMethod?: 'email' | 'mail' | 'hand' | 'fax';
+  sentTo?: string;
   notes?: string;
-  template: 'standard' | 'construction' | 'maintenance';
-  recurring: boolean;
-  recurringFrequency?: 'monthly' | 'quarterly' | 'yearly';
-  tags: string[];
-  attachments: string[];
-  lastEmailSent?: string;
-  emailOpenCount: number;
-  downloadCount: number;
+  internalNotes?: string;
+  createdBy: string;
+  managerId?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface InvoiceItem {
@@ -37,7 +67,7 @@ interface InvoiceItem {
   unit: string;
   unitPrice: number;
   amount: number;
-  taxRate: number;
+  taxRate?: number;
 }
 
 interface InvoiceStats {
@@ -66,202 +96,65 @@ export default function InvoicesPage() {
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
-  // サンプルデータ
-  const [invoices] = useState<Invoice[]>([
-    {
-      id: 'INV-2024-001',
-      projectName: '田中様邸 外壁塗装工事',
-      customer: '田中建設株式会社',
-      customerEmail: 'tanaka@example.com',
-      customerPhone: '03-1234-5678',
-      amount: 2300000,
-      taxAmount: 230000,
-      totalAmount: 2530000,
-      issuedDate: '2024-01-10',
-      dueDate: '2024-02-09',
-      paidDate: '2024-01-25',
-      status: 'paid',
-      paymentProgress: 100,
-      items: [
-        {
-          id: '1',
-          description: '外壁塗装工事一式',
-          quantity: 1,
-          unit: '式',
-          unitPrice: 2000000,
-          amount: 2000000,
-          taxRate: 10,
-        },
-        {
-          id: '2',
-          description: '足場設置・撤去',
-          quantity: 150,
-          unit: '㎡',
-          unitPrice: 2000,
-          amount: 300000,
-          taxRate: 10,
-        },
-      ],
-      notes: '工事完了後の請求書です。',
-      template: 'construction',
-      recurring: false,
-      tags: ['外壁塗装', '完了案件'],
-      attachments: ['工事完了写真.pdf', '検査報告書.pdf'],
-      lastEmailSent: '2024-01-10',
-      emailOpenCount: 3,
-      downloadCount: 2,
-    },
-    {
-      id: 'INV-2024-002',
-      projectName: '山田ビル内装リフォーム',
-      customer: '山田商事株式会社',
-      customerEmail: 'yamada@example.com',
-      customerPhone: '03-9876-5432',
-      amount: 5200000,
-      taxAmount: 520000,
-      totalAmount: 5720000,
-      issuedDate: '2024-01-15',
-      dueDate: '2024-02-14',
-      status: 'sent',
-      paymentProgress: 0,
-      items: [
-        {
-          id: '1',
-          description: 'オフィス内装工事',
-          quantity: 1,
-          unit: '式',
-          unitPrice: 4500000,
-          amount: 4500000,
-          taxRate: 10,
-        },
-        {
-          id: '2',
-          description: '電気工事',
-          quantity: 1,
-          unit: '式',
-          unitPrice: 700000,
-          amount: 700000,
-          taxRate: 10,
-        },
-      ],
-      template: 'construction',
-      recurring: false,
-      tags: ['リフォーム', '進行中'],
-      attachments: ['設計図.pdf'],
-      lastEmailSent: '2024-01-15',
-      emailOpenCount: 5,
-      downloadCount: 1,
-    },
-    {
-      id: 'INV-2024-003',
-      projectName: '佐藤邸屋根修理',
-      customer: '佐藤太郎',
-      customerEmail: 'sato@example.com',
-      customerPhone: '090-1234-5678',
-      amount: 980000,
-      taxAmount: 98000,
-      totalAmount: 1078000,
-      issuedDate: '2023-12-20',
-      dueDate: '2024-01-19',
-      status: 'overdue',
-      paymentProgress: 50,
-      items: [
-        {
-          id: '1',
-          description: '屋根瓦修理',
-          quantity: 25,
-          unit: '枚',
-          unitPrice: 35000,
-          amount: 875000,
-          taxRate: 10,
-        },
-        {
-          id: '2',
-          description: '防水工事',
-          quantity: 1,
-          unit: '式',
-          unitPrice: 105000,
-          amount: 105000,
-          taxRate: 10,
-        },
-      ],
-      notes: '雨漏り修理の緊急対応',
-      template: 'maintenance',
-      recurring: false,
-      tags: ['屋根修理', '緊急'],
-      attachments: ['被害状況写真.pdf'],
-      lastEmailSent: '2024-01-20',
-      emailOpenCount: 2,
-      downloadCount: 0,
-    },
-    {
-      id: 'INV-2024-004',
-      projectName: '鈴木工場定期点検',
-      customer: '鈴木工業株式会社',
-      customerEmail: 'suzuki@example.com',
-      customerPhone: '03-5555-1234',
-      amount: 450000,
-      taxAmount: 45000,
-      totalAmount: 495000,
-      issuedDate: '2024-01-01',
-      dueDate: '2024-01-31',
-      status: 'viewed',
-      paymentProgress: 0,
-      items: [
-        {
-          id: '1',
-          description: '設備定期点検',
-          quantity: 1,
-          unit: '式',
-          unitPrice: 350000,
-          amount: 350000,
-          taxRate: 10,
-        },
-        {
-          id: '2',
-          description: '点検報告書作成',
-          quantity: 1,
-          unit: '式',
-          unitPrice: 100000,
-          amount: 100000,
-          taxRate: 10,
-        },
-      ],
-      template: 'maintenance',
-      recurring: true,
-      recurringFrequency: 'quarterly',
-      tags: ['定期点検', '継続契約'],
-      attachments: ['点検チェックリスト.pdf'],
-      lastEmailSent: '2024-01-01',
-      emailOpenCount: 4,
-      downloadCount: 1,
-    },
-  ]);
+  // APIから取得した請求書データ
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // 統計計算
+  // API: 請求書一覧を取得
+  const fetchInvoices = async () => {
+    try {
+      setIsLoadingInvoices(true);
+      setError(null);
+      const response = await fetch('/api/invoices');
+      if (!response.ok) throw new Error('Failed to fetch invoices');
+      const data = await response.json();
+      if (data.success) {
+        setInvoices(data.invoices || []);
+      } else {
+        throw new Error(data.error || 'Unknown error');
+      }
+    } catch (err) {
+      console.error('Error fetching invoices:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load invoices');
+      setInvoices([]);
+    } finally {
+      setIsLoadingInvoices(false);
+    }
+  };
+
+  // 初回ロード
+  useEffect(() => {
+    if (user) {
+      fetchInvoices();
+    }
+  }, [user]);
+
+
+  // 統計計算（API型に合わせて修正）
   const stats: InvoiceStats = useMemo(() => {
     const totalInvoiced = invoices.reduce(
       (sum, inv) => sum + inv.totalAmount,
       0,
     );
     const totalPaid = invoices
-      .filter((inv) => inv.status === 'paid')
-      .reduce((sum, inv) => sum + inv.totalAmount, 0);
+      .filter((inv) => inv.paymentStatus === 'paid')
+      .reduce((sum, inv) => sum + inv.paidAmount, 0);
     const totalOutstanding = invoices
-      .filter((inv) => inv.status !== 'paid' && inv.status !== 'cancelled')
-      .reduce((sum, inv) => sum + inv.totalAmount, 0);
+      .filter((inv) => inv.paymentStatus !== 'paid' && inv.status !== 'cancelled')
+      .reduce((sum, inv) => sum + (inv.totalAmount - inv.paidAmount), 0);
     const overdueAmount = invoices
       .filter((inv) => inv.status === 'overdue')
-      .reduce((sum, inv) => sum + inv.totalAmount, 0);
+      .reduce((sum, inv) => sum + (inv.totalAmount - inv.paidAmount), 0);
 
     // 今月の請求書
     const thisMonth = new Date().toISOString().slice(0, 7);
     const thisMonthInvoiced = invoices
-      .filter((inv) => inv.issuedDate.startsWith(thisMonth))
+      .filter((inv) => inv.invoiceDate.startsWith(thisMonth))
       .reduce((sum, inv) => sum + inv.totalAmount, 0);
     const thisMonthPaid = invoices
       .filter((inv) => inv.paidDate?.startsWith(thisMonth))
-      .reduce((sum, inv) => sum + inv.totalAmount, 0);
+      .reduce((sum, inv) => sum + inv.paidAmount, 0);
 
     return {
       totalInvoiced,
@@ -274,7 +167,7 @@ export default function InvoicesPage() {
     };
   }, [invoices]);
 
-  // フィルタリング
+  // フィルタリング（API型に合わせて修正）
   const filteredInvoices = useMemo(() => {
     let filtered = invoices;
 
@@ -288,7 +181,9 @@ export default function InvoicesPage() {
       filtered = filtered.filter(
         (inv) =>
           inv.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          inv.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          inv.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          inv.customerCompany.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          inv.invoiceNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
           inv.id.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
@@ -301,12 +196,12 @@ export default function InvoicesPage() {
       if (filterDateRange === 'this-month') {
         filterDate.setMonth(today.getMonth());
         filtered = filtered.filter(
-          (inv) => new Date(inv.issuedDate) >= filterDate,
+          (inv) => new Date(inv.invoiceDate) >= filterDate,
         );
       } else if (filterDateRange === 'last-30-days') {
         filterDate.setDate(today.getDate() - 30);
         filtered = filtered.filter(
-          (inv) => new Date(inv.issuedDate) >= filterDate,
+          (inv) => new Date(inv.invoiceDate) >= filterDate,
         );
       }
     }
@@ -316,16 +211,16 @@ export default function InvoicesPage() {
       let aVal, bVal;
       switch (sortBy) {
         case 'date':
-          aVal = new Date(a.issuedDate).getTime();
-          bVal = new Date(b.issuedDate).getTime();
+          aVal = new Date(a.invoiceDate).getTime();
+          bVal = new Date(b.invoiceDate).getTime();
           break;
         case 'amount':
           aVal = a.totalAmount;
           bVal = b.totalAmount;
           break;
         case 'customer':
-          aVal = a.customer.toLowerCase();
-          bVal = b.customer.toLowerCase();
+          aVal = (a.customerCompany || a.customerName).toLowerCase();
+          bVal = (b.customerCompany || b.customerName).toLowerCase();
           break;
         case 'status':
           aVal = a.status;
@@ -349,9 +244,9 @@ export default function InvoicesPage() {
     switch (status) {
       case 'draft':
         return 'bg-gray-100 text-gray-800';
-      case 'sent':
+      case 'issued':
         return 'bg-blue-100 text-blue-800';
-      case 'viewed':
+      case 'sent':
         return 'bg-purple-100 text-purple-800';
       case 'overdue':
         return 'bg-red-100 text-red-800';
@@ -368,10 +263,10 @@ export default function InvoicesPage() {
     switch (status) {
       case 'draft':
         return '下書き';
+      case 'issued':
+        return '発行済み';
       case 'sent':
         return '送付済み';
-      case 'viewed':
-        return '閲覧済み';
       case 'overdue':
         return '期限超過';
       case 'paid':
@@ -399,12 +294,31 @@ export default function InvoicesPage() {
     );
   };
 
-  if (isLoading || !user) {
+  if (isLoading || isLoadingInvoices || !user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dandori-blue mx-auto"></div>
           <p className="mt-4 text-gray-600">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // エラー表示
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">⚠️</div>
+          <p className="text-gray-800 font-bold mb-2">データの読み込みに失敗しました</p>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={fetchInvoices}
+            className="px-6 py-2.5 bg-dandori-blue text-white rounded-lg hover:bg-dandori-blue-dark"
+          >
+            再試行
+          </button>
         </div>
       </div>
     );
@@ -537,10 +451,11 @@ export default function InvoicesPage() {
               >
                 <option value="all">全ステータス</option>
                 <option value="draft">下書き</option>
+                <option value="issued">発行済み</option>
                 <option value="sent">送付済み</option>
-                <option value="viewed">閲覧済み</option>
                 <option value="overdue">期限超過</option>
                 <option value="paid">支払済み</option>
+                <option value="cancelled">キャンセル</option>
               </select>
               <select
                 value={filterDateRange}
@@ -685,13 +600,11 @@ export default function InvoicesPage() {
                         <div className="flex items-center">
                           <div>
                             <div className="text-sm font-medium text-gray-900">
-                              {invoice.id}
+                              {invoice.invoiceNo}
                             </div>
-                            {invoice.recurring && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mt-1">
-                                🔄 継続契約
-                              </span>
-                            )}
+                            <div className="text-xs text-gray-500 mt-0.5">
+                              {invoice.contractNo}
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -701,17 +614,10 @@ export default function InvoicesPage() {
                             {invoice.projectName}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {invoice.customer}
+                            {invoice.customerCompany || invoice.customerName}
                           </div>
-                          <div className="flex gap-1 mt-1">
-                            {invoice.tags.map((tag, idx) => (
-                              <span
-                                key={idx}
-                                className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
-                              >
-                                {tag}
-                              </span>
-                            ))}
+                          <div className="text-xs text-gray-400 mt-0.5">
+                            {invoice.projectType}
                           </div>
                         </div>
                       </td>
@@ -722,7 +628,7 @@ export default function InvoicesPage() {
                         <div className="text-xs text-gray-500">税込</div>
                       </td>
                       <td className="px-4 py-4 text-sm text-gray-900">
-                        {invoice.issuedDate}
+                        {invoice.invoiceDate}
                       </td>
                       <td className="px-4 py-4">
                         <div className="text-sm text-gray-900">
@@ -747,19 +653,26 @@ export default function InvoicesPage() {
                         </span>
                       </td>
                       <td className="px-4 py-4 text-center">
-                        {invoice.paymentProgress > 0 && (
-                          <div className="w-16 mx-auto">
-                            <div className="flex justify-between text-xs text-gray-600 mb-1">
-                              <span>{invoice.paymentProgress}%</span>
+                        {(() => {
+                          const paymentProgress = invoice.totalAmount > 0
+                            ? Math.round((invoice.paidAmount / invoice.totalAmount) * 100)
+                            : 0;
+                          return paymentProgress > 0 ? (
+                            <div className="w-16 mx-auto">
+                              <div className="flex justify-between text-xs text-gray-600 mb-1">
+                                <span>{paymentProgress}%</span>
+                              </div>
+                              <div className="bg-gray-200 rounded-full h-2">
+                                <div
+                                  className="bg-green-500 h-2 rounded-full"
+                                  style={{ width: `${paymentProgress}%` }}
+                                />
+                              </div>
                             </div>
-                            <div className="bg-gray-200 rounded-full h-2">
-                              <div
-                                className="bg-green-500 h-2 rounded-full"
-                                style={{ width: `${invoice.paymentProgress}%` }}
-                              />
-                            </div>
-                          </div>
-                        )}
+                          ) : (
+                            <span className="text-xs text-gray-400">未入金</span>
+                          );
+                        })()}
                       </td>
                       <td className="px-4 py-4 text-center">
                         <div className="flex justify-center space-x-1">
@@ -812,7 +725,7 @@ export default function InvoicesPage() {
                 <div className="p-4">
                   <div className="flex justify-between items-start mb-3">
                     <div>
-                      <h3 className="font-bold text-lg">{invoice.id}</h3>
+                      <h3 className="font-bold text-lg">{invoice.invoiceNo}</h3>
                       <p className="text-sm text-gray-600">
                         {invoice.projectName}
                       </p>
@@ -825,31 +738,36 @@ export default function InvoicesPage() {
                   </div>
 
                   <div className="mb-4">
-                    <p className="text-sm text-gray-600">{invoice.customer}</p>
+                    <p className="text-sm text-gray-600">{invoice.customerCompany || invoice.customerName}</p>
                     <p className="text-2xl font-bold text-dandori-blue">
                       {formatCurrency(invoice.totalAmount)}
                     </p>
                   </div>
 
                   <div className="text-sm text-gray-600 mb-4">
-                    <p>発行: {invoice.issuedDate}</p>
+                    <p>発行: {invoice.invoiceDate}</p>
                     <p>期限: {invoice.dueDate}</p>
                   </div>
 
-                  {invoice.paymentProgress > 0 && (
-                    <div className="mb-4">
-                      <div className="flex justify-between text-xs text-gray-600 mb-1">
-                        <span>入金進捗</span>
-                        <span>{invoice.paymentProgress}%</span>
+                  {(() => {
+                    const paymentProgress = invoice.totalAmount > 0
+                      ? Math.round((invoice.paidAmount / invoice.totalAmount) * 100)
+                      : 0;
+                    return paymentProgress > 0 && (
+                      <div className="mb-4">
+                        <div className="flex justify-between text-xs text-gray-600 mb-1">
+                          <span>入金進捗</span>
+                          <span>{paymentProgress}%</span>
+                        </div>
+                        <div className="bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-green-500 h-2 rounded-full"
+                            style={{ width: `${paymentProgress}%` }}
+                          />
+                        </div>
                       </div>
-                      <div className="bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-green-500 h-2 rounded-full"
-                          style={{ width: `${invoice.paymentProgress}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   <div className="flex gap-2">
                     <button
@@ -896,9 +814,10 @@ export default function InvoicesPage() {
               <div className="flex justify-between items-start">
                 <div>
                   <h2 className="text-2xl font-bold mb-2">
-                    {selectedInvoice.id}
+                    {selectedInvoice.invoiceNo}
                   </h2>
                   <p className="text-gray-600">{selectedInvoice.projectName}</p>
+                  <p className="text-sm text-gray-500">契約番号: {selectedInvoice.contractNo}</p>
                 </div>
                 <button
                   onClick={() => setShowInvoiceModal(false)}
@@ -916,16 +835,28 @@ export default function InvoicesPage() {
                   <div className="space-y-2 text-sm">
                     <p>
                       <span className="text-gray-600">顧客名:</span>{' '}
-                      {selectedInvoice.customer}
+                      {selectedInvoice.customerName}
                     </p>
                     <p>
-                      <span className="text-gray-600">メール:</span>{' '}
-                      {selectedInvoice.customerEmail}
+                      <span className="text-gray-600">会社名:</span>{' '}
+                      {selectedInvoice.customerCompany}
                     </p>
                     <p>
-                      <span className="text-gray-600">電話:</span>{' '}
-                      {selectedInvoice.customerPhone}
+                      <span className="text-gray-600">住所:</span>{' '}
+                      {selectedInvoice.customerAddress}
                     </p>
+                    {selectedInvoice.customerEmail && (
+                      <p>
+                        <span className="text-gray-600">メール:</span>{' '}
+                        {selectedInvoice.customerEmail}
+                      </p>
+                    )}
+                    {selectedInvoice.customerPhone && (
+                      <p>
+                        <span className="text-gray-600">電話:</span>{' '}
+                        {selectedInvoice.customerPhone}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div>
@@ -933,11 +864,15 @@ export default function InvoicesPage() {
                   <div className="space-y-2 text-sm">
                     <p>
                       <span className="text-gray-600">発行日:</span>{' '}
-                      {selectedInvoice.issuedDate}
+                      {selectedInvoice.invoiceDate}
                     </p>
                     <p>
                       <span className="text-gray-600">支払期限:</span>{' '}
                       {selectedInvoice.dueDate}
+                    </p>
+                    <p>
+                      <span className="text-gray-600">支払方法:</span>{' '}
+                      {selectedInvoice.paymentMethod}
                     </p>
                     <p>
                       <span className="text-gray-600">ステータス:</span>
@@ -945,6 +880,12 @@ export default function InvoicesPage() {
                         className={`ml-2 px-2 py-1 rounded text-xs ${getStatusColor(selectedInvoice.status)}`}
                       >
                         {getStatusLabel(selectedInvoice.status)}
+                      </span>
+                    </p>
+                    <p>
+                      <span className="text-gray-600">入金状況:</span>{' '}
+                      <span className="font-medium">
+                        ¥{selectedInvoice.paidAmount.toLocaleString()} / ¥{selectedInvoice.totalAmount.toLocaleString()}
                       </span>
                     </p>
                   </div>
@@ -994,12 +935,12 @@ export default function InvoicesPage() {
                           小計
                         </td>
                         <td className="px-4 py-2 text-right border font-bold">
-                          {formatCurrency(selectedInvoice.amount)}
+                          {formatCurrency(selectedInvoice.subtotal)}
                         </td>
                       </tr>
                       <tr>
                         <td colSpan={4} className="px-4 py-2 text-right border">
-                          消費税
+                          消費税 ({selectedInvoice.taxRate}%)
                         </td>
                         <td className="px-4 py-2 text-right border">
                           {formatCurrency(selectedInvoice.taxAmount)}
