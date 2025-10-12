@@ -4,9 +4,9 @@
 
 ### 最重要情報
 
-**最新URL**: https://web-frontend-qt2fly6eh-kosukes-projects-c6ad92ba.vercel.app/
+**最新URL**: https://web-frontend-7qpgbbcbi-kosukes-projects-c6ad92ba.vercel.app/
 
-これが2025年8月24日 21:45時点の最新デプロイです。他のURLは古いので使わないこと。
+これが2025年10月12日の最新デプロイです。経理ダッシュボードUI改善版。他のURLは古いので使わないこと。
 
 ### プロジェクト概要
 
@@ -14,7 +14,31 @@
 - **内容**: 建設業界向けCRM「DRMスイート」の見積システム
 - **技術**: Next.js 14 + TypeScript + Tailwind CSS
 
-### 最新の実装内容（2025/08/24）
+### 最新の実装内容（2025/10/12）
+
+#### 🎨 経理ダッシュボードUI改善 ✅
+
+**コミット**: `b3cec1c` - 2025/10/12
+
+- **ヘッダーボタンの整理**
+  - 9個のボタンを4個の主要機能に絞り込み
+  - 工事台帳、勘定科目、新規請求書、エクスポート
+  - 重複していた工事台帳ボタンを削除
+
+- **レイアウトの改善**
+  - 余白とスペーシングを拡大（gap-6→8, space-y-6→8）
+  - ボタンスタイルを統一（rounded-lg、shadow-sm追加）
+  - より洗練された視覚的階層を実現
+
+- **リンクの修正**
+  - 勘定科目ボタンを正しいパス（/admin/account-subjects）に修正
+  - 工事台帳を/construction-ledgersに統一
+
+**デプロイURL**: https://web-frontend-7qpgbbcbi-kosukes-projects-c6ad92ba.vercel.app
+
+---
+
+### 過去の実装内容（2025/08/24）
 
 #### 1. 見積作成フローの完全実装 ✅
 
