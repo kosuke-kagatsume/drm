@@ -1057,7 +1057,13 @@ const MASTER_ITEMS: MasterItem[] = [
 function EstimateEditorV3Content({ params }: { params: { id: string } }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const customerId = searchParams?.get('customer');
+
+  // Phase 10: URLパラメータから顧客情報を取得
+  const customerId =
+    searchParams?.get('customerId') || searchParams?.get('customer'); // 後方互換性
+  const customerName = searchParams?.get('customerName');
+  const isQuickEstimate = searchParams?.get('quick') === 'true';
+
   const customerInfo = customerId
     ? SAMPLE_CUSTOMERS.find((c) => c.id === customerId)
     : null;
@@ -1091,7 +1097,8 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
 
   // PDF テンプレート関連の状態
   const [showPdfTemplateSelector, setShowPdfTemplateSelector] = useState(false);
-  const [selectedPdfTemplate, setSelectedPdfTemplate] = useState<PdfTemplate | null>(null);
+  const [selectedPdfTemplate, setSelectedPdfTemplate] =
+    useState<PdfTemplate | null>(null);
 
   // 見積有効期限の状態管理
   const [validUntil, setValidUntil] = useState<string>(() => {
@@ -1814,6 +1821,8 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
       id: params.id,
       items,
       customer: customerInfo,
+      customerId: customerId || customerInfo?.id, // Phase 10: 顧客ID
+      customerName: customerName || customerInfo?.name, // Phase 10: 顧客名
       validUntil, // 有効期限を追加
       updatedAt: new Date().toISOString(),
     };
@@ -1825,6 +1834,7 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
 
     setSaveStatus('saved');
     console.log('Saved successfully with validUntil:', validUntil);
+    console.log('Customer ID:', customerId, 'Customer Name:', customerName); // Phase 10: デバッグログ
   };
 
   // 新しいマルチテナントPDF生成機能
@@ -1845,32 +1855,36 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
         date: new Date().toISOString(),
         validUntil,
         companyId: 'company_1', // 実際にはユーザー認証から取得
-        customer: customerInfo ? {
-          name: customerInfo.name,
-          address: customerInfo.address || '',
-          phone: customerInfo.phone || '',
-          email: customerInfo.email || '',
-          contactPerson: customerInfo.contactPerson || ''
-        } : null,
-        items: items.filter(item => !item.isCategory && !item.isSubtotal).map(item => ({
-          name: item.name || '',
-          specification: item.specification || '',
-          quantity: item.quantity || 0,
-          unit: item.unit || '',
-          unitPrice: item.unitPrice || 0,
-          amount: item.amount || 0
-        })),
+        customer: customerInfo
+          ? {
+              name: customerInfo.name,
+              address: customerInfo.address || '',
+              phone: customerInfo.phone || '',
+              email: customerInfo.email || '',
+              contactPerson: customerInfo.contactPerson || '',
+            }
+          : null,
+        items: items
+          .filter((item) => !item.isCategory && !item.isSubtotal)
+          .map((item) => ({
+            name: item.name || '',
+            specification: item.specification || '',
+            quantity: item.quantity || 0,
+            unit: item.unit || '',
+            unitPrice: item.unitPrice || 0,
+            amount: item.amount || 0,
+          })),
         totals: {
           subtotal: totals.subtotal,
           tax: totals.tax,
-          total: totals.amount
+          total: totals.amount,
         },
         terms: [
           '工期：別途協議により決定',
           '支払条件：請求書発行後30日以内',
           `有効期限：${new Date(validUntil).toLocaleDateString('ja-JP')}まで`,
-          '備考：材料費の変動により金額が変更になる場合があります'
-        ]
+          '備考：材料費の変動により金額が変更になる場合があります',
+        ],
       };
 
       // PDF生成リクエスト
@@ -1880,8 +1894,8 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
         data: estimateData,
         options: {
           filename: `estimate_${params.id}_${Date.now()}.pdf`,
-          downloadImmediately: true
-        }
+          downloadImmediately: true,
+        },
       });
 
       if (!response.success) {
@@ -1891,7 +1905,10 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
       console.log('PDF生成完了:', response);
     } catch (error) {
       console.error('PDF生成エラー:', error);
-      alert('PDF生成中にエラーが発生しました: ' + (error instanceof Error ? error.message : '不明なエラー'));
+      alert(
+        'PDF生成中にエラーが発生しました: ' +
+          (error instanceof Error ? error.message : '不明なエラー'),
+      );
     }
   };
 
@@ -3632,8 +3649,8 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
                         actionAt: null,
                         delegatedTo: null,
                         delegatedToName: null,
-                      }
-                    ]
+                      },
+                    ],
                   },
                   {
                     id: nanoid(),
@@ -3652,8 +3669,8 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
                         actionAt: null,
                         delegatedTo: null,
                         delegatedToName: null,
-                      }
-                    ]
+                      },
+                    ],
                   },
                   {
                     id: nanoid(),
@@ -3672,9 +3689,9 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
                         actionAt: null,
                         delegatedTo: null,
                         delegatedToName: null,
-                      }
-                    ]
-                  }
+                      },
+                    ],
+                  },
                 ],
                 requestedBy: 'current-user',
                 requestedByName: 'システム管理者',
@@ -3725,12 +3742,12 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
             date: new Date().toISOString(),
             validUntil,
             customer: customerInfo,
-            items: items.filter(item => !item.isCategory && !item.isSubtotal),
+            items: items.filter((item) => !item.isCategory && !item.isSubtotal),
             totals: {
               subtotal: totals.subtotal,
               tax: totals.tax,
-              total: totals.amount
-            }
+              total: totals.amount,
+            },
           }}
           onTemplateSelect={handlePdfTemplateSelect}
           onClose={() => setShowPdfTemplateSelector(false)}

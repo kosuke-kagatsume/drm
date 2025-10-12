@@ -12,16 +12,19 @@ export async function POST(request: NextRequest) {
     if (!contractId) {
       return NextResponse.json(
         { success: false, error: 'Contract ID is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // 契約データを取得
-    const contractRes = await fetch(`${request.nextUrl.origin}/api/contracts?id=${contractId}`, {
-      headers: {
-        Cookie: `tenantId=${tenantId}`,
+    const contractRes = await fetch(
+      `${request.nextUrl.origin}/api/contracts?id=${contractId}`,
+      {
+        headers: {
+          Cookie: `tenantId=${tenantId}`,
+        },
       },
-    });
+    );
 
     if (!contractRes.ok) {
       throw new Error('Failed to fetch contract');
@@ -32,7 +35,7 @@ export async function POST(request: NextRequest) {
     if (!contractData.success || !contractData.contract) {
       return NextResponse.json(
         { success: false, error: 'Contract not found' },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -45,8 +48,8 @@ export async function POST(request: NextRequest) {
       constructionType: contract.projectType.split('/')[0] || '一般建築',
       constructionCategory: contract.projectType.split('/')[1] || '一般工事',
 
-      // 顧客情報
-      customerId: contract.customerId || 'UNKNOWN',
+      // 顧客情報（Phase 10: 顧客IDの継承を強化）
+      customerId: contract.customerId || contract.customerName || 'UNKNOWN', // 顧客IDがなければ顧客名で代替
       customerName: contract.customerName,
       customerCompany: contract.customerCompany,
       customerContact: contract.customerPhone || contract.customerEmail || '',
@@ -100,14 +103,17 @@ export async function POST(request: NextRequest) {
     };
 
     // 工事台帳APIに送信
-    const createRes = await fetch(`${request.nextUrl.origin}/api/construction-ledgers`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Cookie: `tenantId=${tenantId}`,
+    const createRes = await fetch(
+      `${request.nextUrl.origin}/api/construction-ledgers`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: `tenantId=${tenantId}`,
+        },
+        body: JSON.stringify(constructionLedgerData),
       },
-      body: JSON.stringify(constructionLedgerData),
-    });
+    );
 
     if (!createRes.ok) {
       throw new Error('Failed to create construction ledger');
@@ -123,14 +129,20 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error creating construction ledger from contract:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to create construction ledger from contract' },
-      { status: 500 }
+      {
+        success: false,
+        error: 'Failed to create construction ledger from contract',
+      },
+      { status: 500 },
     );
   }
 }
 
 // 実行予算の計算
-function calculateExecutionBudget(estimateItems: any[], totalContractAmount: number) {
+function calculateExecutionBudget(
+  estimateItems: any[],
+  totalContractAmount: number,
+) {
   // 見積項目から原価を集計
   let materialCost = 0;
   let laborCost = 0;

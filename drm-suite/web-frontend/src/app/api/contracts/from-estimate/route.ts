@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     if (!estimateId) {
       return NextResponse.json(
         { success: false, error: 'Estimate ID is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -22,13 +22,13 @@ export async function POST(request: NextRequest) {
         headers: {
           Cookie: `tenantId=${tenantId}`,
         },
-      }
+      },
     );
 
     if (!workflowSettingsRes.ok) {
       return NextResponse.json(
         { success: false, error: 'Failed to fetch workflow settings' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
       estimateNo: `EST-2024-${estimateId}`,
       projectName: 'サンプルプロジェクト',
       projectType: '建設工事',
+      customerId: 'CUST-001', // Phase 10: 顧客ID
       customerName: '山田太郎',
       customerCompany: '山田建設株式会社',
       customerAddress: '東京都渋谷区1-2-3',
@@ -51,9 +52,30 @@ export async function POST(request: NextRequest) {
       taxAmount: 1000000,
       duration: 90,
       items: [
-        { category: '基礎工事', name: '掘削工事', quantity: 1, unit: '式', unitPrice: 2000000, amount: 2000000 },
-        { category: '躯体工事', name: '鉄筋コンクリート工事', quantity: 100, unit: 'm2', unitPrice: 50000, amount: 5000000 },
-        { category: '仕上工事', name: '内装工事', quantity: 1, unit: '式', unitPrice: 3000000, amount: 3000000 },
+        {
+          category: '基礎工事',
+          name: '掘削工事',
+          quantity: 1,
+          unit: '式',
+          unitPrice: 2000000,
+          amount: 2000000,
+        },
+        {
+          category: '躯体工事',
+          name: '鉄筋コンクリート工事',
+          quantity: 100,
+          unit: 'm2',
+          unitPrice: 50000,
+          amount: 5000000,
+        },
+        {
+          category: '仕上工事',
+          name: '内装工事',
+          quantity: 1,
+          unit: '式',
+          unitPrice: 3000000,
+          amount: 3000000,
+        },
       ],
     };
 
@@ -62,7 +84,11 @@ export async function POST(request: NextRequest) {
     const contractData: Partial<Contract> = {
       estimateId: estimate.id,
       estimateNo: estimate.estimateNo,
-      contractNo: `CON-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+      contractNo: `CON-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}-${Math.floor(
+        Math.random() * 1000,
+      )
+        .toString()
+        .padStart(3, '0')}`,
       contractDate: now.toISOString().split('T')[0],
       projectName: estimate.projectName,
       projectType: estimate.projectType,
@@ -72,6 +98,7 @@ export async function POST(request: NextRequest) {
 
     // マッピング設定に応じて項目をコピー
     if (settings.mapCustomerInfoToContract) {
+      contractData.customerId = estimate.customerId; // Phase 10: 顧客IDを継承
       contractData.customerName = estimate.customerName;
       contractData.customerCompany = estimate.customerCompany;
       contractData.customerAddress = estimate.customerAddress;
@@ -140,7 +167,7 @@ export async function POST(request: NextRequest) {
     console.error('Error creating contract from estimate:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to create contract from estimate' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

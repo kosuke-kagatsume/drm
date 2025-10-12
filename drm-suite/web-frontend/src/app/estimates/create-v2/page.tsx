@@ -159,7 +159,7 @@ export default function EstimateCreateV2Page() {
 
   // 顧客選択
   const handleCustomerSelect = (customerId: string) => {
-    const customer = SAMPLE_CUSTOMERS.find(c => c.id === customerId);
+    const customer = SAMPLE_CUSTOMERS.find((c) => c.id === customerId);
     setSelectedCustomer(customerId);
     setSelectedCustomerName(customer?.name || '');
     setStep('type');
@@ -169,8 +169,20 @@ export default function EstimateCreateV2Page() {
   const handleTypeSelect = (typeId: string) => {
     const type = ESTIMATE_TYPES.find((t) => t.id === typeId);
     if (type) {
-      const customerId = selectedCustomer || 'quick';
-      router.push(type.route + `?customer=${customerId}`);
+      if (selectedCustomer) {
+        // 顧客選択済みの場合: customerId と customerName を渡す
+        const customer = SAMPLE_CUSTOMERS.find(
+          (c) => c.id === selectedCustomer,
+        );
+        const params = new URLSearchParams({
+          customerId: selectedCustomer,
+          customerName: customer?.name || '',
+        });
+        router.push(type.route + `?${params.toString()}`);
+      } else {
+        // クイック見積の場合
+        router.push(type.route + `?quick=true`);
+      }
     }
   };
 
@@ -216,7 +228,9 @@ export default function EstimateCreateV2Page() {
                       : 'ステップ ' +
                         (hasCustomer ? '3' : '2') +
                         ': 見積タイプを選択' +
-                        (selectedCustomerName ? ` - ${selectedCustomerName}様` : '')}
+                        (selectedCustomerName
+                          ? ` - ${selectedCustomerName}様`
+                          : '')}
                 </p>
               </div>
             </div>
