@@ -265,6 +265,13 @@ export default function CustomersPage() {
                 セグメント分析
               </button>
               <button
+                onClick={() => router.push('/customers/pipeline')}
+                className="bg-white/10 border-2 border-white/30 text-white px-5 py-3 rounded-xl font-bold hover:bg-white/20 transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
+              >
+                <span className="text-lg">🎯</span>
+                案件パイプライン
+              </button>
+              <button
                 onClick={() => setShowAddModal(true)}
                 className="bg-white text-dandori-blue px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
               >
