@@ -677,10 +677,7 @@ export default function InvoicesPage() {
                       <td className="px-4 py-4 text-center">
                         <div className="flex justify-center space-x-1">
                           <button
-                            onClick={() => {
-                              setSelectedInvoice(invoice);
-                              setShowInvoiceModal(true);
-                            }}
+                            onClick={() => router.push(`/invoices/${invoice.id}`)}
                             className="p-1 text-dandori-blue hover:bg-dandori-blue hover:text-white rounded"
                             title="詳細"
                           >
@@ -771,10 +768,7 @@ export default function InvoicesPage() {
 
                   <div className="flex gap-2">
                     <button
-                      onClick={() => {
-                        setSelectedInvoice(invoice);
-                        setShowInvoiceModal(true);
-                      }}
+                      onClick={() => router.push(`/invoices/${invoice.id}`)}
                       className="flex-1 py-2 bg-dandori-blue text-white rounded hover:bg-dandori-blue-dark"
                     >
                       詳細
