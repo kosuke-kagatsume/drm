@@ -1333,6 +1333,104 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [history, historyIndex]);
 
+  // 自動保存機能（データ変更から3秒後に自動保存）
+  useEffect(() => {
+    console.log('[自動保存] useEffect実行、saveStatus =', saveStatus);
+
+    if (saveStatus !== 'unsaved') {
+      console.log('[自動保存] saveStatusが未保存ではないのでスキップ');
+      return;
+    }
+
+    console.log('[自動保存] ⏱️ タイマー開始（3秒後に保存）');
+    const timer = setTimeout(() => {
+      console.log('[自動保存] ✅ 3秒経過、自動保存を実行します');
+      handleSave();
+    }, 3000); // 3秒後に自動保存
+
+    return () => {
+      console.log(
+        '[自動保存] 🧹 タイマークリア（saveStatusが変わった or アンマウント）',
+      );
+      clearTimeout(timer);
+    };
+  }, [saveStatus]); // saveStatusが変わるたびにタイマーリセット
+
+  // ブラウザ離脱防止（タブを閉じる時・リロード時の警告）
+  useEffect(() => {
+    console.log('[離脱防止] useEffect実行、saveStatus =', saveStatus);
+
+    if (saveStatus !== 'unsaved') {
+      console.log(
+        '[離脱防止] saveStatusが未保存ではないのでイベント登録しない',
+      );
+      return;
+    }
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      console.log(
+        '[離脱防止] ⚠️ beforeunloadイベント発火！ユーザーがタブを閉じようとしています',
+      );
+      e.preventDefault();
+      // Chrome では returnValue を設定する必要がある
+      e.returnValue = '';
+      return '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    console.log(
+      '[離脱防止] ✅ beforeunloadイベント登録完了（未保存の変更あり）',
+    );
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      console.log('[離脱防止] 🧹 beforeunloadイベント解除');
+    };
+  }, [saveStatus]);
+
+  // ブラウザバック対策（戻るボタン押下時の警告）
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    console.log('[バック対策] useEffect実行、saveStatus =', saveStatus);
+
+    const handlePopState = () => {
+      console.log(
+        '[バック対策] ⬅️ popstateイベント発火！ユーザーが戻るボタンを押しました',
+      );
+      console.log('[バック対策] 現在のsaveStatus =', saveStatus);
+
+      if (saveStatus === 'unsaved') {
+        console.log('[バック対策] ⚠️ 未保存の変更あり、確認ダイアログを表示');
+        const confirmLeave = window.confirm(
+          '保存されていない変更があります。本当にページを離れますか？',
+        );
+
+        if (!confirmLeave) {
+          // ユーザーがキャンセルした場合、現在のページに留まる
+          window.history.pushState(null, '', window.location.href);
+          console.log(
+            '[バック対策] ✅ ユーザーがキャンセル、ページ遷移をキャンセル',
+          );
+        } else {
+          console.log('[バック対策] ❌ ユーザーが承認、ページ遷移を許可');
+        }
+      } else {
+        console.log('[バック対策] ✅ 保存済みなので警告なし');
+      }
+    };
+
+    // 現在のURLをhistoryスタックに追加（バック時の検知用）
+    window.history.pushState(null, '', window.location.href);
+    window.addEventListener('popstate', handlePopState);
+    console.log('[バック対策] ✅ popstateイベント登録完了');
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      console.log('[バック対策] 🧹 popstateイベント解除');
+    };
+  }, [saveStatus]);
+
   // モーダルの外側クリック処理（一時的に無効化して原因切り分け）
   // useEffect(() => {
   //   if (!showMasterSearch) return;
@@ -1436,6 +1534,7 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
     const updatedItems = updateCategorySubtotals(newItems);
     setItems(updatedItems);
     setSaveStatus('unsaved');
+    console.log('[handleCellChange] saveStatus を unsaved に変更');
     addToHistory(updatedItems);
 
     // デバッグログ
@@ -1664,16 +1763,15 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
           lineId,
           after.find((x: EstimateItem) => x.id === lineId),
         );
+
+      // 履歴に追加（更新後のitemsを使用）
+      addToHistory(after);
       return after;
     });
 
-    // 4) 履歴/保存状態などがあればここで
-    try {
-      setSaveStatus?.('unsaved');
-    } catch {}
-    try {
-      addToHistory?.(items);
-    } catch {}
+    // 保存状態を未保存にする
+    setSaveStatus('unsaved');
+    console.log('[updateRow] saveStatus を unsaved に変更');
   };
 
   // 行追加
