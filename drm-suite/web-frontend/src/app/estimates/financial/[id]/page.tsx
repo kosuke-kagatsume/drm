@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Save,
@@ -62,6 +62,23 @@ export default function FinancialPlanPage({
     useState<FinancialPlanVersion | null>(null);
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [showCompareModal, setShowCompareModal] = useState(false);
+  const [showNewVersionModal, setShowNewVersionModal] = useState(false);
+  const [newVersionNote, setNewVersionNote] = useState('');
+
+  // バージョン比較用のstate
+  const [compareVersionA, setCompareVersionA] = useState<string>('');
+  const [compareVersionB, setCompareVersionB] = useState<string>('');
+  const [comparisonResult, setComparisonResult] = useState<any>(null);
+  const [isComparing, setIsComparing] = useState(false);
+
+  // 保存機能用のstate
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [lastSavedData, setLastSavedData] = useState<string>('');
 
   // 坪単価計算用のstate
   const [buildingArea, setBuildingArea] = useState(40); // 施工面積（坪）
@@ -209,24 +226,40 @@ export default function FinancialPlanPage({
   useEffect(() => {
     const fetchVersions = async () => {
       try {
-        const response = await fetch('/api/financial-plans?customerId=cust-1');
-        if (response.ok) {
-          const data = await response.json();
-          setVersions(data);
-          // 現在のバージョンを設定（params.idに基づいて）
-          const current = data.find(
-            (v: FinancialPlanVersion) => v.id === `fp-${params.id}`,
-          );
-          if (current) {
-            setCurrentVersion(current);
-            // データをロード
-            setBuildingArea(current.buildingArea);
-            setUnitPrice(current.unitPrice);
-            setLoanInfo(current.loanInfo);
-            if (current.financialData.length > 0) {
-              setFinancialData(current.financialData);
-            }
+        // まず、指定されたIDのバージョンを直接取得
+        const versionId = `fp-${params.id}`;
+        const versionResponse = await fetch(
+          `/api/financial-plans?versionId=${versionId}`,
+        );
+
+        if (versionResponse.ok) {
+          const currentVersionData = await versionResponse.json();
+          setCurrentVersion(currentVersionData);
+
+          // 現在のバージョンのデータをロード
+          setBuildingArea(currentVersionData.buildingArea);
+          setUnitPrice(currentVersionData.unitPrice);
+          setLoanInfo(currentVersionData.loanInfo);
+
+          // financialDataが空でない場合のみ上書き（空の場合はstateの初期値を使用）
+          if (
+            currentVersionData.financialData &&
+            currentVersionData.financialData.length > 0
+          ) {
+            setFinancialData(currentVersionData.financialData);
           }
+          // 空の場合は、最初の保存時にstateの初期値が保存される
+
+          // 同じ顧客の全バージョンを取得
+          const allVersionsResponse = await fetch(
+            `/api/financial-plans?customerId=${currentVersionData.customerId}`,
+          );
+          if (allVersionsResponse.ok) {
+            const allVersions = await allVersionsResponse.json();
+            setVersions(allVersions);
+          }
+        } else {
+          console.error('Version not found:', versionId);
         }
       } catch (error) {
         console.error('Failed to fetch versions:', error);
@@ -235,6 +268,88 @@ export default function FinancialPlanPage({
 
     fetchVersions();
   }, [params.id]);
+
+  // 保存機能
+  const handleSave = useCallback(
+    async (isAutoSave = false) => {
+      if (!currentVersion) {
+        if (!isAutoSave) {
+          alert('保存するバージョンが見つかりません');
+        }
+        return;
+      }
+
+      setIsSaving(true);
+      if (!isAutoSave) {
+        setSaveMessage(null);
+      }
+
+      try {
+        const response = await fetch('/api/financial-plans', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: currentVersion.id,
+            buildingArea,
+            unitPrice,
+            financialData,
+            loanInfo,
+            status: currentVersion.status,
+          }),
+        });
+
+        if (response.ok) {
+          const updatedVersion = await response.json();
+          setCurrentVersion(updatedVersion);
+
+          // バージョン一覧も更新
+          setVersions((prev) =>
+            prev.map((v) => (v.id === updatedVersion.id ? updatedVersion : v)),
+          );
+
+          // 最後に保存したデータを記録
+          const savedData = JSON.stringify({
+            buildingArea,
+            unitPrice,
+            financialData,
+            loanInfo,
+          });
+          setLastSavedData(savedData);
+          setHasUnsavedChanges(false);
+
+          setSaveMessage({
+            type: 'success',
+            text: isAutoSave ? '自動保存しました' : '保存しました',
+          });
+
+          // 3秒後にメッセージを消す
+          setTimeout(() => {
+            setSaveMessage(null);
+          }, 3000);
+        } else {
+          if (!isAutoSave) {
+            setSaveMessage({
+              type: 'error',
+              text: '保存に失敗しました',
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Failed to save:', error);
+        if (!isAutoSave) {
+          setSaveMessage({
+            type: 'error',
+            text: '保存に失敗しました',
+          });
+        }
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [currentVersion, buildingArea, unitPrice, financialData, loanInfo],
+  );
 
   // 坪単価計算：施工面積 × 坪単価 → 本体工事費を自動更新
   useEffect(() => {
@@ -256,6 +371,57 @@ export default function FinancialPlanPage({
       }),
     );
   }, [buildingArea, unitPrice]);
+
+  // データ変更検知と自動保存
+  useEffect(() => {
+    if (!currentVersion) return;
+
+    const currentData = JSON.stringify({
+      buildingArea,
+      unitPrice,
+      financialData,
+      loanInfo,
+    });
+
+    // 初回ロード時は保存データとして記録
+    if (!lastSavedData) {
+      setLastSavedData(currentData);
+      return;
+    }
+
+    // データが変更されているかチェック
+    if (currentData !== lastSavedData) {
+      setHasUnsavedChanges(true);
+
+      // 5秒後に自動保存
+      const autoSaveTimer = setTimeout(() => {
+        handleSave(true);
+      }, 5000);
+
+      return () => clearTimeout(autoSaveTimer);
+    }
+  }, [
+    buildingArea,
+    unitPrice,
+    financialData,
+    loanInfo,
+    currentVersion,
+    lastSavedData,
+    handleSave,
+  ]);
+
+  // ブラウザ離脱警告
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   // 合計計算
   const calculateCategoryTotal = (items: { amount: number }[]) => {
@@ -422,6 +588,81 @@ export default function FinancialPlanPage({
     return currentIndex > 0;
   };
 
+  // 新バージョン作成
+  const handleCreateNewVersion = async () => {
+    if (!currentVersion || !newVersionNote.trim()) {
+      alert('変更内容を入力してください');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/financial-plans', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          customerId: currentVersion.customerId,
+          customerName: currentVersion.customerName,
+          buildingArea,
+          unitPrice,
+          financialData,
+          loanInfo,
+          changeNote: newVersionNote,
+          previousVersionId: currentVersion.id,
+        }),
+      });
+
+      if (response.ok) {
+        const newVersion = await response.json();
+        // 新しいバージョンのページに遷移
+        window.location.href = `/estimates/financial/${newVersion.id.replace('fp-', '')}`;
+      } else {
+        alert('新バージョンの作成に失敗しました');
+      }
+    } catch (error) {
+      console.error('Failed to create new version:', error);
+      alert('新バージョンの作成に失敗しました');
+    }
+  };
+
+  // バージョン比較実行
+  const handleCompareVersions = async () => {
+    if (!compareVersionA || !compareVersionB) {
+      alert('比較する2つのバージョンを選択してください');
+      return;
+    }
+
+    if (compareVersionA === compareVersionB) {
+      alert('異なるバージョンを選択してください');
+      return;
+    }
+
+    setIsComparing(true);
+    try {
+      const response = await fetch(
+        `/api/financial-plans/compare?versionA=${compareVersionA}&versionB=${compareVersionB}`,
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        setComparisonResult(result);
+      } else {
+        alert('比較に失敗しました');
+      }
+    } catch (error) {
+      console.error('Failed to compare versions:', error);
+      alert('比較に失敗しました');
+    } finally {
+      setIsComparing(false);
+    }
+  };
+
+  // PDF出力機能
+  const handlePrintPdf = () => {
+    window.print();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* ヘッダー */}
@@ -451,16 +692,59 @@ export default function FinancialPlanPage({
                 <Calculator className="w-4 h-4" />
                 詳細見積へ変換
               </button>
-              <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
-                <Save className="w-4 h-4" />
-                保存
+              <button
+                onClick={() => handleSave(false)}
+                disabled={isSaving}
+                className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                  hasUnsavedChanges
+                    ? 'bg-orange-600 text-white hover:bg-orange-700'
+                    : 'bg-green-600 text-white hover:bg-green-700'
+                }`}
+              >
+                {isSaving ? (
+                  <>
+                    <span className="animate-spin">⏳</span>
+                    保存中...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    {hasUnsavedChanges ? '保存 (未保存)' : '保存'}
+                  </>
+                )}
               </button>
-              <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2">
+              <button
+                onClick={handlePrintPdf}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+              >
                 <FileDown className="w-4 h-4" />
                 PDF出力
               </button>
             </div>
           </div>
+
+          {/* 保存メッセージ */}
+          <AnimatePresence>
+            {saveMessage && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className={`mt-4 px-4 py-3 rounded-lg flex items-center gap-2 ${
+                  saveMessage.type === 'success'
+                    ? 'bg-green-100 text-green-800 border border-green-200'
+                    : 'bg-red-100 text-red-800 border border-red-200'
+                }`}
+              >
+                {saveMessage.type === 'success' ? (
+                  <Check className="w-5 h-5" />
+                ) : (
+                  <span>❌</span>
+                )}
+                <span className="font-medium">{saveMessage.text}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* バージョンナビゲーション */}
           {currentVersion && versions.length > 0 && (
@@ -538,7 +822,10 @@ export default function FinancialPlanPage({
                   <GitCompare className="w-4 h-4" />
                   比較
                 </button>
-                <button className="px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors flex items-center gap-2 text-sm">
+                <button
+                  onClick={() => setShowNewVersionModal(true)}
+                  className="px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors flex items-center gap-2 text-sm"
+                >
                   <Copy className="w-4 h-4" />
                   新バージョン作成
                 </button>
@@ -1154,6 +1441,542 @@ export default function FinancialPlanPage({
           </>
         )}
       </AnimatePresence>
+
+      {/* 新バージョン作成モーダル */}
+      <AnimatePresence>
+        {showNewVersionModal && (
+          <>
+            {/* オーバーレイ */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowNewVersionModal(false)}
+              className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
+            />
+
+            {/* モーダル */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+                {/* ヘッダー */}
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    <Copy className="w-6 h-6 text-green-600" />
+                    新バージョン作成
+                  </h2>
+                  <button
+                    onClick={() => setShowNewVersionModal(false)}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* 説明 */}
+                <p className="text-sm text-gray-600 mb-4">
+                  現在の資金計画書（{currentVersion?.versionLabel}
+                  ）をベースに、新しいバージョンを作成します。
+                </p>
+
+                {/* 現在のバージョン情報 */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-blue-700">
+                      現在のバージョン
+                    </span>
+                    <span className="text-sm text-blue-600">
+                      {currentVersion?.versionLabel}
+                    </span>
+                  </div>
+                  <div className="text-lg font-bold text-blue-900">
+                    ¥{calculateGrandTotal().toLocaleString()}
+                  </div>
+                </div>
+
+                {/* 変更メモ入力 */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    変更内容 <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={newVersionNote}
+                    onChange={(e) => setNewVersionNote(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+                    rows={4}
+                    placeholder="例：外構工事費を追加、オール電化に変更、など"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    何を変更したか簡単にメモしてください
+                  </p>
+                </div>
+
+                {/* アクションボタン */}
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      setShowNewVersionModal(false);
+                      setNewVersionNote('');
+                    }}
+                    className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                  >
+                    キャンセル
+                  </button>
+                  <button
+                    onClick={handleCreateNewVersion}
+                    disabled={!newVersionNote.trim()}
+                    className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <Copy className="w-4 h-4" />
+                    作成
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* バージョン比較モーダル */}
+      <AnimatePresence>
+        {showCompareModal && (
+          <>
+            {/* オーバーレイ */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => {
+                setShowCompareModal(false);
+                setComparisonResult(null);
+                setCompareVersionA('');
+                setCompareVersionB('');
+              }}
+              className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
+            />
+
+            {/* モーダル */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
+                {/* ヘッダー */}
+                <div className="flex items-center justify-between mb-6 sticky top-0 bg-white pb-4 border-b border-gray-200">
+                  <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    <GitCompare className="w-6 h-6 text-purple-600" />
+                    バージョン比較
+                  </h2>
+                  <button
+                    onClick={() => {
+                      setShowCompareModal(false);
+                      setComparisonResult(null);
+                      setCompareVersionA('');
+                      setCompareVersionB('');
+                    }}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* バージョン選択 */}
+                <div className="mb-6">
+                  <p className="text-sm text-gray-600 mb-4">
+                    比較する2つのバージョンを選択してください
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* バージョンA */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        バージョンA（旧）
+                      </label>
+                      <select
+                        value={compareVersionA}
+                        onChange={(e) => setCompareVersionA(e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      >
+                        <option value="">選択してください</option>
+                        {versions.map((version) => (
+                          <option key={version.id} value={version.id}>
+                            {version.versionLabel} - ¥
+                            {version.totalAmount.toLocaleString()}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* バージョンB */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        バージョンB（新）
+                      </label>
+                      <select
+                        value={compareVersionB}
+                        onChange={(e) => setCompareVersionB(e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      >
+                        <option value="">選択してください</option>
+                        {versions.map((version) => (
+                          <option key={version.id} value={version.id}>
+                            {version.versionLabel} - ¥
+                            {version.totalAmount.toLocaleString()}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* 比較実行ボタン */}
+                  <button
+                    onClick={handleCompareVersions}
+                    disabled={
+                      !compareVersionA || !compareVersionB || isComparing
+                    }
+                    className="mt-4 w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isComparing ? (
+                      <>
+                        <span className="animate-spin">⏳</span>
+                        比較中...
+                      </>
+                    ) : (
+                      <>
+                        <GitCompare className="w-4 h-4" />
+                        比較実行
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* 比較結果 */}
+                {comparisonResult && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    {/* バージョン情報サマリー */}
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                      {/* バージョンA */}
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h3 className="text-sm font-medium text-blue-700 mb-2">
+                          {comparisonResult.versionA.versionLabel}
+                        </h3>
+                        <p className="text-2xl font-bold text-blue-900">
+                          ¥
+                          {comparisonResult.versionA.totalAmount.toLocaleString()}
+                        </p>
+                        <p className="text-xs text-blue-600 mt-1">
+                          {new Date(
+                            comparisonResult.versionA.createdAt,
+                          ).toLocaleString('ja-JP')}
+                        </p>
+                      </div>
+
+                      {/* バージョンB */}
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h3 className="text-sm font-medium text-green-700 mb-2">
+                          {comparisonResult.versionB.versionLabel}
+                        </h3>
+                        <p className="text-2xl font-bold text-green-900">
+                          ¥
+                          {comparisonResult.versionB.totalAmount.toLocaleString()}
+                        </p>
+                        <p className="text-xs text-green-600 mt-1">
+                          {new Date(
+                            comparisonResult.versionB.createdAt,
+                          ).toLocaleString('ja-JP')}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* 総額差異 */}
+                    <div
+                      className={`mb-6 p-4 rounded-lg border-2 ${
+                        comparisonResult.totalChange > 0
+                          ? 'bg-red-50 border-red-200'
+                          : comparisonResult.totalChange < 0
+                            ? 'bg-green-50 border-green-200'
+                            : 'bg-gray-50 border-gray-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-lg font-semibold text-gray-900">
+                          総額差異
+                        </span>
+                        <span
+                          className={`text-2xl font-bold ${
+                            comparisonResult.totalChange > 0
+                              ? 'text-red-600'
+                              : comparisonResult.totalChange < 0
+                                ? 'text-green-600'
+                                : 'text-gray-600'
+                          }`}
+                        >
+                          {comparisonResult.totalChange > 0 ? '+' : ''}¥
+                          {comparisonResult.totalChange.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* 差分テーブル */}
+                    {comparisonResult.differences.length > 0 ? (
+                      <div className="border border-gray-200 rounded-lg overflow-hidden">
+                        <table className="w-full">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">
+                                カテゴリ
+                              </th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">
+                                項目名
+                              </th>
+                              <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase">
+                                旧金額
+                              </th>
+                              <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase">
+                                新金額
+                              </th>
+                              <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase">
+                                差異
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-200">
+                            {comparisonResult.differences.map(
+                              (diff: any, index: number) => {
+                                const isIncrease = diff.change > 0;
+                                const isDecrease = diff.change < 0;
+                                const isNew = diff.oldAmount === 0;
+                                const isRemoved = diff.newAmount === 0;
+
+                                return (
+                                  <tr
+                                    key={index}
+                                    className={`
+                                      ${isNew ? 'bg-green-50' : ''}
+                                      ${isRemoved ? 'bg-red-50' : ''}
+                                      ${!isNew && !isRemoved && diff.change !== 0 ? 'bg-yellow-50' : ''}
+                                    `}
+                                  >
+                                    <td className="px-4 py-3 text-sm text-gray-900">
+                                      {diff.category}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-gray-900">
+                                      {diff.itemName}
+                                      {isNew && (
+                                        <span className="ml-2 px-2 py-0.5 bg-green-200 text-green-800 text-xs rounded-full">
+                                          新規
+                                        </span>
+                                      )}
+                                      {isRemoved && (
+                                        <span className="ml-2 px-2 py-0.5 bg-red-200 text-red-800 text-xs rounded-full">
+                                          削除
+                                        </span>
+                                      )}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-right text-gray-900">
+                                      ¥{diff.oldAmount.toLocaleString()}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-right text-gray-900">
+                                      ¥{diff.newAmount.toLocaleString()}
+                                    </td>
+                                    <td
+                                      className={`px-4 py-3 text-sm text-right font-semibold ${
+                                        isIncrease
+                                          ? 'text-red-600'
+                                          : isDecrease
+                                            ? 'text-green-600'
+                                            : 'text-gray-900'
+                                      }`}
+                                    >
+                                      {diff.change > 0 ? '+' : ''}¥
+                                      {diff.change.toLocaleString()}
+                                      <span className="text-xs ml-1">
+                                        ({diff.changePercent > 0 ? '+' : ''}
+                                        {diff.changePercent.toFixed(1)}%)
+                                      </span>
+                                    </td>
+                                  </tr>
+                                );
+                              },
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        差異はありません
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
+                {/* 凡例 */}
+                {comparisonResult && (
+                  <div className="mt-6 pt-6 border-t border-gray-200">
+                    <p className="text-sm font-medium text-gray-700 mb-2">
+                      凡例
+                    </p>
+                    <div className="flex flex-wrap gap-4 text-xs">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 bg-green-50 border border-green-200 rounded"></div>
+                        <span className="text-gray-600">新規追加</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 bg-red-50 border border-red-200 rounded"></div>
+                        <span className="text-gray-600">削除</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 bg-yellow-50 border border-yellow-200 rounded"></div>
+                        <span className="text-gray-600">変更</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* 印刷用CSS */}
+      <style jsx global>{`
+        @media print {
+          /* ページ設定 */
+          @page {
+            size: A4;
+            margin: 15mm;
+          }
+
+          /* 背景とグラデーション */
+          body {
+            background: white !important;
+          }
+
+          /* 非表示にする要素 */
+          .sticky,
+          button,
+          nav,
+          .print\\:hidden,
+          [class*='hover:'],
+          [class*='transition-'],
+          .backdrop-blur-lg,
+          .shadow-sm,
+          .shadow-lg,
+          .rounded-lg,
+          .rounded-xl,
+          .rounded-2xl {
+            display: none !important;
+          }
+
+          /* バージョンナビゲーションとボタンを非表示 */
+          .sticky.top-0,
+          .bg-white\\/95,
+          header,
+          .z-40 {
+            display: none !important;
+          }
+
+          /* メインコンテンツの調整 */
+          .min-h-screen {
+            min-height: auto !important;
+          }
+
+          /* カードとテーブルのスタイル調整 */
+          .bg-white {
+            background: white !important;
+            box-shadow: none !important;
+            border: 1px solid #e5e7eb !important;
+          }
+
+          /* テーブルのスタイル */
+          table {
+            page-break-inside: auto;
+            border-collapse: collapse;
+            width: 100%;
+          }
+
+          tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+          }
+
+          thead {
+            display: table-header-group;
+          }
+
+          tfoot {
+            display: table-footer-group;
+          }
+
+          /* ページ区切り */
+          .page-break-before {
+            page-break-before: always;
+          }
+
+          .page-break-after {
+            page-break-after: always;
+          }
+
+          .no-page-break {
+            page-break-inside: avoid;
+          }
+
+          /* 印刷時のフォントサイズ調整 */
+          body {
+            font-size: 10pt;
+            line-height: 1.4;
+          }
+
+          h1 {
+            font-size: 18pt;
+          }
+
+          h2 {
+            font-size: 14pt;
+          }
+
+          h3 {
+            font-size: 12pt;
+          }
+
+          /* 色の調整 */
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+          }
+
+          /* タイトルとヘッダー */
+          .text-2xl,
+          .text-xl {
+            color: #000 !important;
+          }
+
+          /* グラデーション背景を白に */
+          .bg-gradient-to-br,
+          .bg-gradient-to-r {
+            background: white !important;
+          }
+
+          /* モーダルとオーバーレイを非表示 */
+          .fixed.inset-0,
+          [role='dialog'],
+          .animate-in,
+          .animate-out {
+            display: none !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
