@@ -11,6 +11,7 @@ import ApprovalWorkflowComponent from '@/components/estimates/ApprovalWorkflow';
 import TemplateSelector from '@/components/pdf/TemplateSelector';
 import { PdfTemplate } from '@/types/pdf-template';
 import { PdfTemplateEngine } from '@/lib/pdf-engine';
+import ApprovalButton from '@/components/approvals/ApprovalButton';
 import { EstimateVersion } from '@/features/estimate-versions/types';
 import {
   ApprovalWorkflow as ApprovalWorkflowType,
@@ -2835,6 +2836,18 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
                   <FileText className="w-3.5 h-3.5" />
                   PDF
                 </button>
+
+                <ApprovalButton
+                  documentType="estimate"
+                  documentId={params.id}
+                  documentTitle={
+                    customerInfo ? `${customerInfo.name}様 見積書` : '見積書'
+                  }
+                  amount={calculateTotal().amount}
+                  onSuccess={() => {
+                    console.log('承認申請が送信されました');
+                  }}
+                />
               </div>
 
               {/* セパレーター */}

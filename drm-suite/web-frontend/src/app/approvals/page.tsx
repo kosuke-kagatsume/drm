@@ -11,7 +11,7 @@ import {
   DollarSign,
   Send,
   Filter,
-  Search
+  Search,
 } from 'lucide-react';
 
 interface ApprovalItem {
@@ -33,7 +33,9 @@ export default function ApprovalsPage() {
   const router = useRouter();
   const [approvals, setApprovals] = useState<ApprovalItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
+  const [filter, setFilter] = useState<
+    'all' | 'pending' | 'approved' | 'rejected'
+  >('pending');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -45,67 +47,59 @@ export default function ApprovalsPage() {
     try {
       setLoading(true);
 
-      // サンプルデータ（実際はAPIから取得）
-      const sampleApprovals: ApprovalItem[] = [
-        {
-          id: 'APR-001',
-          type: 'estimate',
-          typeLabel: '見積',
-          title: 'EST-2024-001',
-          projectName: '田中様邸新築工事',
-          amount: 100000000,
-          requestedBy: '山田営業',
-          requestedAt: '2024-10-07T10:00:00Z',
-          status: 'pending',
-          currentApprover: '鈴木部長',
-          approvalFlowName: '高額案件承認フロー',
-          priority: 'high',
-        },
-        {
-          id: 'APR-002',
-          type: 'contract',
-          typeLabel: '契約',
-          title: 'CON-2024-001',
-          projectName: '山田ビル改修工事',
-          amount: 35750000,
-          requestedBy: '佐藤営業',
-          requestedAt: '2024-10-06T14:00:00Z',
-          status: 'pending',
-          currentApprover: '鈴木部長',
-          approvalFlowName: '通常承認フロー',
-          priority: 'medium',
-        },
-        {
-          id: 'APR-003',
-          type: 'order',
-          typeLabel: '発注',
-          title: 'ORD-2024-003',
-          projectName: '佐々木様邸リフォーム',
-          amount: 15000000,
-          requestedBy: '田中施工管理',
-          requestedAt: '2024-10-05T09:00:00Z',
-          status: 'approved',
-          currentApprover: '鈴木部長',
-          approvalFlowName: '発注承認フロー',
-          priority: 'medium',
-        },
-        {
-          id: 'APR-004',
-          type: 'invoice',
-          typeLabel: '請求',
-          title: 'INV-2024-003',
-          projectName: '高橋様邸新築工事',
-          amount: 50000000,
-          requestedBy: '伊藤経理',
-          requestedAt: '2024-10-04T16:00:00Z',
-          status: 'approved',
-          currentApprover: '鈴木部長',
-          approvalFlowName: '請求承認フロー',
-          priority: 'high',
-        },
-      ];
+      // APIから承認一覧を取得
+      const response = await fetch('/api/approvals');
+      if (!response.ok) throw new Error('Failed to fetch approvals');
 
-      setApprovals(sampleApprovals);
+      const data = await response.json();
+      const apiApprovals = data.data || [];
+
+      // APIレスポンスを画面表示用の形式に変換
+      const typeLabels: Record<string, string> = {
+        estimate: '見積',
+        contract: '契約',
+        purchase: '発注',
+        invoice: '請求書',
+        expense: '経費',
+      };
+
+      const formattedApprovals: ApprovalItem[] = apiApprovals.map(
+        (approval: any) => {
+          // 優先度の判定（金額ベース）
+          let priority: 'low' | 'medium' | 'high' | 'urgent' = 'medium';
+          // 実際の金額データがある場合は後でドキュメントから取得
+
+          // 現在のステップの承認者を取得
+          const currentStepData = approval.steps[approval.currentStep - 1];
+          const currentApprover = currentStepData ? '承認待ち' : '不明';
+
+          // ステータスマッピング
+          let status: 'pending' | 'approved' | 'rejected' = 'pending';
+          if (approval.status === 'approved') status = 'approved';
+          else if (approval.status === 'rejected') status = 'rejected';
+
+          return {
+            id: approval.id,
+            type:
+              approval.documentType === 'purchase'
+                ? 'order'
+                : approval.documentType,
+            typeLabel:
+              typeLabels[approval.documentType] || approval.documentType,
+            title: approval.documentId,
+            projectName: approval.documentTitle,
+            amount: 0, // 実際の金額は後でドキュメントから取得
+            requestedBy: approval.requestedBy.name,
+            requestedAt: approval.createdAt,
+            status,
+            currentApprover,
+            approvalFlowName: approval.flowName,
+            priority,
+          };
+        },
+      );
+
+      setApprovals(formattedApprovals);
     } catch (error) {
       console.error('Error loading approvals:', error);
     } finally {
@@ -117,16 +111,32 @@ export default function ApprovalsPage() {
     if (!confirm('この申請を承認しますか？')) return;
 
     try {
-      // 実際はAPIを呼び出す
-      // await fetch(`/api/approvals/${approvalId}/approve`, { method: 'POST' });
+      // 承認APIを呼び出す
+      const response = await fetch('/api/approvals', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          approvalId,
+          action: 'approved',
+          approverId: 'current-user-id', // 実際はログインユーザーIDを使用
+          approverName: '承認者', // 実際はログインユーザー名を使用
+          approverEmail: 'approver@example.com', // 実際はログインユーザーのメールを使用
+          comment: '',
+        }),
+      });
 
-      setApprovals(prev =>
-        prev.map(item =>
-          item.id === approvalId ? { ...item, status: 'approved' as const } : item
-        )
-      );
+      if (!response.ok) throw new Error('Failed to approve');
 
-      alert('承認しました');
+      const data = await response.json();
+      if (data.success) {
+        alert(data.message || '承認しました');
+        // 承認一覧を再読み込み
+        loadApprovals();
+      } else {
+        throw new Error(data.error || '承認に失敗しました');
+      }
     } catch (error) {
       console.error('Error approving:', error);
       alert('承認に失敗しました');
@@ -138,19 +148,32 @@ export default function ApprovalsPage() {
     if (!reason) return;
 
     try {
-      // 実際はAPIを呼び出す
-      // await fetch(`/api/approvals/${approvalId}/reject`, {
-      //   method: 'POST',
-      //   body: JSON.stringify({ reason }),
-      // });
+      // 却下APIを呼び出す
+      const response = await fetch('/api/approvals', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          approvalId,
+          action: 'rejected',
+          approverId: 'current-user-id', // 実際はログインユーザーIDを使用
+          approverName: '承認者', // 実際はログインユーザー名を使用
+          approverEmail: 'approver@example.com', // 実際はログインユーザーのメールを使用
+          comment: reason,
+        }),
+      });
 
-      setApprovals(prev =>
-        prev.map(item =>
-          item.id === approvalId ? { ...item, status: 'rejected' as const } : item
-        )
-      );
+      if (!response.ok) throw new Error('Failed to reject');
 
-      alert('却下しました');
+      const data = await response.json();
+      if (data.success) {
+        alert(data.message || '却下しました');
+        // 承認一覧を再読み込み
+        loadApprovals();
+      } else {
+        throw new Error(data.error || '却下に失敗しました');
+      }
     } catch (error) {
       console.error('Error rejecting:', error);
       alert('却下に失敗しました');
@@ -159,9 +182,21 @@ export default function ApprovalsPage() {
 
   const getStatusBadge = (status: string) => {
     const badges = {
-      pending: { label: '承認待ち', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
-      approved: { label: '承認済み', color: 'bg-green-100 text-green-800', icon: CheckCircle },
-      rejected: { label: '却下', color: 'bg-red-100 text-red-800', icon: XCircle },
+      pending: {
+        label: '承認待ち',
+        color: 'bg-yellow-100 text-yellow-800',
+        icon: Clock,
+      },
+      approved: {
+        label: '承認済み',
+        color: 'bg-green-100 text-green-800',
+        icon: CheckCircle,
+      },
+      rejected: {
+        label: '却下',
+        color: 'bg-red-100 text-red-800',
+        icon: XCircle,
+      },
     };
     return badges[status as keyof typeof badges] || badges.pending;
   };
@@ -186,7 +221,7 @@ export default function ApprovalsPage() {
     return icons[type as keyof typeof icons] || FileText;
   };
 
-  const filteredApprovals = approvals.filter(approval => {
+  const filteredApprovals = approvals.filter((approval) => {
     const matchesStatus = filter === 'all' || approval.status === filter;
     const matchesType = typeFilter === 'all' || approval.type === typeFilter;
     const matchesSearch =
@@ -198,9 +233,9 @@ export default function ApprovalsPage() {
   });
 
   const stats = {
-    pending: approvals.filter(a => a.status === 'pending').length,
-    approved: approvals.filter(a => a.status === 'approved').length,
-    rejected: approvals.filter(a => a.status === 'rejected').length,
+    pending: approvals.filter((a) => a.status === 'pending').length,
+    approved: approvals.filter((a) => a.status === 'approved').length,
+    rejected: approvals.filter((a) => a.status === 'rejected').length,
     total: approvals.length,
   };
 
@@ -239,7 +274,9 @@ export default function ApprovalsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">承認待ち</p>
-                <p className="text-2xl font-bold text-yellow-600 mt-2">{stats.pending}</p>
+                <p className="text-2xl font-bold text-yellow-600 mt-2">
+                  {stats.pending}
+                </p>
               </div>
               <div className="p-3 bg-yellow-100 rounded-lg">
                 <Clock className="h-6 w-6 text-yellow-600" />
@@ -251,7 +288,9 @@ export default function ApprovalsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">承認済み</p>
-                <p className="text-2xl font-bold text-green-600 mt-2">{stats.approved}</p>
+                <p className="text-2xl font-bold text-green-600 mt-2">
+                  {stats.approved}
+                </p>
               </div>
               <div className="p-3 bg-green-100 rounded-lg">
                 <CheckCircle className="h-6 w-6 text-green-600" />
@@ -263,7 +302,9 @@ export default function ApprovalsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">却下</p>
-                <p className="text-2xl font-bold text-red-600 mt-2">{stats.rejected}</p>
+                <p className="text-2xl font-bold text-red-600 mt-2">
+                  {stats.rejected}
+                </p>
               </div>
               <div className="p-3 bg-red-100 rounded-lg">
                 <XCircle className="h-6 w-6 text-red-600" />
@@ -275,7 +316,9 @@ export default function ApprovalsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">総件数</p>
-                <p className="text-2xl font-bold text-gray-900 mt-2">{stats.total}</p>
+                <p className="text-2xl font-bold text-gray-900 mt-2">
+                  {stats.total}
+                </p>
               </div>
               <div className="p-3 bg-blue-100 rounded-lg">
                 <FileText className="h-6 w-6 text-blue-600" />
@@ -435,7 +478,9 @@ export default function ApprovalsPage() {
           {filteredApprovals.length === 0 && (
             <div className="text-center py-12">
               <AlertCircle className="mx-auto h-12 w-12 text-gray-400" />
-              <p className="mt-2 text-sm text-gray-500">承認案件が見つかりません</p>
+              <p className="mt-2 text-sm text-gray-500">
+                承認案件が見つかりません
+              </p>
             </div>
           )}
         </div>

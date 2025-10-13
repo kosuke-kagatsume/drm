@@ -16,6 +16,7 @@ import {
   Edit,
   RefreshCw,
 } from 'lucide-react';
+import ApprovalButton from '@/components/approvals/ApprovalButton';
 
 export default function OrderDetailPage() {
   const router = useRouter();
@@ -72,15 +73,33 @@ export default function OrderDetailPage() {
   const getStatusBadge = (status: string) => {
     const config: any = {
       draft: { bg: 'bg-gray-100', text: 'text-gray-800', label: '下書き' },
-      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: '承認待ち' },
+      pending: {
+        bg: 'bg-yellow-100',
+        text: 'text-yellow-800',
+        label: '承認待ち',
+      },
       approved: { bg: 'bg-blue-100', text: 'text-blue-800', label: '承認済み' },
-      sent_to_dw: { bg: 'bg-green-100', text: 'text-green-800', label: 'DW送信済み' },
-      in_progress: { bg: 'bg-cyan-100', text: 'text-cyan-800', label: '進行中' },
-      completed: { bg: 'bg-emerald-100', text: 'text-emerald-800', label: '完了' },
+      sent_to_dw: {
+        bg: 'bg-green-100',
+        text: 'text-green-800',
+        label: 'DW送信済み',
+      },
+      in_progress: {
+        bg: 'bg-cyan-100',
+        text: 'text-cyan-800',
+        label: '進行中',
+      },
+      completed: {
+        bg: 'bg-emerald-100',
+        text: 'text-emerald-800',
+        label: '完了',
+      },
     };
     const cfg = config[status] || config.draft;
     return (
-      <span className={`px-3 py-1 rounded-full text-sm font-medium ${cfg.bg} ${cfg.text}`}>
+      <span
+        className={`px-3 py-1 rounded-full text-sm font-medium ${cfg.bg} ${cfg.text}`}
+      >
         {cfg.label}
       </span>
     );
@@ -88,15 +107,37 @@ export default function OrderDetailPage() {
 
   const getSyncStatusBadge = (syncStatus: string) => {
     const config: any = {
-      not_synced: { bg: 'bg-gray-100', text: 'text-gray-800', label: '未送信', icon: AlertTriangle },
-      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: '送信中', icon: RefreshCw },
-      synced: { bg: 'bg-green-100', text: 'text-green-800', label: '同期済み', icon: CheckCircle },
-      error: { bg: 'bg-red-100', text: 'text-red-800', label: 'エラー', icon: AlertTriangle },
+      not_synced: {
+        bg: 'bg-gray-100',
+        text: 'text-gray-800',
+        label: '未送信',
+        icon: AlertTriangle,
+      },
+      pending: {
+        bg: 'bg-yellow-100',
+        text: 'text-yellow-800',
+        label: '送信中',
+        icon: RefreshCw,
+      },
+      synced: {
+        bg: 'bg-green-100',
+        text: 'text-green-800',
+        label: '同期済み',
+        icon: CheckCircle,
+      },
+      error: {
+        bg: 'bg-red-100',
+        text: 'text-red-800',
+        label: 'エラー',
+        icon: AlertTriangle,
+      },
     };
     const cfg = config[syncStatus] || config.not_synced;
     const Icon = cfg.icon;
     return (
-      <span className={`px-3 py-1 rounded-full text-sm font-medium ${cfg.bg} ${cfg.text} flex items-center gap-1 inline-flex`}>
+      <span
+        className={`px-3 py-1 rounded-full text-sm font-medium ${cfg.bg} ${cfg.text} flex items-center gap-1 inline-flex`}
+      >
         <Icon className="h-4 w-4" />
         {cfg.label}
       </span>
@@ -160,16 +201,31 @@ export default function OrderDetailPage() {
                 <Download className="h-4 w-4" />
                 PDF出力
               </button>
-              {order.dwSyncStatus === 'not_synced' && order.status === 'approved' && (
-                <button
-                  onClick={handleSyncToDW}
-                  disabled={syncing}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50"
-                >
-                  <Send className="h-4 w-4" />
-                  {syncing ? 'DW送信中...' : 'DWに送信'}
-                </button>
-              )}
+              <ApprovalButton
+                documentType="purchase"
+                documentId={orderId}
+                documentTitle={
+                  order.partnerName
+                    ? `${order.partnerName}様 発注書`
+                    : `発注書 ${order.orderNo}`
+                }
+                amount={order.totalAmount}
+                onSuccess={() => {
+                  console.log('承認申請が送信されました');
+                  loadOrder(); // Reload order data to update status
+                }}
+              />
+              {order.dwSyncStatus === 'not_synced' &&
+                order.status === 'approved' && (
+                  <button
+                    onClick={handleSyncToDW}
+                    disabled={syncing}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50"
+                  >
+                    <Send className="h-4 w-4" />
+                    {syncing ? 'DW送信中...' : 'DWに送信'}
+                  </button>
+                )}
             </div>
           </div>
         </div>
@@ -197,7 +253,9 @@ export default function OrderDetailPage() {
                     order.isOverdue ? 'text-red-900' : 'text-yellow-900'
                   }`}
                 >
-                  {order.isOverdue ? '発注期限超過！' : '発注期限まであとわずか'}
+                  {order.isOverdue
+                    ? '発注期限超過！'
+                    : '発注期限まであとわずか'}
                 </p>
                 <p
                   className={`text-sm mt-1 ${
@@ -205,7 +263,10 @@ export default function OrderDetailPage() {
                   }`}
                 >
                   期限: {order.orderDeadline} (
-                  {order.isOverdue ? '期限超過' : `あと${order.daysUntilDeadline}日`})
+                  {order.isOverdue
+                    ? '期限超過'
+                    : `あと${order.daysUntilDeadline}日`}
+                  )
                 </p>
               </div>
             </div>
@@ -221,15 +282,21 @@ export default function OrderDetailPage() {
             </div>
             <div className="text-right">
               <p className="text-sm text-gray-600">発注日</p>
-              <p className="text-lg font-bold text-gray-900">{order.orderDate}</p>
+              <p className="text-lg font-bold text-gray-900">
+                {order.orderDate}
+              </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="border-l-4 border-blue-500 pl-4">
               <p className="text-sm text-gray-600 mb-1">プロジェクト名</p>
-              <p className="text-lg font-bold text-gray-900">{order.projectName}</p>
-              <p className="text-sm text-gray-600 mt-1">契約: {order.contractNo}</p>
+              <p className="text-lg font-bold text-gray-900">
+                {order.projectName}
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                契約: {order.contractNo}
+              </p>
             </div>
             <div className="border-l-4 border-green-500 pl-4">
               <p className="text-sm text-gray-600 mb-1">発注金額</p>
@@ -242,7 +309,9 @@ export default function OrderDetailPage() {
             </div>
             <div className="border-l-4 border-purple-500 pl-4">
               <p className="text-sm text-gray-600 mb-1">工期</p>
-              <p className="text-lg font-bold text-gray-900">{order.duration}日間</p>
+              <p className="text-lg font-bold text-gray-900">
+                {order.duration}日間
+              </p>
               <p className="text-sm text-gray-600 mt-1">
                 {order.startDate} ～ {order.endDate}
               </p>
@@ -320,12 +389,18 @@ export default function OrderDetailPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {order.workItems?.map((item: any, index: number) => (
                   <tr key={index}>
-                    <td className="px-4 py-3 text-sm text-gray-900">{item.category}</td>
-                    <td className="px-4 py-3 text-sm text-gray-900">{item.name}</td>
+                    <td className="px-4 py-3 text-sm text-gray-900">
+                      {item.category}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-900">
+                      {item.name}
+                    </td>
                     <td className="px-4 py-3 text-sm text-gray-900 text-right">
                       {item.quantity}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-900">{item.unit}</td>
+                    <td className="px-4 py-3 text-sm text-gray-900">
+                      {item.unit}
+                    </td>
                     <td className="px-4 py-3 text-sm text-gray-900 text-right">
                       ¥{item.unitPrice.toLocaleString()}
                     </td>
@@ -337,7 +412,10 @@ export default function OrderDetailPage() {
               </tbody>
               <tfoot className="bg-gray-50">
                 <tr>
-                  <td colSpan={5} className="px-4 py-3 text-sm font-medium text-gray-900 text-right">
+                  <td
+                    colSpan={5}
+                    className="px-4 py-3 text-sm font-medium text-gray-900 text-right"
+                  >
                     小計
                   </td>
                   <td className="px-4 py-3 text-sm font-bold text-gray-900 text-right">
@@ -345,7 +423,10 @@ export default function OrderDetailPage() {
                   </td>
                 </tr>
                 <tr>
-                  <td colSpan={5} className="px-4 py-3 text-sm font-medium text-gray-900 text-right">
+                  <td
+                    colSpan={5}
+                    className="px-4 py-3 text-sm font-medium text-gray-900 text-right"
+                  >
                     消費税（10%）
                   </td>
                   <td className="px-4 py-3 text-sm font-bold text-gray-900 text-right">
@@ -353,7 +434,10 @@ export default function OrderDetailPage() {
                   </td>
                 </tr>
                 <tr>
-                  <td colSpan={5} className="px-4 py-3 text-sm font-medium text-gray-900 text-right">
+                  <td
+                    colSpan={5}
+                    className="px-4 py-3 text-sm font-medium text-gray-900 text-right"
+                  >
                     合計金額
                   </td>
                   <td className="px-4 py-3 text-lg font-bold text-green-600 text-right">
@@ -396,12 +480,16 @@ export default function OrderDetailPage() {
             {order.dwOrderId && (
               <div>
                 <p className="text-gray-600">DW発注ID</p>
-                <p className="text-gray-900 mt-1 font-mono">{order.dwOrderId}</p>
+                <p className="text-gray-900 mt-1 font-mono">
+                  {order.dwOrderId}
+                </p>
               </div>
             )}
             <div>
               <p className="text-gray-600">同期ステータス</p>
-              <div className="mt-1">{getSyncStatusBadge(order.dwSyncStatus)}</div>
+              <div className="mt-1">
+                {getSyncStatusBadge(order.dwSyncStatus)}
+              </div>
             </div>
             {order.dwSyncedAt && (
               <div>

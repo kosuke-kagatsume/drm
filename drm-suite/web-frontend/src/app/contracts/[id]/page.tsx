@@ -16,6 +16,7 @@ import {
   Send,
   Building2,
 } from 'lucide-react';
+import ApprovalButton from '@/components/approvals/ApprovalButton';
 
 export default function ContractDetailPage() {
   const router = useRouter();
@@ -53,17 +54,55 @@ export default function ContractDetailPage() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      draft: { bg: 'bg-gray-100', text: 'text-gray-800', label: '下書き', icon: '📋' },
-      pending_approval: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: '承認待ち', icon: '⏳' },
-      approved: { bg: 'bg-blue-100', text: 'text-blue-800', label: '承認済み', icon: '✅' },
-      signed: { bg: 'bg-green-100', text: 'text-green-800', label: '契約締結', icon: '📝' },
-      in_progress: { bg: 'bg-cyan-100', text: 'text-cyan-800', label: '進行中', icon: '🚧' },
-      completed: { bg: 'bg-emerald-100', text: 'text-emerald-800', label: '完了', icon: '🎉' },
-      cancelled: { bg: 'bg-red-100', text: 'text-red-800', label: 'キャンセル', icon: '❌' },
+      draft: {
+        bg: 'bg-gray-100',
+        text: 'text-gray-800',
+        label: '下書き',
+        icon: '📋',
+      },
+      pending_approval: {
+        bg: 'bg-yellow-100',
+        text: 'text-yellow-800',
+        label: '承認待ち',
+        icon: '⏳',
+      },
+      approved: {
+        bg: 'bg-blue-100',
+        text: 'text-blue-800',
+        label: '承認済み',
+        icon: '✅',
+      },
+      signed: {
+        bg: 'bg-green-100',
+        text: 'text-green-800',
+        label: '契約締結',
+        icon: '📝',
+      },
+      in_progress: {
+        bg: 'bg-cyan-100',
+        text: 'text-cyan-800',
+        label: '進行中',
+        icon: '🚧',
+      },
+      completed: {
+        bg: 'bg-emerald-100',
+        text: 'text-emerald-800',
+        label: '完了',
+        icon: '🎉',
+      },
+      cancelled: {
+        bg: 'bg-red-100',
+        text: 'text-red-800',
+        label: 'キャンセル',
+        icon: '❌',
+      },
     };
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
+    const config =
+      statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
     return (
-      <span className={`px-3 py-1 rounded-full text-sm font-medium ${config.bg} ${config.text} flex items-center gap-1 inline-flex`}>
+      <span
+        className={`px-3 py-1 rounded-full text-sm font-medium ${config.bg} ${config.text} flex items-center gap-1 inline-flex`}
+      >
         <span>{config.icon}</span>
         <span>{config.label}</span>
       </span>
@@ -132,25 +171,46 @@ export default function ContractDetailPage() {
                 <Download className="h-4 w-4" />
                 PDF出力
               </button>
+              <ApprovalButton
+                documentType="contract"
+                documentId={contractId}
+                documentTitle={
+                  contract.customerName
+                    ? `${contract.customerName}様 契約書`
+                    : contract.contractTitle || '契約書'
+                }
+                amount={contract.totalAmount}
+                onSuccess={() => {
+                  console.log('承認申請が送信されました');
+                  loadContract(); // Reload contract data to update status
+                }}
+              />
               {contract.status === 'approved' && (
                 <button className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
                   <Send className="h-4 w-4" />
                   顧客へ送信
                 </button>
               )}
-              {(contract.status === 'signed' || contract.status === 'approved' || contract.status === 'in_progress') && (
+              {(contract.status === 'signed' ||
+                contract.status === 'approved' ||
+                contract.status === 'in_progress') && (
                 <button
-                  onClick={() => router.push(`/orders/create?contractId=${contractId}`)}
+                  onClick={() =>
+                    router.push(`/orders/create?contractId=${contractId}`)
+                  }
                   className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
                 >
                   <Send className="h-4 w-4" />
                   発注先決定
                 </button>
               )}
-              {(contract.status === 'signed' || contract.status === 'in_progress') && (
+              {(contract.status === 'signed' ||
+                contract.status === 'in_progress') && (
                 <>
                   <button
-                    onClick={() => router.push(`/invoices/create?contractId=${contractId}`)}
+                    onClick={() =>
+                      router.push(`/invoices/create?contractId=${contractId}`)
+                    }
                     className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
                   >
                     <FileText className="h-4 w-4" />
@@ -159,11 +219,14 @@ export default function ContractDetailPage() {
                   <button
                     onClick={async () => {
                       // 工事台帳を作成
-                      const response = await fetch('/api/construction-ledgers/from-contract', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contractId }),
-                      });
+                      const response = await fetch(
+                        '/api/construction-ledgers/from-contract',
+                        {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ contractId }),
+                        },
+                      );
                       const data = await response.json();
                       if (data.success) {
                         router.push(`/construction-ledgers/${data.ledger.id}`);
@@ -195,15 +258,21 @@ export default function ContractDetailPage() {
             </div>
             <div className="text-right">
               <p className="text-sm text-gray-600">見積番号</p>
-              <p className="text-lg font-bold text-gray-900">{contract.estimateNo}</p>
+              <p className="text-lg font-bold text-gray-900">
+                {contract.estimateNo}
+              </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="border-l-4 border-blue-500 pl-4">
               <p className="text-sm text-gray-600 mb-1">プロジェクト名</p>
-              <p className="text-lg font-bold text-gray-900">{contract.projectName}</p>
-              <p className="text-sm text-gray-600 mt-1">{contract.projectType}</p>
+              <p className="text-lg font-bold text-gray-900">
+                {contract.projectName}
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                {contract.projectType}
+              </p>
             </div>
             <div className="border-l-4 border-green-500 pl-4">
               <p className="text-sm text-gray-600 mb-1">契約金額</p>
@@ -216,7 +285,9 @@ export default function ContractDetailPage() {
             </div>
             <div className="border-l-4 border-purple-500 pl-4">
               <p className="text-sm text-gray-600 mb-1">工期</p>
-              <p className="text-lg font-bold text-gray-900">{contract.duration}日間</p>
+              <p className="text-lg font-bold text-gray-900">
+                {contract.duration}日間
+              </p>
               <p className="text-sm text-gray-600 mt-1">
                 {contract.startDate} ～ {contract.endDate}
               </p>
@@ -262,7 +333,10 @@ export default function ContractDetailPage() {
             <h2 className="text-lg font-bold text-gray-900 mb-4">契約条項</h2>
             <div className="space-y-4">
               {contract.clauses.map((clause: any, index: number) => (
-                <div key={index} className="border-l-4 border-blue-500 pl-4 py-2">
+                <div
+                  key={index}
+                  className="border-l-4 border-blue-500 pl-4 py-2"
+                >
                   <p className="font-medium text-gray-900">{clause.title}</p>
                   <p className="text-sm text-gray-600 mt-1">{clause.content}</p>
                 </div>

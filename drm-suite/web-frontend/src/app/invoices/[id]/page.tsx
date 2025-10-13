@@ -24,6 +24,7 @@ import {
   Plus,
   ExternalLink,
 } from 'lucide-react';
+import ApprovalButton from '@/components/approvals/ApprovalButton';
 
 // API型定義
 interface Invoice {
@@ -134,12 +135,16 @@ export default function InvoiceDetailPage() {
 
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [paymentRecords, setPaymentRecords] = useState<PaymentRecord[]>([]);
-  const [paymentSchedules, setPaymentSchedules] = useState<PaymentSchedule[]>([]);
+  const [paymentSchedules, setPaymentSchedules] = useState<PaymentSchedule[]>(
+    [],
+  );
   const [paymentAlerts, setPaymentAlerts] = useState<PaymentAlert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingPayments, setIsLoadingPayments] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'items' | 'payments' | 'related'>('overview');
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'items' | 'payments' | 'related'
+  >('overview');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [newPayment, setNewPayment] = useState({
     paymentDate: new Date().toISOString().split('T')[0],
@@ -190,7 +195,9 @@ export default function InvoiceDetailPage() {
   // APIから入金予定を取得
   const fetchPaymentSchedules = async () => {
     try {
-      const response = await fetch(`/api/payment-schedules?invoiceId=${invoiceId}`);
+      const response = await fetch(
+        `/api/payment-schedules?invoiceId=${invoiceId}`,
+      );
       if (!response.ok) throw new Error('Failed to fetch payment schedules');
       const data = await response.json();
       if (data.success && data.schedules) {
@@ -204,7 +211,9 @@ export default function InvoiceDetailPage() {
   // APIからアラートを取得
   const fetchPaymentAlerts = async () => {
     try {
-      const response = await fetch(`/api/payment-alerts?invoiceId=${invoiceId}&activeOnly=true`);
+      const response = await fetch(
+        `/api/payment-alerts?invoiceId=${invoiceId}&activeOnly=true`,
+      );
       if (!response.ok) throw new Error('Failed to fetch payment alerts');
       const data = await response.json();
       if (data.success && data.alerts) {
@@ -321,7 +330,10 @@ export default function InvoiceDetailPage() {
       }
     } catch (err) {
       console.error('Error adding payment:', err);
-      alert('入金の記録に失敗しました: ' + (err instanceof Error ? err.message : 'Unknown error'));
+      alert(
+        '入金の記録に失敗しました: ' +
+          (err instanceof Error ? err.message : 'Unknown error'),
+      );
     }
   };
 
@@ -341,8 +353,12 @@ export default function InvoiceDetailPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">請求書が見つかりません</h2>
-          <p className="text-gray-600 mb-6">{error || '指定された請求書は存在しません'}</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            請求書が見つかりません
+          </h2>
+          <p className="text-gray-600 mb-6">
+            {error || '指定された請求書は存在しません'}
+          </p>
           <button
             onClick={() => router.push('/invoices')}
             className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -355,9 +371,10 @@ export default function InvoiceDetailPage() {
   }
 
   // 支払進捗を計算
-  const paymentProgress = invoice.totalAmount > 0
-    ? Math.round((invoice.paidAmount / invoice.totalAmount) * 100)
-    : 0;
+  const paymentProgress =
+    invoice.totalAmount > 0
+      ? Math.round((invoice.paidAmount / invoice.totalAmount) * 100)
+      : 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -374,12 +391,18 @@ export default function InvoiceDetailPage() {
               </button>
               <div>
                 <div className="flex items-center gap-3">
-                  <h1 className="text-2xl font-bold text-gray-900">{invoice.invoiceNo}</h1>
-                  <span className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(invoice.status)}`}>
+                  <h1 className="text-2xl font-bold text-gray-900">
+                    {invoice.invoiceNo}
+                  </h1>
+                  <span
+                    className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(invoice.status)}`}
+                  >
                     {getStatusLabel(invoice.status)}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600 mt-1">{invoice.projectName}</p>
+                <p className="text-sm text-gray-600 mt-1">
+                  {invoice.projectName}
+                </p>
               </div>
             </div>
 
@@ -400,6 +423,20 @@ export default function InvoiceDetailPage() {
                 <Download className="h-4 w-4" />
                 PDF
               </button>
+              <ApprovalButton
+                documentType="invoice"
+                documentId={invoice.id}
+                documentTitle={
+                  invoice.customerName
+                    ? `${invoice.customerName}様 請求書`
+                    : invoice.invoiceTitle || '請求書'
+                }
+                amount={invoice.totalAmount}
+                onSuccess={() => {
+                  console.log('承認申請が送信されました');
+                  fetchInvoice(); // Reload invoice data to update status
+                }}
+              />
               <button
                 onClick={() => router.push(`/invoices/${invoice.id}/edit`)}
                 className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
@@ -463,17 +500,23 @@ export default function InvoiceDetailPage() {
             {/* 支払進捗カード */}
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">支払状況</h2>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  支払状況
+                </h2>
                 <DollarSign className="h-5 w-5 text-green-600" />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
                   <p className="text-sm text-gray-600">請求金額</p>
-                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(invoice.totalAmount)}</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {formatCurrency(invoice.totalAmount)}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">入金済み</p>
-                  <p className="text-2xl font-bold text-green-600">{formatCurrency(invoice.paidAmount)}</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {formatCurrency(invoice.paidAmount)}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">未収金</p>
@@ -501,22 +544,30 @@ export default function InvoiceDetailPage() {
               <div className="bg-white rounded-lg shadow p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <User className="h-5 w-5 text-blue-600" />
-                  <h2 className="text-lg font-semibold text-gray-900">顧客情報</h2>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    顧客情報
+                  </h2>
                 </div>
                 <div className="space-y-3">
                   <div>
                     <p className="text-sm text-gray-600">顧客名</p>
-                    <p className="text-base font-medium text-gray-900">{invoice.customerName}</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {invoice.customerName}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">会社名</p>
-                    <p className="text-base font-medium text-gray-900">{invoice.customerCompany}</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {invoice.customerCompany}
+                    </p>
                   </div>
                   <div className="flex items-start gap-2">
                     <MapPin className="h-4 w-4 text-gray-400 mt-0.5" />
                     <div className="flex-1">
                       <p className="text-sm text-gray-600">住所</p>
-                      <p className="text-base text-gray-900">{invoice.customerAddress}</p>
+                      <p className="text-base text-gray-900">
+                        {invoice.customerAddress}
+                      </p>
                     </div>
                   </div>
                   {invoice.customerEmail && (
@@ -524,7 +575,9 @@ export default function InvoiceDetailPage() {
                       <Mail className="h-4 w-4 text-gray-400" />
                       <div className="flex-1">
                         <p className="text-sm text-gray-600">メール</p>
-                        <p className="text-base text-gray-900">{invoice.customerEmail}</p>
+                        <p className="text-base text-gray-900">
+                          {invoice.customerEmail}
+                        </p>
                       </div>
                     </div>
                   )}
@@ -533,7 +586,9 @@ export default function InvoiceDetailPage() {
                       <Phone className="h-4 w-4 text-gray-400" />
                       <div className="flex-1">
                         <p className="text-sm text-gray-600">電話番号</p>
-                        <p className="text-base text-gray-900">{invoice.customerPhone}</p>
+                        <p className="text-base text-gray-900">
+                          {invoice.customerPhone}
+                        </p>
                       </div>
                     </div>
                   )}
@@ -544,41 +599,55 @@ export default function InvoiceDetailPage() {
               <div className="bg-white rounded-lg shadow p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <FileText className="h-5 w-5 text-blue-600" />
-                  <h2 className="text-lg font-semibold text-gray-900">請求情報</h2>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    請求情報
+                  </h2>
                 </div>
                 <div className="space-y-3">
                   <div>
                     <p className="text-sm text-gray-600">契約番号</p>
-                    <p className="text-base font-medium text-gray-900">{invoice.contractNo}</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {invoice.contractNo}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">工事種別</p>
-                    <p className="text-base font-medium text-gray-900">{invoice.projectType}</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {invoice.projectType}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-gray-400" />
                     <div className="flex-1">
                       <p className="text-sm text-gray-600">発行日</p>
-                      <p className="text-base text-gray-900">{invoice.invoiceDate}</p>
+                      <p className="text-base text-gray-900">
+                        {invoice.invoiceDate}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-gray-400" />
                     <div className="flex-1">
                       <p className="text-sm text-gray-600">支払期限</p>
-                      <p className="text-base text-gray-900">{invoice.dueDate}</p>
+                      <p className="text-base text-gray-900">
+                        {invoice.dueDate}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <CreditCard className="h-4 w-4 text-gray-400" />
                     <div className="flex-1">
                       <p className="text-sm text-gray-600">支払方法</p>
-                      <p className="text-base text-gray-900">{invoice.paymentMethod}</p>
+                      <p className="text-base text-gray-900">
+                        {invoice.paymentMethod}
+                      </p>
                     </div>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">支払条件</p>
-                    <p className="text-base text-gray-900">{invoice.paymentTerms}</p>
+                    <p className="text-base text-gray-900">
+                      {invoice.paymentTerms}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -589,28 +658,40 @@ export default function InvoiceDetailPage() {
               <div className="bg-white rounded-lg shadow p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <Building2 className="h-5 w-5 text-blue-600" />
-                  <h2 className="text-lg font-semibold text-gray-900">振込先情報</h2>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    振込先情報
+                  </h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
                     <p className="text-sm text-gray-600">銀行名</p>
-                    <p className="text-base font-medium text-gray-900">{invoice.bankInfo.bankName}</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {invoice.bankInfo.bankName}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">支店名</p>
-                    <p className="text-base font-medium text-gray-900">{invoice.bankInfo.branchName}</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {invoice.bankInfo.branchName}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">口座種別</p>
-                    <p className="text-base font-medium text-gray-900">{invoice.bankInfo.accountType}</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {invoice.bankInfo.accountType}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">口座番号</p>
-                    <p className="text-base font-medium text-gray-900">{invoice.bankInfo.accountNumber}</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {invoice.bankInfo.accountNumber}
+                    </p>
                   </div>
                   <div className="md:col-span-2">
                     <p className="text-sm text-gray-600">口座名義</p>
-                    <p className="text-base font-medium text-gray-900">{invoice.bankInfo.accountHolder}</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {invoice.bankInfo.accountHolder}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -619,8 +700,12 @@ export default function InvoiceDetailPage() {
             {/* 備考 */}
             {invoice.notes && (
               <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">備考</h3>
-                <p className="text-gray-700 whitespace-pre-wrap">{invoice.notes}</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  備考
+                </h3>
+                <p className="text-gray-700 whitespace-pre-wrap">
+                  {invoice.notes}
+                </p>
               </div>
             )}
           </div>
@@ -662,7 +747,9 @@ export default function InvoiceDetailPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <p className="text-sm text-gray-900">{item.description}</p>
+                        <p className="text-sm text-gray-900">
+                          {item.description}
+                        </p>
                       </td>
                       <td className="px-6 py-4 text-center">
                         <p className="text-sm text-gray-900">{item.quantity}</p>
@@ -671,17 +758,24 @@ export default function InvoiceDetailPage() {
                         <p className="text-sm text-gray-600">{item.unit}</p>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <p className="text-sm text-gray-900">{formatCurrency(item.unitPrice)}</p>
+                        <p className="text-sm text-gray-900">
+                          {formatCurrency(item.unitPrice)}
+                        </p>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <p className="text-sm font-medium text-gray-900">{formatCurrency(item.amount)}</p>
+                        <p className="text-sm font-medium text-gray-900">
+                          {formatCurrency(item.amount)}
+                        </p>
                       </td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot className="bg-gray-50">
                   <tr>
-                    <td colSpan={5} className="px-6 py-4 text-right text-sm font-medium text-gray-900">
+                    <td
+                      colSpan={5}
+                      className="px-6 py-4 text-right text-sm font-medium text-gray-900"
+                    >
                       小計
                     </td>
                     <td className="px-6 py-4 text-right text-sm font-bold text-gray-900">
@@ -689,7 +783,10 @@ export default function InvoiceDetailPage() {
                     </td>
                   </tr>
                   <tr>
-                    <td colSpan={5} className="px-6 py-4 text-right text-sm text-gray-600">
+                    <td
+                      colSpan={5}
+                      className="px-6 py-4 text-right text-sm text-gray-600"
+                    >
                       消費税 ({invoice.taxRate}%)
                     </td>
                     <td className="px-6 py-4 text-right text-sm text-gray-900">
@@ -697,7 +794,10 @@ export default function InvoiceDetailPage() {
                     </td>
                   </tr>
                   <tr>
-                    <td colSpan={5} className="px-6 py-4 text-right text-base font-bold text-gray-900">
+                    <td
+                      colSpan={5}
+                      className="px-6 py-4 text-right text-base font-bold text-gray-900"
+                    >
                       合計
                     </td>
                     <td className="px-6 py-4 text-right text-lg font-bold text-blue-600">
@@ -716,7 +816,9 @@ export default function InvoiceDetailPage() {
             {/* アラート表示 */}
             {paymentAlerts.length > 0 && (
               <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">⚠️ 入金アラート</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  ⚠️ 入金アラート
+                </h3>
                 <div className="space-y-3">
                   {paymentAlerts.map((alert) => {
                     const alertStyles = {
@@ -732,12 +834,16 @@ export default function InvoiceDetailPage() {
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <h4 className="font-semibold mb-1">{alert.title}</h4>
+                            <h4 className="font-semibold mb-1">
+                              {alert.title}
+                            </h4>
                             <p className="text-sm mb-2">{alert.message}</p>
                             <div className="flex items-center gap-4 text-sm">
                               <span>金額: {formatCurrency(alert.amount)}</span>
                               {alert.daysUntilDue < 0 && (
-                                <span className="font-medium">遅延: {Math.abs(alert.daysUntilDue)}日</span>
+                                <span className="font-medium">
+                                  遅延: {Math.abs(alert.daysUntilDue)}日
+                                </span>
                               )}
                               {alert.daysUntilDue > 0 && (
                                 <span>期日まで: {alert.daysUntilDue}日</span>
@@ -755,18 +861,30 @@ export default function InvoiceDetailPage() {
 
             {/* 入金サマリー */}
             <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">入金サマリー</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                入金サマリー
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-4 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-blue-600 font-medium mb-1">請求金額</p>
-                  <p className="text-2xl font-bold text-blue-900">{formatCurrency(invoice.totalAmount)}</p>
+                  <p className="text-sm text-blue-600 font-medium mb-1">
+                    請求金額
+                  </p>
+                  <p className="text-2xl font-bold text-blue-900">
+                    {formatCurrency(invoice.totalAmount)}
+                  </p>
                 </div>
                 <div className="p-4 bg-green-50 rounded-lg">
-                  <p className="text-sm text-green-600 font-medium mb-1">入金済み</p>
-                  <p className="text-2xl font-bold text-green-900">{formatCurrency(invoice.paidAmount)}</p>
+                  <p className="text-sm text-green-600 font-medium mb-1">
+                    入金済み
+                  </p>
+                  <p className="text-2xl font-bold text-green-900">
+                    {formatCurrency(invoice.paidAmount)}
+                  </p>
                 </div>
                 <div className="p-4 bg-orange-50 rounded-lg">
-                  <p className="text-sm text-orange-600 font-medium mb-1">未収金</p>
+                  <p className="text-sm text-orange-600 font-medium mb-1">
+                    未収金
+                  </p>
                   <p className="text-2xl font-bold text-orange-900">
                     {formatCurrency(invoice.totalAmount - invoice.paidAmount)}
                   </p>
@@ -778,7 +896,9 @@ export default function InvoiceDetailPage() {
             {paymentSchedules.length > 0 && (
               <div className="bg-white rounded-lg shadow">
                 <div className="p-6 border-b">
-                  <h3 className="text-lg font-semibold text-gray-900">入金予定</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    入金予定
+                  </h3>
                 </div>
                 <div className="p-6">
                   <div className="space-y-3">
@@ -804,31 +924,40 @@ export default function InvoiceDetailPage() {
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-2">
                                 <Clock className="h-5 w-5 text-gray-400" />
-                                <span className="font-semibold text-gray-900">{schedule.scheduledDate}</span>
+                                <span className="font-semibold text-gray-900">
+                                  {schedule.scheduledDate}
+                                </span>
                                 <span
                                   className={`px-2 py-0.5 text-xs font-medium rounded ${statusStyles[schedule.status]}`}
                                 >
                                   {schedule.status === 'scheduled' && '予定'}
                                   {schedule.status === 'received' && '入金済み'}
                                   {schedule.status === 'overdue' && '遅延'}
-                                  {schedule.status === 'cancelled' && 'キャンセル'}
+                                  {schedule.status === 'cancelled' &&
+                                    'キャンセル'}
                                 </span>
-                                {schedule.installmentNumber && schedule.totalInstallments && (
-                                  <span className="text-sm text-gray-600">
-                                    {schedule.installmentNumber}/{schedule.totalInstallments}回目
-                                  </span>
-                                )}
+                                {schedule.installmentNumber &&
+                                  schedule.totalInstallments && (
+                                    <span className="text-sm text-gray-600">
+                                      {schedule.installmentNumber}/
+                                      {schedule.totalInstallments}回目
+                                    </span>
+                                  )}
                               </div>
                               <div className="flex items-center gap-4 ml-8">
                                 <span className="text-lg font-bold text-gray-900">
                                   {formatCurrency(schedule.amount)}
                                 </span>
                                 {schedule.alertMessage && (
-                                  <span className="text-sm text-orange-600">{schedule.alertMessage}</span>
+                                  <span className="text-sm text-orange-600">
+                                    {schedule.alertMessage}
+                                  </span>
                                 )}
                               </div>
                               {schedule.notes && (
-                                <p className="text-sm text-gray-600 ml-8 mt-1">{schedule.notes}</p>
+                                <p className="text-sm text-gray-600 ml-8 mt-1">
+                                  {schedule.notes}
+                                </p>
                               )}
                             </div>
                           </div>
@@ -844,7 +973,9 @@ export default function InvoiceDetailPage() {
             <div className="bg-white rounded-lg shadow">
               <div className="p-6 border-b">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">入金履歴</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    入金履歴
+                  </h3>
                   <button
                     onClick={() => setShowPaymentModal(true)}
                     className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
@@ -891,7 +1022,9 @@ export default function InvoiceDetailPage() {
                                 {formatCurrency(record.amount)}
                               </span>
                               <span className="text-sm text-gray-500">|</span>
-                              <span className="text-sm text-gray-600">{record.paymentMethod}</span>
+                              <span className="text-sm text-gray-600">
+                                {record.paymentMethod}
+                              </span>
                               <span
                                 className={`px-2 py-0.5 text-xs font-medium rounded ${statusStyles[record.status]}`}
                               >
@@ -907,17 +1040,28 @@ export default function InvoiceDetailPage() {
                             </div>
                             <div className="flex items-center gap-4 text-sm text-gray-600 ml-8">
                               <span>入金日: {record.paymentDate}</span>
-                              {record.reference && <span>参照: {record.reference}</span>}
+                              {record.reference && (
+                                <span>参照: {record.reference}</span>
+                              )}
                               <span>記録者: {record.createdBy}</span>
-                              {record.confirmedBy && <span>承認者: {record.confirmedBy}</span>}
+                              {record.confirmedBy && (
+                                <span>承認者: {record.confirmedBy}</span>
+                              )}
                             </div>
                             {record.notes && (
-                              <p className="text-sm text-gray-600 ml-8 mt-1">{record.notes}</p>
+                              <p className="text-sm text-gray-600 ml-8 mt-1">
+                                {record.notes}
+                              </p>
                             )}
                             <div className="flex items-center gap-2 text-xs text-gray-500 ml-8 mt-2">
                               <span>ID: {record.id}</span>
                               <span>|</span>
-                              <span>登録: {new Date(record.createdAt).toLocaleString('ja-JP')}</span>
+                              <span>
+                                登録:{' '}
+                                {new Date(record.createdAt).toLocaleString(
+                                  'ja-JP',
+                                )}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -936,9 +1080,13 @@ export default function InvoiceDetailPage() {
             {/* 契約情報 */}
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">契約情報</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  契約情報
+                </h3>
                 <button
-                  onClick={() => router.push(`/contracts/${invoice.contractId}`)}
+                  onClick={() =>
+                    router.push(`/contracts/${invoice.contractId}`)
+                  }
                   className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium"
                 >
                   契約詳細を見る
@@ -948,11 +1096,15 @@ export default function InvoiceDetailPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-600">契約番号</p>
-                  <p className="text-base font-medium text-gray-900">{invoice.contractNo}</p>
+                  <p className="text-base font-medium text-gray-900">
+                    {invoice.contractNo}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">契約ID</p>
-                  <p className="text-base font-medium text-gray-900">{invoice.contractId}</p>
+                  <p className="text-base font-medium text-gray-900">
+                    {invoice.contractId}
+                  </p>
                 </div>
               </div>
             </div>
@@ -960,7 +1112,9 @@ export default function InvoiceDetailPage() {
             {/* 工事台帳情報（将来的に連携） */}
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">工事台帳</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  工事台帳
+                </h3>
               </div>
               <p className="text-sm text-gray-600">
                 この請求書に関連する工事台帳は現在連携されていません。
@@ -989,34 +1143,56 @@ export default function InvoiceDetailPage() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">入金日</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  入金日
+                </label>
                 <input
                   type="date"
                   value={newPayment.paymentDate}
-                  onChange={(e) => setNewPayment({ ...newPayment, paymentDate: e.target.value })}
+                  onChange={(e) =>
+                    setNewPayment({
+                      ...newPayment,
+                      paymentDate: e.target.value,
+                    })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">入金額</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  入金額
+                </label>
                 <input
                   type="number"
                   value={newPayment.amount || ''}
-                  onChange={(e) => setNewPayment({ ...newPayment, amount: Number(e.target.value) })}
+                  onChange={(e) =>
+                    setNewPayment({
+                      ...newPayment,
+                      amount: Number(e.target.value),
+                    })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="0"
                 />
                 <p className="text-sm text-gray-500 mt-1">
-                  未収金: {formatCurrency(invoice.totalAmount - invoice.paidAmount)}
+                  未収金:{' '}
+                  {formatCurrency(invoice.totalAmount - invoice.paidAmount)}
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">支払方法</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  支払方法
+                </label>
                 <select
                   value={newPayment.paymentMethod}
-                  onChange={(e) => setNewPayment({ ...newPayment, paymentMethod: e.target.value })}
+                  onChange={(e) =>
+                    setNewPayment({
+                      ...newPayment,
+                      paymentMethod: e.target.value,
+                    })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="銀行振込">銀行振込</option>
@@ -1028,21 +1204,29 @@ export default function InvoiceDetailPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">参照番号（任意）</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  参照番号（任意）
+                </label>
                 <input
                   type="text"
                   value={newPayment.reference}
-                  onChange={(e) => setNewPayment({ ...newPayment, reference: e.target.value })}
+                  onChange={(e) =>
+                    setNewPayment({ ...newPayment, reference: e.target.value })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="振込番号など"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">備考（任意）</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  備考（任意）
+                </label>
                 <textarea
                   value={newPayment.notes}
-                  onChange={(e) => setNewPayment({ ...newPayment, notes: e.target.value })}
+                  onChange={(e) =>
+                    setNewPayment({ ...newPayment, notes: e.target.value })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   rows={3}
                   placeholder="メモなど"
