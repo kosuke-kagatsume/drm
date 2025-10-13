@@ -170,10 +170,26 @@ function EstimateCreateV2Content() {
     const type = ESTIMATE_TYPES.find((t) => t.id === typeId);
     if (type) {
       if (selectedCustomer) {
-        // 顧客選択済みの場合: customerId と customerName を渡す
+        // 顧客選択済みの場合: LocalStorage に顧客情報を保存してから遷移
         const customer = SAMPLE_CUSTOMERS.find(
           (c) => c.id === selectedCustomer,
         );
+
+        // 顧客情報を一時的に LocalStorage に保存
+        localStorage.setItem(
+          'temp_customer_info',
+          JSON.stringify({
+            customerId: selectedCustomer,
+            customerName: customer?.name || '',
+            customer: customer,
+          }),
+        );
+
+        console.log('[create-v2] 顧客情報を LocalStorage に保存:', {
+          customerId: selectedCustomer,
+          customerName: customer?.name,
+        });
+
         const params = new URLSearchParams({
           customerId: selectedCustomer,
           customerName: customer?.name || '',

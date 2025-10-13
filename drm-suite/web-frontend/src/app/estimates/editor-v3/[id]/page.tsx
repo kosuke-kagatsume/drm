@@ -67,6 +67,7 @@ import {
   FolderOpen,
   GitBranch,
   Send,
+  List,
   Eye,
   EyeOff,
   Download,
@@ -1057,16 +1058,79 @@ const MASTER_ITEMS: MasterItem[] = [
 function EstimateEditorV3Content({ params }: { params: { id: string } }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  // Phase 10: URLパラメータから顧客情報を取得
-  const customerId =
-    searchParams?.get('customerId') || searchParams?.get('customer'); // 後方互換性
-  const customerName = searchParams?.get('customerName');
   const isQuickEstimate = searchParams?.get('quick') === 'true';
 
-  const customerInfo = customerId
-    ? SAMPLE_CUSTOMERS.find((c) => c.id === customerId)
-    : null;
+  // Phase 10: 顧客情報を状態として管理
+  const [customerId, setCustomerId] = useState<string | null>(() => {
+    // 初期値：URLパラメータから取得
+    return (
+      searchParams?.get('customerId') || searchParams?.get('customer') || null
+    );
+  });
+
+  const [customerName, setCustomerName] = useState<string | null>(() => {
+    // 初期値：URLパラメータから取得
+    return searchParams?.get('customerName') || null;
+  });
+
+  const [customerInfo, setCustomerInfo] = useState<any>(null);
+
+  // LocalStorageから顧客情報を復元（初回レンダリング時のみ）
+  useEffect(() => {
+    // URLパラメータがない場合のみ、LocalStorageから取得を試みる
+    if (!customerId && typeof window !== 'undefined') {
+      const tempCustomerInfo = localStorage.getItem('temp_customer_info');
+      if (tempCustomerInfo) {
+        try {
+          const parsed = JSON.parse(tempCustomerInfo);
+          const restoredCustomerId = parsed.customerId;
+          const restoredCustomerName = parsed.customerName;
+
+          setCustomerId(restoredCustomerId);
+          setCustomerName(restoredCustomerName);
+
+          // customerInfo も一緒に設定
+          if (restoredCustomerId) {
+            const info = SAMPLE_CUSTOMERS.find(
+              (c) => c.id === restoredCustomerId,
+            );
+            setCustomerInfo(info || null);
+            console.log('[editor-v3] LocalStorageから顧客情報を復元:', {
+              customerId: restoredCustomerId,
+              customerName: restoredCustomerName,
+              customerInfo: info,
+            });
+          }
+
+          // 一度読み込んだら削除（クリーンアップ）
+          localStorage.removeItem('temp_customer_info');
+        } catch (error) {
+          console.error(
+            '[editor-v3] LocalStorageの顧客情報の解析に失敗:',
+            error,
+          );
+        }
+      }
+    } else if (customerId) {
+      // URLパラメータから取得した場合も customerInfo を設定
+      const info = SAMPLE_CUSTOMERS.find((c) => c.id === customerId);
+      setCustomerInfo(info || null);
+      console.log('[editor-v3] URLパラメータから顧客情報を設定:', {
+        customerId,
+        customerName,
+        customerInfo: info,
+      });
+    }
+  }, []); // 初回レンダリング時のみ実行
+
+  // customerIdが変更されたら、customerInfoを更新（後から変更された場合用）
+  useEffect(() => {
+    if (customerId && !customerInfo) {
+      const info = SAMPLE_CUSTOMERS.find((c) => c.id === customerId);
+      setCustomerInfo(info || null);
+      console.log('[editor-v3] 顧客情報を再設定:', info);
+    }
+  }, [customerId, customerInfo]);
 
   const [items, setItems] = useState<EstimateItem[]>([]);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
@@ -1108,6 +1172,10 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
     return date.toISOString().split('T')[0];
   });
   const [showValidUntilEditor, setShowValidUntilEditor] = useState(false);
+
+  // トースト通知用のステート
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
 
   // 新機能用のステート
   const [showNewTemplateModal, setShowNewTemplateModal] = useState(false);
@@ -1313,7 +1381,7 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
       // Ctrl+S: 保存
       if (e.ctrlKey && e.key === 's') {
         e.preventDefault();
-        handleSave();
+        handleSave(true); // 手動保存
       }
 
       // Ctrl+Z: 元に戻す
@@ -1911,10 +1979,10 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
   };
 
   // 保存
-  const handleSave = async () => {
+  const handleSave = async (isManual: boolean = false) => {
     setSaveStatus('saving');
 
-    // LocalStorageに保存
+    // 保存するデータ
     const estimateData = {
       id: params.id,
       items,
@@ -1925,14 +1993,44 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
       updatedAt: new Date().toISOString(),
     };
 
-    localStorage.setItem(`estimate_${params.id}`, JSON.stringify(estimateData));
+    try {
+      // 1. LocalStorageに保存
+      localStorage.setItem(
+        `estimate_${params.id}`,
+        JSON.stringify(estimateData),
+      );
 
-    // 疑似的な遅延
-    await new Promise((resolve) => setTimeout(resolve, 500));
+      // 2. サーバーAPIに保存
+      const response = await fetch('/api/estimates', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(estimateData),
+      });
 
-    setSaveStatus('saved');
-    console.log('Saved successfully with validUntil:', validUntil);
-    console.log('Customer ID:', customerId, 'Customer Name:', customerName); // Phase 10: デバッグログ
+      if (!response.ok) {
+        console.error('サーバー保存エラー:', response.statusText);
+      }
+
+      setSaveStatus('saved');
+      console.log('Saved successfully with validUntil:', validUntil);
+      console.log('Customer ID:', customerId, 'Customer Name:', customerName); // Phase 10: デバッグログ
+
+      // トースト通知を表示（手動保存時のみ）
+      if (isManual) {
+        setToastMessage('✅ 見積もりを保存しました。見積一覧で確認できます。');
+        setShowToast(true);
+
+        // 3秒後にトーストを自動で非表示
+        setTimeout(() => {
+          setShowToast(false);
+        }, 3000);
+      }
+    } catch (error) {
+      console.error('保存エラー:', error);
+      setSaveStatus('unsaved');
+    }
   };
 
   // 新しいマルチテナントPDF生成機能
@@ -2672,6 +2770,16 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
                 )}
               </div>
 
+              {/* 見積一覧へボタン */}
+              <button
+                onClick={() => router.push('/estimates')}
+                className="px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-1.5 text-xs font-medium"
+                title="見積一覧に戻る"
+              >
+                <List className="w-3.5 h-3.5" />
+                見積一覧へ
+              </button>
+
               {/* 履歴操作 */}
               <div className="flex items-center">
                 <button
@@ -2695,7 +2803,7 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
               {/* 保存・ファイル管理グループ */}
               <div className="flex items-center gap-2 px-2 py-1 bg-gray-50 rounded-lg">
                 <button
-                  onClick={handleSave}
+                  onClick={() => handleSave(true)}
                   className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-1.5 text-xs font-medium"
                   disabled={saveStatus === 'saving'}
                 >
@@ -3851,6 +3959,41 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
           onClose={() => setShowPdfTemplateSelector(false)}
         />
       )}
+
+      {/* トースト通知 */}
+      <AnimatePresence>
+        {showToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            className="fixed top-20 right-4 z-50 bg-white border-2 border-green-500 rounded-lg shadow-xl p-4 max-w-md"
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <CheckCircle className="w-6 h-6 text-green-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">
+                  {toastMessage}
+                </p>
+                <button
+                  onClick={() => router.push('/estimates')}
+                  className="mt-2 text-sm text-green-600 hover:text-green-700 font-medium underline"
+                >
+                  見積一覧を開く →
+                </button>
+              </div>
+              <button
+                onClick={() => setShowToast(false)}
+                className="flex-shrink-0 text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

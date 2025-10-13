@@ -69,157 +69,76 @@ export default function EstimatesPage() {
 
   const [estimates, setEstimates] = useState<Estimate[]>([]);
 
-  // LocalStorageから見積データを読み込み
+  // APIサーバーから見積データを読み込み
   useEffect(() => {
-    const loadEstimates = () => {
-      const savedEstimates = localStorage.getItem('estimates');
-      if (savedEstimates) {
-        const parsed = JSON.parse(savedEstimates);
-        // 既存のフォーマットに変換
-        const formattedEstimates = parsed.map((est: any) => ({
-          id: est.id,
-          estimateNo: est.id,
-          customerName: est.customerName,
-          companyName: est.customerCompany || '',
-          projectName: est.title,
-          projectType: '建設工事',
-          totalAmount: est.totals?.total || 0,
-          status: est.status || 'draft',
-          createdAt:
-            est.date ||
-            est.createdAt?.split('T')[0] ||
-            new Date().toISOString().split('T')[0],
-          validUntil:
-            est.validUntil ||
-            new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split('T')[0],
-          createdBy: est.createdBy || 'システム',
-          lastModified:
-            est.createdAt?.split('T')[0] ||
-            new Date().toISOString().split('T')[0],
-          version: 1,
-          tags: [],
-        }));
-        setEstimates([
-          ...formattedEstimates,
-          {
-            id: '1',
-            estimateNo: 'EST-2024-001',
-            customerName: '田中太郎',
-            companyName: '田中建設株式会社',
-            projectName: '田中様邸新築工事',
-            projectType: '新築住宅',
-            totalAmount: 15500000,
-            status: 'submitted',
-            createdAt: '2024-08-01',
-            validUntil: '2024-08-31',
-            createdBy: '佐藤次郎',
-            lastModified: '2024-08-10',
-            version: 2,
-            tags: ['木造', '2階建て', '緊急'],
-          },
-          {
-            id: '2',
-            estimateNo: 'EST-2024-002',
-            customerName: '山田花子',
-            companyName: '山田商事株式会社',
-            projectName: '山田ビル外壁改修',
-            projectType: '外壁塗装',
-            totalAmount: 3200000,
-            status: 'won',
-            createdAt: '2024-08-03',
-            validUntil: '2024-09-03',
-            createdBy: '鈴木一郎',
-            lastModified: '2024-08-05',
+    const loadEstimates = async () => {
+      try {
+        console.log('[見積一覧] APIから見積データを取得中...');
+        const response = await fetch('/api/estimates');
+
+        if (!response.ok) {
+          console.error('[見積一覧] API取得エラー:', response.statusText);
+          throw new Error('Failed to fetch estimates');
+        }
+
+        const data = await response.json();
+        console.log('[見積一覧] API取得成功:', data);
+
+        // APIデータをEstimate型に変換
+        const formattedEstimates = data.estimates.map((est: any) => {
+          console.log('[見積一覧] 見積データ:', est);
+          console.log('[見積一覧] items配列:', est.items);
+
+          // items から合計金額を計算
+          // itemsはフラット配列で、isCategory=false の行の amount を合計する
+          const totalAmount =
+            est.items?.reduce((sum: number, item: any) => {
+              // カテゴリー行と小計行は除外（isCategory: true または itemName が「小計」を含む）
+              if (item.isCategory === true || item.itemName?.includes('小計')) {
+                return sum;
+              }
+              // 明細行の amount を合計
+              return sum + (item.amount || 0);
+            }, 0) || 0;
+
+          console.log('[見積一覧] 計算された合計金額:', totalAmount);
+
+          // プロジェクト名を items から推測（最初のアイテムのカテゴリ名など）
+          const projectName = est.items?.[0]?.category || '見積書';
+
+          return {
+            id: est.id,
+            estimateNo: est.id,
+            customerName: est.customerName || est.customer?.name || '未設定',
+            companyName: est.customer?.company || '',
+            projectName: projectName,
+            projectType: '建設工事',
+            totalAmount: totalAmount,
+            status: est.status || 'draft',
+            createdAt:
+              est.savedAt?.split('T')[0] ||
+              est.updatedAt?.split('T')[0] ||
+              new Date().toISOString().split('T')[0],
+            validUntil:
+              est.validUntil ||
+              new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                .toISOString()
+                .split('T')[0],
+            createdBy: 'システム',
+            lastModified:
+              est.updatedAt?.split('T')[0] ||
+              new Date().toISOString().split('T')[0],
             version: 1,
-            tags: ['塗装', 'ビル'],
-          },
-          {
-            id: '3',
-            estimateNo: 'EST-2024-003',
-            customerName: '鈴木明',
-            companyName: '鈴木不動産',
-            projectName: 'マンションリフォーム',
-            projectType: 'リフォーム',
-            totalAmount: 8500000,
-            status: 'draft',
-            createdAt: '2024-08-05',
-            validUntil: '2024-09-05',
-            createdBy: '佐藤次郎',
-            lastModified: '2024-08-09',
-            version: 3,
-            tags: ['マンション', '水回り'],
-          },
-          {
-            id: '4',
-            estimateNo: 'EST-2024-004',
-            customerName: '高橋一郎',
-            companyName: '',
-            projectName: '高橋様邸増築工事',
-            projectType: '増築',
-            totalAmount: 12000000,
-            status: 'lost',
-            createdAt: '2024-07-20',
-            validUntil: '2024-08-20',
-            createdBy: '山田太郎',
-            lastModified: '2024-07-25',
-            version: 2,
-            tags: ['増築', '個人宅'],
-          },
-          {
-            id: '5',
-            estimateNo: 'EST-2024-005',
-            customerName: '渡辺美穂',
-            companyName: '渡辺コーポレーション',
-            projectName: '店舗内装工事',
-            projectType: '店舗内装',
-            totalAmount: 5500000,
-            status: 'expired',
-            createdAt: '2024-06-01',
-            validUntil: '2024-07-01',
-            createdBy: '鈴木一郎',
-            lastModified: '2024-06-15',
-            version: 1,
-            tags: ['飲食店', '内装'],
-          },
-        ]);
-      } else {
-        // デモデータを設定
-        setEstimates([
-          {
-            id: '1',
-            estimateNo: 'EST-2024-001',
-            customerName: '田中太郎',
-            companyName: '田中建設株式会社',
-            projectName: '田中様邸新築工事',
-            projectType: '新築住宅',
-            totalAmount: 15500000,
-            status: 'submitted',
-            createdAt: '2024-08-01',
-            validUntil: '2024-08-31',
-            createdBy: '佐藤次郎',
-            lastModified: '2024-08-10',
-            version: 2,
-            tags: ['木造', '2階建て', '緊急'],
-          },
-          {
-            id: '2',
-            estimateNo: 'EST-2024-002',
-            customerName: '山田花子',
-            companyName: '山田商事株式会社',
-            projectName: '山田ビル外壁改修',
-            projectType: '外壁塗装',
-            totalAmount: 3200000,
-            status: 'won',
-            createdAt: '2024-08-03',
-            validUntil: '2024-09-03',
-            createdBy: '鈴木一郎',
-            lastModified: '2024-08-05',
-            version: 1,
-            tags: ['塗装', 'ビル'],
-          },
-        ]);
+            tags: [],
+          };
+        });
+
+        console.log('[見積一覧] フォーマット済みデータ:', formattedEstimates);
+        setEstimates(formattedEstimates);
+      } catch (error) {
+        console.error('[見積一覧] データ読み込みエラー:', error);
+        // エラー時は空配列を設定
+        setEstimates([]);
       }
     };
 
