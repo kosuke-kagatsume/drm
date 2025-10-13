@@ -67,7 +67,7 @@ const ESTIMATE_TYPES = [
   },
 ];
 
-// サンプル顧客データ
+// サンプル顧客データ（拡張版）
 const SAMPLE_CUSTOMERS = [
   {
     id: '1',
@@ -79,6 +79,9 @@ const SAMPLE_CUSTOMERS = [
     projectCount: 3,
     totalAmount: 45000000,
     lastContact: '2024/03/10',
+    lastUpdated: '2025-10-12', // 最近更新日
+    assignedTo: 'me', // 担当者（me = 自分、other = 他の人）
+    branch: '東京支店', // 支店
   },
   {
     id: '2',
@@ -90,6 +93,9 @@ const SAMPLE_CUSTOMERS = [
     projectCount: 5,
     totalAmount: 62000000,
     lastContact: '2024/03/12',
+    lastUpdated: '2025-10-13', // 最近更新（今日）
+    assignedTo: 'me',
+    branch: '大阪支店',
   },
   {
     id: '3',
@@ -101,6 +107,9 @@ const SAMPLE_CUSTOMERS = [
     projectCount: 1,
     totalAmount: 12000000,
     lastContact: '2024/03/08',
+    lastUpdated: '2025-10-11',
+    assignedTo: 'me',
+    branch: '東京支店',
   },
   {
     id: '4',
@@ -112,6 +121,65 @@ const SAMPLE_CUSTOMERS = [
     projectCount: 8,
     totalAmount: 98000000,
     lastContact: '2024/03/15',
+    lastUpdated: '2025-10-10',
+    assignedTo: 'other', // 他の人の担当
+    branch: '名古屋支店',
+  },
+  {
+    id: '5',
+    name: '高橋美咲',
+    company: '高橋不動産',
+    email: 'takahashi@example.com',
+    phone: '03-9876-5432',
+    address: '東京都新宿区...',
+    projectCount: 2,
+    totalAmount: 28000000,
+    lastUpdated: '2025-10-09',
+    assignedTo: 'me',
+    branch: '東京支店',
+    lastContact: '2024/03/05',
+  },
+  {
+    id: '6',
+    name: '伊藤健太',
+    company: '伊藤商事',
+    email: 'ito@example.com',
+    phone: '06-5555-4444',
+    address: '大阪府堺市...',
+    projectCount: 4,
+    totalAmount: 52000000,
+    lastUpdated: '2025-10-08',
+    assignedTo: 'other',
+    branch: '大阪支店',
+    lastContact: '2024/03/03',
+  },
+  {
+    id: '7',
+    name: '渡辺優子',
+    company: '渡辺建築',
+    email: 'watanabe@example.com',
+    phone: '052-3333-2222',
+    address: '愛知県豊田市...',
+    projectCount: 6,
+    totalAmount: 75000000,
+    lastUpdated: '2025-10-07',
+    assignedTo: 'other',
+    branch: '名古屋支店',
+    lastContact: '2024/03/01',
+  },
+  {
+    id: '8',
+    name: '中村直樹',
+    company: '個人',
+    email: 'nakamura@example.com',
+    phone: '03-7777-8888',
+    address: '東京都品川区...',
+    projectCount: 1,
+    totalAmount: 18000000,
+    lastUpdated: '2025-10-13', // 最近更新（今日）
+    assignedTo: 'me',
+    branch: '東京支店',
+    lastContact: '2024/02/28',
   },
 ];
 
@@ -124,6 +192,11 @@ function EstimateCreateV2Content() {
   const [selectedCustomerName, setSelectedCustomerName] = useState<string>('');
   const [customerSearch, setCustomerSearch] = useState('');
   const [showNewCustomerForm, setShowNewCustomerForm] = useState(false);
+
+  // フィルタ用のstate
+  const [filterType, setFilterType] = useState<
+    'all' | 'myCustomers' | 'tokyo' | 'osaka' | 'nagoya'
+  >('all');
 
   // 顧客詳細ページから直接遷移してきた場合の処理
   useEffect(() => {
@@ -140,11 +213,28 @@ function EstimateCreateV2Content() {
     }
   }, [searchParams]);
 
-  const filteredCustomers = SAMPLE_CUSTOMERS.filter(
-    (customer) =>
-      customer.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
-      customer.company.toLowerCase().includes(customerSearch.toLowerCase()),
-  );
+  const filteredCustomers = SAMPLE_CUSTOMERS
+    // フィルタタイプに基づく絞り込み
+    .filter((customer) => {
+      if (filterType === 'myCustomers') return customer.assignedTo === 'me';
+      if (filterType === 'tokyo') return customer.branch === '東京支店';
+      if (filterType === 'osaka') return customer.branch === '大阪支店';
+      if (filterType === 'nagoya') return customer.branch === '名古屋支店';
+      return true; // 'all' の場合は全員表示
+    })
+    // 検索フィルタ
+    .filter(
+      (customer) =>
+        customer.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
+        customer.company.toLowerCase().includes(customerSearch.toLowerCase()),
+    )
+    // 最近更新順にソート
+    .sort(
+      (a, b) =>
+        new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime(),
+    )
+    // 最大6件に制限
+    .slice(0, 6);
 
   // 初期選択（顧客情報あり/なし）
   const handleInitialSelect = (optionId: string) => {
@@ -381,6 +471,62 @@ function EstimateCreateV2Content() {
                     onChange={(e) => setCustomerSearch(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
+                </div>
+              </div>
+
+              {/* フィルタボタン */}
+              <div className="mb-6">
+                <div className="flex items-center gap-2 overflow-x-auto pb-2">
+                  <button
+                    onClick={() => setFilterType('all')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                      filterType === 'all'
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    全て
+                  </button>
+                  <button
+                    onClick={() => setFilterType('myCustomers')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                      filterType === 'myCustomers'
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    自分の顧客
+                  </button>
+                  <button
+                    onClick={() => setFilterType('tokyo')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                      filterType === 'tokyo'
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    東京支店
+                  </button>
+                  <button
+                    onClick={() => setFilterType('osaka')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                      filterType === 'osaka'
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    大阪支店
+                  </button>
+                  <button
+                    onClick={() => setFilterType('nagoya')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                      filterType === 'nagoya'
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    名古屋支店
+                  </button>
                 </div>
               </div>
 
