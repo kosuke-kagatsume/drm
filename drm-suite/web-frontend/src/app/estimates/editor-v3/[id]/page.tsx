@@ -3733,36 +3733,79 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
           isOpen={showNewTemplateModal}
           onClose={() => setShowNewTemplateModal(false)}
           onApply={(template, options) => {
-            // テンプレートのアイテムを現在の見積に適用
-            const newItems: EstimateItem[] = [];
-            template.sections.forEach((section) => {
-              section.items.forEach((item) => {
+            setItems((prevItems) => {
+              // 既存の通常項目の最大Noを取得
+              const maxNo = prevItems
+                .filter((item) => !item.isCategory && !item.isSubtotal)
+                .reduce((max, item) => Math.max(max, item.no || 0), 0);
+
+              let currentNo = maxNo + 1;
+              const newItems: EstimateItem[] = [];
+
+              template.sections.forEach((section) => {
+                // カテゴリーヘッダーを追加
                 newItems.push({
                   id: nanoid(),
-                  no: newItems.length + 1,
+                  no: 0,
                   category: section.name,
-                  itemName: item.itemName,
-                  specification: item.specification || '',
-                  quantity: item.defaultQuantity,
-                  unit: item.unit,
-                  unitPrice: item.unitPrice,
-                  amount: item.unitPrice * item.defaultQuantity,
+                  itemName: section.name,
+                  specification: '',
+                  quantity: 0,
+                  unit: '',
+                  unitPrice: 0,
+                  amount: 0,
                   remarks: '',
-                  costPrice: item.costPrice,
-                  costAmount: item.costPrice * item.defaultQuantity,
-                  grossProfit:
-                    (item.unitPrice - item.costPrice) * item.defaultQuantity,
-                  grossProfitRate:
-                    ((item.unitPrice - item.costPrice) / item.unitPrice) * 100,
+                  isCategory: true,
+                });
+
+                // 項目を追加
+                section.items.forEach((item) => {
+                  newItems.push({
+                    id: nanoid(),
+                    no: currentNo++,
+                    category: section.name,
+                    itemName: item.itemName,
+                    specification: item.specification || '',
+                    quantity: item.defaultQuantity,
+                    unit: item.unit,
+                    unitPrice: item.unitPrice,
+                    amount: item.unitPrice * item.defaultQuantity,
+                    remarks: '',
+                    costPrice: item.costPrice,
+                    costAmount: item.costPrice * item.defaultQuantity,
+                    grossProfit:
+                      (item.unitPrice - item.costPrice) * item.defaultQuantity,
+                    grossProfitRate:
+                      ((item.unitPrice - item.costPrice) / item.unitPrice) *
+                      100,
+                  });
+                });
+
+                // 小計行を追加
+                newItems.push({
+                  id: nanoid(),
+                  no: 0,
+                  category: section.name,
+                  itemName: `${section.name} 小計`,
+                  specification: '',
+                  quantity: 0,
+                  unit: '',
+                  unitPrice: 0,
+                  amount: 0,
+                  remarks: '',
+                  isSubtotal: true,
                 });
               });
+
+              const allItems = options.keepExistingItems
+                ? [...prevItems, ...newItems]
+                : newItems;
+
+              return updateCategorySubtotals(allItems);
             });
-            if (options.keepExistingItems) {
-              setItems((prevItems) => [...prevItems, ...newItems]);
-            } else {
-              setItems(newItems);
-            }
-            setShowNewTemplateModal(false);
+
+            setSaveStatus('unsaved');
+            // モーダルは TemplateSelectModal 側で制御するので、ここでは閉じない
           }}
         />
       )}

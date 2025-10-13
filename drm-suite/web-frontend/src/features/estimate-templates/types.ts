@@ -20,6 +20,8 @@ export interface EstimateTemplate {
   createdAt: Date;
   updatedAt: Date;
   createdBy: string;
+  branch?: string; // 支店（東京支店、大阪支店など）
+  scope: 'personal' | 'branch' | 'company'; // スコープ（個人、支店、全社）
 
   // テンプレート内容
   sections: TemplateSection[];

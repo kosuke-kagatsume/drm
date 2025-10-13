@@ -10,6 +10,7 @@ import {
   Tag,
   Check,
   ChevronRight,
+  Plus,
 } from 'lucide-react';
 import {
   EstimateTemplate,
@@ -42,6 +43,12 @@ export default function TemplateSelectModal({
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedTemplate, setSelectedTemplate] =
     useState<EstimateTemplate | null>(null);
+  const [filterType, setFilterType] = useState<
+    'all' | 'myTemplates' | 'tokyo' | 'osaka' | 'nagoya'
+  >('all');
+  const [selectedSections, setSelectedSections] = useState<Set<string>>(
+    new Set(),
+  );
   const [applyOptions, setApplyOptions] = useState<TemplateApplyOptions>({
     includeOptionalItems: true,
     overridePrices: false,
@@ -56,25 +63,102 @@ export default function TemplateSelectModal({
   const templates = useMemo(() => {
     let result = ESTIMATE_TEMPLATES;
 
+    // スコープ・支店フィルタ
+    result = result.filter((template) => {
+      if (filterType === 'myTemplates') {
+        // 自分のテンプレート（個人スコープ + ログインユーザーが作成）
+        return template.scope === 'personal';
+      }
+      if (filterType === 'tokyo') return template.branch === '東京支店';
+      if (filterType === 'osaka') return template.branch === '大阪支店';
+      if (filterType === 'nagoya') return template.branch === '名古屋支店';
+      return true; // 'all'の場合は全て表示
+    });
+
     // カテゴリフィルタ
     if (selectedCategory !== 'all') {
-      result = getTemplatesByCategory(selectedCategory);
+      result = result.filter(
+        (template) => template.category === selectedCategory,
+      );
     }
 
     // 検索フィルタ
     if (searchQuery) {
-      result = searchTemplates(searchQuery);
+      result = result.filter(
+        (template) =>
+          template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          template.description
+            ?.toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          template.tags.some((tag) =>
+            tag.toLowerCase().includes(searchQuery.toLowerCase()),
+          ),
+      );
     }
 
     return result;
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory, searchQuery, filterType]);
 
   // 人気テンプレート
   const popularTemplates = useMemo(() => getPopularTemplates(3), []);
 
-  const handleApply = () => {
-    if (selectedTemplate) {
-      onApply(selectedTemplate, applyOptions);
+  // セクション選択の切り替え
+  const toggleSection = (sectionId: string) => {
+    const newSelected = new Set(selectedSections);
+    if (newSelected.has(sectionId)) {
+      newSelected.delete(sectionId);
+    } else {
+      newSelected.add(sectionId);
+    }
+    setSelectedSections(newSelected);
+  };
+
+  // 全選択/全解除
+  const toggleAllSections = () => {
+    if (!selectedTemplate) return;
+    if (selectedSections.size === selectedTemplate.sections.length) {
+      setSelectedSections(new Set());
+    } else {
+      setSelectedSections(new Set(selectedTemplate.sections.map((s) => s.id)));
+    }
+  };
+
+  // テンプレート選択時にセクションを全選択
+  const handleTemplateSelect = (template: EstimateTemplate) => {
+    setSelectedTemplate(template);
+    setSelectedSections(new Set(template.sections.map((s) => s.id)));
+  };
+
+  // 適用して続ける（モーダルを開いたまま）
+  const handleApplyAndContinue = () => {
+    if (selectedTemplate && selectedSections.size > 0) {
+      // 選択されたセクションだけを含むテンプレートを作成
+      const filteredTemplate = {
+        ...selectedTemplate,
+        sections: selectedTemplate.sections.filter((section) =>
+          selectedSections.has(section.id),
+        ),
+      };
+      // 既存項目を保持する設定で適用
+      onApply(filteredTemplate, { ...applyOptions, keepExistingItems: true });
+      // テンプレート選択をリセット（次のテンプレートを選べるように）
+      setSelectedTemplate(null);
+      setSelectedSections(new Set());
+    }
+  };
+
+  // 適用して閉じる
+  const handleApplyAndClose = () => {
+    if (selectedTemplate && selectedSections.size > 0) {
+      // 選択されたセクションだけを含むテンプレートを作成
+      const filteredTemplate = {
+        ...selectedTemplate,
+        sections: selectedTemplate.sections.filter((section) =>
+          selectedSections.has(section.id),
+        ),
+      };
+      // 既存項目を保持する設定で適用
+      onApply(filteredTemplate, { ...applyOptions, keepExistingItems: true });
       onClose();
     }
   };
@@ -111,6 +195,62 @@ export default function TemplateSelectModal({
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
+              </div>
+            </div>
+
+            {/* フィルタボタン */}
+            <div className="px-4 py-3 border-b border-gray-200">
+              <div className="flex items-center gap-2 overflow-x-auto">
+                <button
+                  onClick={() => setFilterType('all')}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                    filterType === 'all'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  全て
+                </button>
+                <button
+                  onClick={() => setFilterType('myTemplates')}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                    filterType === 'myTemplates'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  自分のテンプレート
+                </button>
+                <button
+                  onClick={() => setFilterType('tokyo')}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                    filterType === 'tokyo'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  東京支店
+                </button>
+                <button
+                  onClick={() => setFilterType('osaka')}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                    filterType === 'osaka'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  大阪支店
+                </button>
+                <button
+                  onClick={() => setFilterType('nagoya')}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                    filterType === 'nagoya'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  名古屋支店
+                </button>
               </div>
             </div>
 
@@ -151,7 +291,7 @@ export default function TemplateSelectModal({
                   {popularTemplates.map((template) => (
                     <button
                       key={template.id}
-                      onClick={() => setSelectedTemplate(template)}
+                      onClick={() => handleTemplateSelect(template)}
                       className={`w-full text-left px-2 py-1 rounded text-sm hover:bg-amber-100 transition-colors ${
                         selectedTemplate?.id === template.id
                           ? 'bg-amber-100'
@@ -175,7 +315,7 @@ export default function TemplateSelectModal({
               {templates.map((template) => (
                 <button
                   key={template.id}
-                  onClick={() => setSelectedTemplate(template)}
+                  onClick={() => handleTemplateSelect(template)}
                   className={`w-full text-left p-3 rounded-lg border transition-all ${
                     selectedTemplate?.id === template.id
                       ? 'border-blue-500 bg-blue-50'
@@ -259,17 +399,50 @@ export default function TemplateSelectModal({
                     </div>
                   </div>
 
+                  {/* 全選択ボタン */}
+                  <div className="mb-4 flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                    <span className="text-sm font-medium text-gray-700">
+                      選択した大項目のみペースト
+                    </span>
+                    <button
+                      onClick={toggleAllSections}
+                      className="px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-100 rounded transition-colors"
+                    >
+                      {selectedSections.size ===
+                      selectedTemplate.sections.length
+                        ? '全て解除'
+                        : '全て選択'}
+                    </button>
+                  </div>
+
                   {/* セクション一覧 */}
                   <div className="space-y-4">
                     {selectedTemplate.sections.map((section) => (
                       <div
                         key={section.id}
-                        className="border border-gray-200 rounded-lg"
+                        className={`border-2 rounded-lg transition-all ${
+                          selectedSections.has(section.id)
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-gray-200'
+                        }`}
                       >
-                        <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-                          <h4 className="font-medium text-gray-900">
+                        <div
+                          className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center gap-3 cursor-pointer hover:bg-gray-100"
+                          onClick={() => toggleSection(section.id)}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedSections.has(section.id)}
+                            onChange={() => toggleSection(section.id)}
+                            className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                          <h4 className="font-medium text-gray-900 flex-1">
                             {section.name}
                           </h4>
+                          <span className="text-xs text-gray-500">
+                            {section.items.length}項目
+                          </span>
                         </div>
                         <div className="divide-y divide-gray-100">
                           {section.items.map((item) => (
@@ -436,20 +609,31 @@ export default function TemplateSelectModal({
                 </div>
 
                 {/* アクションボタン */}
-                <div className="border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
+                <div className="border-t border-gray-200 px-6 py-4 flex justify-between items-center">
                   <button
                     onClick={onClose}
                     className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     キャンセル
                   </button>
-                  <button
-                    onClick={handleApply}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                  >
-                    テンプレートを適用
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleApplyAndContinue}
+                      disabled={selectedSections.size === 0}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      追加して続ける ({selectedSections.size}件)
+                      <Plus className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={handleApplyAndClose}
+                      disabled={selectedSections.size === 0}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      適用して閉じる ({selectedSections.size}件)
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </>
             ) : (
