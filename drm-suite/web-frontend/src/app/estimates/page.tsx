@@ -9,6 +9,7 @@ import { Download, FileText } from 'lucide-react';
 import { invoiceService } from '@/services/invoice.service';
 import TemplateSelector from '@/components/pdf/TemplateSelector';
 import { PdfTemplate } from '@/types/pdf-template';
+import { logger } from '@/lib/logger';
 
 interface Estimate {
   id: string;
@@ -68,26 +69,31 @@ export default function EstimatesPage() {
   );
 
   const [estimates, setEstimates] = useState<Estimate[]>([]);
+  const [isLoadingEstimates, setIsLoadingEstimates] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // APIサーバーから見積データを読み込み
   useEffect(() => {
     const loadEstimates = async () => {
       try {
-        console.log('[見積一覧] APIから見積データを取得中...');
+        setIsLoadingEstimates(true);
+        setLoadError(null);
+        logger.estimate.debug('APIから見積データを取得中...');
         const response = await fetch('/api/estimates');
 
         if (!response.ok) {
-          console.error('[見積一覧] API取得エラー:', response.statusText);
-          throw new Error('Failed to fetch estimates');
+          logger.estimate.error('API取得エラー:', response.statusText);
+          throw new Error(
+            `見積データの取得に失敗しました (${response.status})`,
+          );
         }
 
         const data = await response.json();
-        console.log('[見積一覧] API取得成功:', data);
+        logger.estimate.debug('API取得成功:', data);
 
         // APIデータをEstimate型に変換
         const formattedEstimates = data.estimates.map((est: any) => {
-          console.log('[見積一覧] 見積データ:', est);
-          console.log('[見積一覧] items配列:', est.items);
+          logger.estimate.debug('見積データ:', est);
 
           // items から合計金額を計算
           // itemsはフラット配列で、isCategory=false の行の amount を合計する
@@ -101,7 +107,7 @@ export default function EstimatesPage() {
               return sum + (item.amount || 0);
             }, 0) || 0;
 
-          console.log('[見積一覧] 計算された合計金額:', totalAmount);
+          logger.estimate.debug('計算された合計金額:', totalAmount);
 
           // プロジェクト名を items から推測（最初のアイテムのカテゴリ名など）
           const projectName = est.items?.[0]?.category || '見積書';
@@ -133,12 +139,19 @@ export default function EstimatesPage() {
           };
         });
 
-        console.log('[見積一覧] フォーマット済みデータ:', formattedEstimates);
+        logger.estimate.debug('フォーマット済みデータ:', formattedEstimates);
         setEstimates(formattedEstimates);
       } catch (error) {
-        console.error('[見積一覧] データ読み込みエラー:', error);
+        logger.estimate.error('データ読み込みエラー:', error);
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : '見積データの読み込み中にエラーが発生しました';
+        setLoadError(errorMessage);
         // エラー時は空配列を設定
         setEstimates([]);
+      } finally {
+        setIsLoadingEstimates(false);
       }
     };
 
@@ -367,7 +380,7 @@ export default function EstimatesPage() {
       });
       router.push(`/contracts/create?${params.toString()}`);
     } catch (error) {
-      console.error('契約書作成エラー:', error);
+      logger.estimate.error('契約書作成エラー:', error);
       alert('契約書の作成に失敗しました。管理者設定を確認してください。');
     }
   };
@@ -504,7 +517,101 @@ export default function EstimatesPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dandori-blue mx-auto"></div>
-          <p className="mt-4 text-gray-600">読み込み中...</p>
+          <p className="mt-4 text-gray-600">認証情報を確認中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 見積データのローディング中表示
+  if (isLoadingEstimates) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {/* ヘッダー */}
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-4">
+              <div className="flex items-center">
+                <button
+                  onClick={() => router.push('/dashboard')}
+                  className="mr-4 text-gray-500 hover:text-gray-700"
+                >
+                  ← 戻る
+                </button>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">見積管理</h1>
+                  <p className="text-sm text-gray-600 mt-1">
+                    見積書の作成・管理・承認
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ローディング */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-dandori-blue mx-auto"></div>
+            <p className="mt-4 text-lg text-gray-600">
+              見積データを読み込み中...
+            </p>
+            <p className="mt-2 text-sm text-gray-500">しばらくお待ちください</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // エラー表示
+  if (loadError) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {/* ヘッダー */}
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-4">
+              <div className="flex items-center">
+                <button
+                  onClick={() => router.push('/dashboard')}
+                  className="mr-4 text-gray-500 hover:text-gray-700"
+                >
+                  ← 戻る
+                </button>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">見積管理</h1>
+                  <p className="text-sm text-gray-600 mt-1">
+                    見積書の作成・管理・承認
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* エラー表示 */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="bg-red-50 border-2 border-red-200 rounded-xl p-8 text-center">
+            <div className="text-6xl mb-4">⚠️</div>
+            <h3 className="text-xl font-bold text-red-800 mb-2">
+              データの読み込みに失敗しました
+            </h3>
+            <p className="text-red-600 mb-6">{loadError}</p>
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={() => window.location.reload()}
+                className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                🔄 再読み込み
+              </button>
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                ダッシュボードへ戻る
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -974,14 +1081,46 @@ export default function EstimatesPage() {
         {/* 空状態 */}
         {filteredEstimates.length === 0 && (
           <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-            <div className="text-6xl mb-4">📂</div>
-            <p className="text-gray-600 mb-4">該当する見積書がありません</p>
-            <button
-              onClick={() => router.push('/estimates/editor-v3/new')}
-              className="px-4 py-2 bg-dandori-blue text-white rounded-lg hover:bg-dandori-blue-dark"
-            >
-              新規見積を作成
-            </button>
+            <div className="text-6xl mb-4">
+              {searchTerm || filterStatus !== 'all' || filterType !== 'all'
+                ? '🔍'
+                : '📂'}
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              {searchTerm || filterStatus !== 'all' || filterType !== 'all'
+                ? '検索結果が見つかりません'
+                : '見積書がまだありません'}
+            </h3>
+            <p className="text-gray-600 mb-6">
+              {searchTerm || filterStatus !== 'all' || filterType !== 'all'
+                ? '検索条件を変更するか、新しい見積書を作成してください'
+                : '最初の見積書を作成して、営業活動を開始しましょう'}
+            </p>
+            <div className="flex gap-3 justify-center">
+              {(searchTerm ||
+                filterStatus !== 'all' ||
+                filterType !== 'all') && (
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setFilterStatus('all');
+                    setFilterType('all');
+                  }}
+                  className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  🔄 フィルターをリセット
+                </button>
+              )}
+              <button
+                onClick={() => router.push('/estimates/create-v2')}
+                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+              >
+                <span className="flex items-center gap-2">
+                  <span className="text-lg">+</span>
+                  新規見積作成
+                </span>
+              </button>
+            </div>
           </div>
         )}
 

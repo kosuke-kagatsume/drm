@@ -76,6 +76,7 @@ import {
   ChevronLeft,
   FileText,
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 // === DEBUG HOOK (一時) ===============================
 declare global {
@@ -1320,21 +1321,21 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
 
     if (isNewEstimate) {
       // 新規作成モード - 空の状態から開始
-      console.log('新規見積作成モード');
+      logger.estimate.debug('新規見積作成モード');
       const initialItems: EstimateItem[] = [];
       setItems(initialItems);
       setHistory([initialItems]);
       setShowCategorySelector(true); // 大項目選択を表示
     } else {
       // 既存見積の編集モード
-      console.log(`見積編集モード: ID=${params.id}`);
+      logger.estimate.debug(`見積編集モード: ID=${params.id}`);
       const savedEstimate = localStorage.getItem(`estimate_${params.id}`);
 
       if (savedEstimate) {
         try {
           // 保存済みデータがある場合
           const estimateData = JSON.parse(savedEstimate);
-          console.log('保存済みデータを読み込み:', estimateData);
+          logger.estimate.debug('保存済みデータを読み込み:', estimateData);
           const loadedItems = estimateData.items || [];
           setItems(loadedItems);
           setHistory([loadedItems]);
@@ -1346,10 +1347,10 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
           }
           if (estimateData.customerName && customerInfo) {
             // 顧客情報の整合性チェック
-            console.log(`顧客: ${estimateData.customerName}`);
+            logger.estimate.debug(`顧客: ${estimateData.customerName}`);
           }
         } catch (error) {
-          console.error('保存データの読み込みエラー:', error);
+          logger.estimate.error('保存データの読み込みエラー:', error);
           // エラー時は空の編集モードで開始
           setItems([]);
           setHistory([[]]);
@@ -1357,7 +1358,7 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
         }
       } else {
         // 保存済みデータがない場合は空の編集モードで開始
-        console.log('保存済みデータなし - 空の編集モード');
+        logger.estimate.debug('保存済みデータなし - 空の編集モード');
         const initialItems: EstimateItem[] = [];
         setItems(initialItems);
         setHistory([initialItems]);
@@ -2011,12 +2012,17 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
       });
 
       if (!response.ok) {
-        console.error('サーバー保存エラー:', response.statusText);
+        logger.estimate.error('サーバー保存エラー:', response.statusText);
       }
 
       setSaveStatus('saved');
-      console.log('Saved successfully with validUntil:', validUntil);
-      console.log('Customer ID:', customerId, 'Customer Name:', customerName); // Phase 10: デバッグログ
+      logger.estimate.debug('Saved successfully with validUntil:', validUntil);
+      logger.estimate.debug(
+        'Customer ID:',
+        customerId,
+        'Customer Name:',
+        customerName,
+      );
 
       // トースト通知を表示（手動保存時のみ）
       if (isManual) {
@@ -2029,7 +2035,7 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
         }, 3000);
       }
     } catch (error) {
-      console.error('保存エラー:', error);
+      logger.estimate.error('保存エラー:', error);
       setSaveStatus('unsaved');
     }
   };

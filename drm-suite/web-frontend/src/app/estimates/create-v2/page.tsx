@@ -15,6 +15,7 @@ import {
   Search,
   CheckCircle,
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 // 初期選択の定義（顧客情報あり/なし）
 const INITIAL_OPTIONS = [
@@ -275,7 +276,7 @@ function EstimateCreateV2Content() {
           }),
         );
 
-        console.log('[create-v2] 顧客情報を LocalStorage に保存:', {
+        logger.estimate.debug('顧客情報を LocalStorage に保存:', {
           customerId: selectedCustomer,
           customerName: customer?.name,
         });

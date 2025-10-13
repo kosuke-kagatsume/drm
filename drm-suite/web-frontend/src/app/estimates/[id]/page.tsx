@@ -29,6 +29,7 @@ import {
   Wrench,
   Printer,
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface Estimate {
   id: string;
@@ -132,25 +133,23 @@ export default function EstimateDetailPage() {
 
   // PDF出力処理
   const handlePDFExport = () => {
-    console.log('PDF出力ボタンがクリックされました');
-    console.log('現在の estimate:', estimate);
-    console.log('現在の showPDFPreview:', showPDFPreview);
+    logger.estimate.debug('PDF出力ボタンがクリックされました');
     setShowPDFPreview(true);
   };
 
   // PDFダウンロード（直接）
   const handleQuickPDFDownload = async () => {
-    console.log('PDF即ダウンロードボタンがクリックされました');
+    logger.estimate.debug('PDF即ダウンロードボタンがクリックされました');
     try {
       const estimateData = {
         ...estimate,
         customer,
         paymentTerm,
       };
-      console.log('PDFダウンロード開始:', estimateData);
+      logger.estimate.debug('PDFダウンロード開始:', estimateData);
       await PDFClientService.downloadEstimatePDF(estimateData);
     } catch (error) {
-      console.error('PDFダウンロードエラー:', error);
+      logger.estimate.error('PDFダウンロードエラー:', error);
       alert('PDFダウンロード中にエラーが発生しました');
     }
   };
