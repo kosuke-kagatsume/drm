@@ -5,6 +5,9 @@ import type {
   LoanInfo,
 } from '@/types/financial-plan';
 
+// Vercelのサーバーレス環境で動的レンダリングを強制
+export const dynamic = 'force-dynamic';
+
 // メモリベースのデータストア
 let financialPlans: FinancialPlanVersion[] = [
   {
