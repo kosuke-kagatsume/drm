@@ -5,9 +5,9 @@
 ### 最重要情報
 
 **開発サーバー**: http://localhost:3005 (ポート3005で動作中)
-**本番URL**: https://web-frontend-mrdiwclnr-kosukes-projects-c6ad92ba.vercel.app
+**本番URL**: https://web-frontend-l7vxyuc3f-kosukes-projects-c6ad92ba.vercel.app
 
-⚠️ **2025年10月13日の重要修正** - 資金計画書の保存をlocalStorageベースに変更してVercelサーバーレス環境完全対応！
+⚠️ **2025年10月13日の重要修正** - 資金計画書の保存をlocalStorageベースに変更してVercelサーバーレス環境完全対応！顧客管理からのアクセスも追加！
 
 ### プロジェクト概要
 
@@ -19,10 +19,10 @@
 
 ## 🆕 最新の実装内容（2025/10/13）
 
-### 🔧 資金計画書のlocalStorage対応（Vercel保存問題の完全解決）
+### 🔧 資金計画書のlocalStorage対応 + 顧客管理連携（Vercel保存問題の完全解決）
 
-**コミット**: `c914262` - 2025/10/13
-**デプロイURL**: https://web-frontend-mrdiwclnr-kosukes-projects-c6ad92ba.vercel.app
+**コミット**: `ffc27a1` - 2025/10/13
+**デプロイURL**: https://web-frontend-l7vxyuc3f-kosukes-projects-c6ad92ba.vercel.app
 
 #### 問題と解決策
 
@@ -57,7 +57,22 @@
 - ✅ 新規作成: API POST → `createPlan()`
 - ✅ 比較: API GET → `comparePlans()`
 
-**3. 機能強化**
+**3. 資金計画書一覧画面** (`/estimates/financial/page.tsx` - 287行)
+
+- ✅ 顧客ごとにグループ化表示
+- ✅ 各顧客の全バージョン一覧
+- ✅ ステータスバッジ（下書き・提出済み・承認済み・旧版）
+- ✅ クリックで詳細画面に遷移
+- ✅ 統計カード（顧客数・総バージョン数・平均総額）
+- ✅ バージョン比較ボタン
+
+**4. 顧客管理からのアクセス**
+
+- ✅ 顧客一覧画面 (`/customers`) - ヘッダーに「💰 資金計画書」ボタン追加
+- ✅ 顧客詳細画面 (`/customers/[id]`) - 見積タブに「資金計画書を見る」ボタン追加
+- ✅ 3つの方法でアクセス可能（直接URL / 顧客一覧経由 / 顧客詳細経由）
+
+**5. 機能強化**
 
 - ✅ 詳細な差分表示（基本情報 + 全カテゴリ・全項目）
 - ✅ 新規追加・削除・変更の3パターン表示
