@@ -4,9 +4,9 @@
 
 ### 最重要情報
 
-**最新URL**: https://web-frontend-gudarw9tm-kosukes-projects-c6ad92ba.vercel.app/
+**最新URL**: https://web-frontend-4homafqdw-kosukes-projects-c6ad92ba.vercel.app/
 
-これが2025年10月13日の最新デプロイです。Phase 14完了版（資金計画書バージョン管理・自動保存・PDF出力機能完全実装）。他のURLは古いので使わないこと。
+これが2025年10月13日の最新デプロイです。Phase 15-16完了版（承認ワークフロー + 見積機能詳細修正）。他のURLは古いので使わないこと。
 
 ### プロジェクト概要
 
@@ -19,6 +19,7 @@
 #### 🔧 Phase 16完了: 見積機能の詳細修正 ✅
 
 **コミット**: `083fd40` - 2025/10/13
+**デプロイURL**: https://web-frontend-4homafqdw-kosukes-projects-c6ad92ba.vercel.app/
 
 **Phase 16 実装内容**
 
@@ -60,6 +61,7 @@
 #### 🔐 Phase 15完了: 承認ワークフロー実装 ✅
 
 **コミット**: `a15851a` - 2025/10/13
+**デプロイURL**: https://web-frontend-4homafqdw-kosukes-projects-c6ad92ba.vercel.app/
 
 **Phase 15 実装内容**
 
@@ -298,5 +300,6 @@ vercel --prod
 
 ---
 
-最終更新: 2025/10/13 21:57
-Phase 16完了: 見積機能の詳細修正（ロギングシステム導入・UX改善）
+最終更新: 2025/10/13 22:02
+Phase 15-16完了 + Vercelデプロイ完了
+デプロイURL: https://web-frontend-4homafqdw-kosukes-projects-c6ad92ba.vercel.app/
