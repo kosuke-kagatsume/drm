@@ -27,6 +27,13 @@ import {
   Check,
 } from 'lucide-react';
 import type { FinancialPlanVersion } from '@/types/financial-plan';
+import {
+  getAllPlans,
+  getPlanById,
+  updatePlan,
+  createPlan,
+  comparePlans,
+} from '@/lib/financial-plans-storage';
 
 // 資金計画の項目
 interface FinancialItem {
@@ -222,18 +229,15 @@ export default function FinancialPlanPage({
     rate: 0.5,
   });
 
-  // バージョン一覧を取得
+  // バージョン一覧を取得（localStorage版）
   useEffect(() => {
-    const fetchVersions = async () => {
+    const loadVersions = () => {
       try {
-        // まず、指定されたIDのバージョンを直接取得
+        // localStorageから指定されたIDのバージョンを取得
         const versionId = `fp-${params.id}`;
-        const versionResponse = await fetch(
-          `/api/financial-plans?versionId=${versionId}`,
-        );
+        const currentVersionData = getPlanById(versionId);
 
-        if (versionResponse.ok) {
-          const currentVersionData = await versionResponse.json();
+        if (currentVersionData) {
           setCurrentVersion(currentVersionData);
 
           // 現在のバージョンのデータをロード
@@ -251,27 +255,25 @@ export default function FinancialPlanPage({
           // 空の場合は、最初の保存時にstateの初期値が保存される
 
           // 同じ顧客の全バージョンを取得
-          const allVersionsResponse = await fetch(
-            `/api/financial-plans?customerId=${currentVersionData.customerId}`,
-          );
-          if (allVersionsResponse.ok) {
-            const allVersions = await allVersionsResponse.json();
-            setVersions(allVersions);
-          }
+          const allPlans = getAllPlans();
+          const customerVersions = allPlans
+            .filter((p) => p.customerId === currentVersionData.customerId)
+            .sort((a, b) => b.versionNumber - a.versionNumber);
+          setVersions(customerVersions);
         } else {
           console.error('Version not found:', versionId);
         }
       } catch (error) {
-        console.error('Failed to fetch versions:', error);
+        console.error('Failed to load versions:', error);
       }
     };
 
-    fetchVersions();
+    loadVersions();
   }, [params.id]);
 
-  // 保存機能
+  // 保存機能（localStorage版）
   const handleSave = useCallback(
-    async (isAutoSave = false) => {
+    (isAutoSave = false) => {
       if (!currentVersion) {
         if (!isAutoSave) {
           alert('保存するバージョンが見つかりません');
@@ -285,23 +287,22 @@ export default function FinancialPlanPage({
       }
 
       try {
-        const response = await fetch('/api/financial-plans', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            id: currentVersion.id,
-            buildingArea,
-            unitPrice,
-            financialData,
-            loanInfo,
-            status: currentVersion.status,
-          }),
+        // localStorageに保存
+        const totalAmount = financialData.reduce((total, category) => {
+          return (
+            total + category.items.reduce((sum, item) => sum + item.amount, 0)
+          );
+        }, 0);
+
+        const updatedVersion = updatePlan(currentVersion.id, {
+          buildingArea,
+          unitPrice,
+          financialData,
+          loanInfo,
+          totalAmount,
         });
 
-        if (response.ok) {
-          const updatedVersion = await response.json();
+        if (updatedVersion) {
           setCurrentVersion(updatedVersion);
 
           // バージョン一覧も更新
@@ -588,46 +589,47 @@ export default function FinancialPlanPage({
     return currentIndex > 0;
   };
 
-  // 新バージョン作成
-  const handleCreateNewVersion = async () => {
+  // 新バージョン作成（localStorage版）
+  const handleCreateNewVersion = () => {
     if (!currentVersion || !newVersionNote.trim()) {
       alert('変更内容を入力してください');
       return;
     }
 
     try {
-      const response = await fetch('/api/financial-plans', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          customerId: currentVersion.customerId,
-          customerName: currentVersion.customerName,
-          buildingArea,
-          unitPrice,
-          financialData,
-          loanInfo,
-          changeNote: newVersionNote,
-          previousVersionId: currentVersion.id,
-        }),
+      // localStorageに新バージョンを作成
+      const totalAmount = financialData.reduce((total, category) => {
+        return (
+          total + category.items.reduce((sum, item) => sum + item.amount, 0)
+        );
+      }, 0);
+
+      const newVersion = createPlan({
+        customerId: currentVersion.customerId,
+        customerName: currentVersion.customerName,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        createdBy: currentVersion.createdBy,
+        status: 'draft',
+        buildingArea,
+        unitPrice,
+        financialData,
+        loanInfo,
+        changeNote: newVersionNote,
+        previousVersionId: currentVersion.id,
+        totalAmount,
       });
 
-      if (response.ok) {
-        const newVersion = await response.json();
-        // 新しいバージョンのページに遷移
-        window.location.href = `/estimates/financial/${newVersion.id.replace('fp-', '')}`;
-      } else {
-        alert('新バージョンの作成に失敗しました');
-      }
+      // 新しいバージョンのページに遷移
+      window.location.href = `/estimates/financial/${newVersion.id.replace('fp-', '')}`;
     } catch (error) {
       console.error('Failed to create new version:', error);
       alert('新バージョンの作成に失敗しました');
     }
   };
 
-  // バージョン比較実行
-  const handleCompareVersions = async () => {
+  // バージョン比較実行（localStorage版）
+  const handleCompareVersions = () => {
     if (!compareVersionA || !compareVersionB) {
       alert('比較する2つのバージョンを選択してください');
       return;
@@ -640,12 +642,8 @@ export default function FinancialPlanPage({
 
     setIsComparing(true);
     try {
-      const response = await fetch(
-        `/api/financial-plans/compare?versionA=${compareVersionA}&versionB=${compareVersionB}`,
-      );
-
-      if (response.ok) {
-        const result = await response.json();
+      const result = comparePlans(compareVersionA, compareVersionB);
+      if (result) {
         setComparisonResult(result);
       } else {
         alert('比較に失敗しました');
