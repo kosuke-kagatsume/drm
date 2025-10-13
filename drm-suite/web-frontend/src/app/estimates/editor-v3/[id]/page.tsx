@@ -2920,8 +2920,8 @@ function EstimateEditorV3Content({ params }: { params: { id: string } }) {
 
       {/* メインコンテンツ */}
       <div className="px-4 sm:px-6 lg:px-8 py-6">
-        {/* カテゴリ選択モード - 新規作成時のみ表示 */}
-        {showCategorySelector && items.length === 0 && (
+        {/* カテゴリ選択モード - 大項目追加時に表示 */}
+        {showCategorySelector && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
