@@ -39,7 +39,7 @@ const publicPaths = [
   '/',
   '/api',
   '/estimates/create-v2',
-  '/estimates/editor-v3',
+  '/estimates/editor-v5',
   '/estimates/financial',
 ];
 

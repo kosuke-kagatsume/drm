@@ -609,7 +609,7 @@ export default function EstimateDetailPage() {
               <div className="space-y-3">
                 <button
                   onClick={() =>
-                    router.push(`/estimates/editor-v3/${estimate.id}`)
+                    router.push(`/estimates/editor-v5/${estimate.id}`)
                   }
                   className="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition flex items-center gap-2 justify-center"
                 >

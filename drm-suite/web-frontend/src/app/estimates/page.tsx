@@ -918,7 +918,7 @@ export default function EstimatesPage() {
                         <div className="relative group">
                           <button
                             onClick={() =>
-                              router.push(`/estimates/editor-v3/${estimate.id}`)
+                              router.push(`/estimates/editor-v5/${estimate.id}`)
                             }
                             className="p-1.5 text-gray-600 hover:text-dandori-blue hover:bg-dandori-blue/10 rounded transition-colors"
                           >
@@ -1060,7 +1060,7 @@ export default function EstimatesPage() {
                 >
                   <button
                     onClick={() =>
-                      router.push(`/estimates/editor-v3/${estimate.id}`)
+                      router.push(`/estimates/editor-v5/${estimate.id}`)
                     }
                     className="flex-1 py-1.5 bg-dandori-blue text-white text-sm rounded hover:bg-dandori-blue-dark transition-colors"
                   >

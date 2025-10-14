@@ -55,7 +55,7 @@ const ESTIMATE_TYPES = [
       '住設機器・水回りの一括登録',
       'CSVインポート対応',
     ],
-    route: '/estimates/editor-v3/new',
+    route: '/estimates/editor-v5/new',
   },
   {
     id: 'financial',

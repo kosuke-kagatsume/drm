@@ -120,7 +120,7 @@ export default function EstimateTemplatesPage() {
     setShowCreateModal(false);
 
     // 作成後すぐに編集画面に移動
-    router.push(`/estimates/editor-v3/${template.id}?edit_template=true`);
+    router.push(`/estimates/editor-v5/${template.id}?edit_template=true`);
   };
 
   // テンプレート複製
@@ -183,7 +183,7 @@ export default function EstimateTemplatesPage() {
     );
 
     // 見積作成ページに移動
-    router.push(`/estimates/editor-v3/new?template=${templateId}`);
+    router.push(`/estimates/editor-v5/new?template=${templateId}`);
   };
 
   return (
@@ -300,7 +300,7 @@ export default function EstimateTemplatesPage() {
                   <button
                     onClick={() =>
                       router.push(
-                        `/estimates/editor-v3/${template.id}?edit_template=true`,
+                        `/estimates/editor-v5/${template.id}?edit_template=true`,
                       )
                     }
                     className="p-2 text-gray-600 hover:text-blue-600 transition"

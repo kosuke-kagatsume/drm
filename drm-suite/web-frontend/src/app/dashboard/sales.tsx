@@ -317,9 +317,9 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
                         todo.type === 'follow-estimate' &&
                         todo.estimateId
                       ) {
-                        router.push(`/estimates/editor-v3/${todo.estimateId}`);
+                        router.push(`/estimates/editor-v5/${todo.estimateId}`);
                       } else if (todo.type === 'estimate' && todo.estimateId) {
-                        router.push(`/estimates/editor-v3/${todo.estimateId}`);
+                        router.push(`/estimates/editor-v5/${todo.estimateId}`);
                       } else if (todo.type === 'contract' && todo.contractId) {
                         router.push(`/contracts/${todo.contractId}`);
                       }
@@ -368,14 +368,14 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
                               todo.estimateId
                             ) {
                               router.push(
-                                `/estimates/editor-v3/${todo.estimateId}`,
+                                `/estimates/editor-v5/${todo.estimateId}`,
                               );
                             } else if (
                               todo.type === 'estimate' &&
                               todo.estimateId
                             ) {
                               router.push(
-                                `/estimates/editor-v3/${todo.estimateId}`,
+                                `/estimates/editor-v5/${todo.estimateId}`,
                               );
                             } else if (
                               todo.type === 'contract' &&
@@ -768,7 +768,7 @@ export default function SalesDashboard({ userEmail }: SalesDashboardProps) {
             <p className="text-xs text-white/80">CRM</p>
           </button>
           <button
-            onClick={() => router.push('/estimates/editor-v3/new')}
+            onClick={() => router.push('/estimates/editor-v5/new')}
             className="bg-white/20 backdrop-blur-sm p-4 rounded-xl hover:bg-white/30 transform hover:scale-105 transition-all duration-200 border border-white/30"
           >
             <span className="text-3xl">📝</span>

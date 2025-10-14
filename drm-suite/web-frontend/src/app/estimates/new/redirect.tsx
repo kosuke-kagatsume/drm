@@ -7,8 +7,8 @@ export default function NewRedirect() {
   const router = useRouter();
 
   useEffect(() => {
-    // editor-v3の新規作成ページにリダイレクト
-    router.replace('/estimates/editor-v3/new');
+    // editor-v5の新規作成ページにリダイレクト
+    router.replace('/estimates/editor-v5/new');
   }, [router]);
 
   return (

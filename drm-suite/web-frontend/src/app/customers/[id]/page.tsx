@@ -1711,7 +1711,7 @@ export default function CustomerDetailPage() {
                   <div
                     key={estimate.id}
                     onClick={() =>
-                      router.push(`/estimates/editor-v3/${estimate.id}`)
+                      router.push(`/estimates/editor-v5/${estimate.id}`)
                     }
                     className="bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-lg hover:shadow-xl transition-all p-6 border border-blue-100 cursor-pointer group"
                   >

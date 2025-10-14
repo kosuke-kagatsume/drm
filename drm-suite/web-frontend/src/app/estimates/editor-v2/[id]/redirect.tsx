@@ -8,8 +8,8 @@ export default function EditorV2Redirect() {
   const params = useParams();
 
   useEffect(() => {
-    // editor-v3の同じIDページにリダイレクト
-    router.replace(`/estimates/editor-v3/${params.id}`);
+    // editor-v5の同じIDページにリダイレクト
+    router.replace(`/estimates/editor-v5/${params.id}`);
   }, [router, params.id]);
 
   return (

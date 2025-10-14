@@ -1,6 +1,12 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Save,
@@ -14,6 +20,7 @@ import {
   CheckCircle,
   Clock,
   Trash2,
+  List,
 } from 'lucide-react';
 import {
   EstimateItem,
@@ -104,6 +111,11 @@ export default function EditorClient({
   );
   const [lastSaved, setLastSaved] = useState<Date>(new Date());
 
+  // 新規見積のID管理（一度生成したIDを保持）
+  const actualEstimateIdRef = useRef<string | null>(null);
+  // 保存中フラグ（二重保存を防ぐ）
+  const isSavingRef = useRef(false);
+
   // クライアント側マウント検出
   useEffect(() => {
     setIsMounted(true);
@@ -156,13 +168,43 @@ export default function EditorClient({
   // ==================== データ読み込み ====================
 
   useEffect(() => {
-    const loadedData = loadEstimate(estimateId);
-    if (loadedData) {
-      setEstimateTitle(loadedData.title);
-      setCustomer(loadedData.customer || '');
-      setItems(loadedData.items);
-      setLastSaved(new Date(loadedData.updatedAt));
+    // 新規見積の場合はデータを読み込まない
+    if (estimateId === 'new') {
+      return;
     }
+
+    // 既存見積の場合、まずAPIから取得を試みる
+    const fetchEstimate = async () => {
+      try {
+        const response = await fetch(`/api/estimates?id=${estimateId}`);
+        if (response.ok) {
+          const data = await response.json();
+          const estimate = data.estimates?.find(
+            (e: any) => e.id === estimateId,
+          );
+          if (estimate && estimate.items) {
+            setEstimateTitle(estimate.projectName || estimate.title || '');
+            setCustomer(estimate.customerName || estimate.customer || '');
+            setItems(estimate.items);
+            setLastSaved(new Date(estimate.lastModified || estimate.updatedAt));
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('API取得エラー:', error);
+      }
+
+      // APIから取得できない場合はlocalStorageから読み込み
+      const loadedData = loadEstimate(estimateId);
+      if (loadedData) {
+        setEstimateTitle(loadedData.title);
+        setCustomer(loadedData.customer || '');
+        setItems(loadedData.items);
+        setLastSaved(new Date(loadedData.updatedAt));
+      }
+    };
+
+    fetchEstimate();
 
     // コメントを読み込み
     const loadedComments = loadComments(estimateId);
@@ -175,6 +217,46 @@ export default function EditorClient({
     // 初回マウント時のみデモテンプレートを初期化
     initializeDemoTemplates();
   }, []);
+
+  // ==================== 未保存変更の警告 ====================
+
+  useEffect(() => {
+    // ブラウザの戻るボタン・ページ離脱時の警告
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (saveStatus === 'unsaved' && items.length > 0) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [saveStatus, items.length]);
+
+  // Next.js Router での警告
+  useEffect(() => {
+    const handleRouteChange = () => {
+      if (saveStatus === 'unsaved' && items.length > 0) {
+        const confirmLeave = window.confirm(
+          '未保存の変更があります。ページを離れますか？',
+        );
+        if (!confirmLeave) {
+          router.push(window.location.pathname);
+          throw new Error('Route change aborted by user');
+        }
+      }
+    };
+
+    // Note: Next.js 13+ App Router では router events が使えないため、
+    // beforeunload での対応のみ
+    return () => {
+      // cleanup
+    };
+  }, [saveStatus, items.length, router]);
 
   // ==================== 自動保存 ====================
 
@@ -196,11 +278,29 @@ export default function EditorClient({
 
   // ==================== 保存処理 ====================
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
+    // 保存中の場合は早期リターン（二重保存を防ぐ）
+    if (isSavingRef.current) {
+      return;
+    }
+
+    isSavingRef.current = true;
     setSaveStatus('saving');
 
+    // 新規作成の場合はユニークIDを生成（一度だけ）
+    let actualEstimateId: string;
+    if (estimateId === 'new') {
+      if (!actualEstimateIdRef.current) {
+        // 初回保存時のみIDを生成
+        actualEstimateIdRef.current = `estimate-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      }
+      actualEstimateId = actualEstimateIdRef.current;
+    } else {
+      actualEstimateId = estimateId;
+    }
+
     const estimateData = {
-      id: estimateId,
+      id: actualEstimateId,
       title: estimateTitle,
       customer: customer,
       items: itemsWithCost,
@@ -211,9 +311,58 @@ export default function EditorClient({
       createdByName: currentUser.name,
     };
 
-    saveEstimate(estimateId, estimateData);
+    // localStorageに保存
+    saveEstimate(actualEstimateId, estimateData);
+
+    // APIにも保存（見積一覧に表示させるため）
+    try {
+      // 初回保存かどうかの判定（actualEstimateIdRefが今回生成されたかどうか）
+      const isNewEstimate =
+        estimateId === 'new' &&
+        actualEstimateIdRef.current === actualEstimateId;
+      const now = new Date();
+      const validUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+      // 見積番号を生成（EST-2025-001234形式）
+      const estimateNo = `EST-${now.getFullYear()}-${String(Math.floor(Math.random() * 1000000)).padStart(6, '0')}`;
+
+      const apiData = {
+        id: actualEstimateId,
+        estimateNo: estimateNo,
+        customerName: customer || '顧客名未設定',
+        companyName: customer || '顧客名未設定',
+        projectName: estimateTitle,
+        projectType: '新築',
+        totalAmount: totals.totalAmount,
+        status: 'draft',
+        createdAt: now.toISOString(),
+        validUntil: validUntil.toISOString(),
+        createdBy: currentUser.id,
+        lastModified: now.toISOString(),
+        version: 1,
+        tags: [],
+        items: itemsWithCost,
+      };
+
+      const response = await fetch('/api/estimates', {
+        method: isNewEstimate ? 'POST' : 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(apiData),
+      });
+
+      if (!response.ok) {
+        console.error('API保存エラー:', response.statusText);
+      }
+    } catch (error) {
+      console.error('API保存に失敗:', error);
+      // APIエラーでもlocalStorageには保存できているので続行
+    }
+
     setLastSaved(new Date());
     setSaveStatus('saved');
+    isSavingRef.current = false;
   }, [
     estimateId,
     estimateTitle,
@@ -808,58 +957,70 @@ export default function EditorClient({
       <header className="bg-white/95 backdrop-blur-lg border-b border-blue-200 shadow-xl sticky top-0 z-30">
         <div className="max-w-[1800px] mx-auto px-6 py-4">
           {/* タイトル行 */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-4 flex-1">
-              <div className="flex flex-col gap-2 flex-1 max-w-2xl">
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex flex-col gap-2 flex-1 max-w-3xl">
+              {/* タイトル入力と保存状態 */}
+              <div className="flex items-center gap-6">
                 <input
                   type="text"
                   value={estimateTitle}
                   onChange={(e) => setEstimateTitle(e.target.value)}
                   className="text-2xl font-bold border-none outline-none focus:outline-none bg-transparent hover:bg-gray-50 px-2 py-1 rounded transition-colors"
                   placeholder="見積タイトル"
+                  style={{ minWidth: '300px' }}
                 />
-                {customer && (
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 border border-indigo-200 rounded-lg">
-                    <span className="text-sm text-indigo-600 font-semibold">
-                      顧客:
+                {/* 保存状態インジケーター */}
+                <div className="flex items-center gap-2 text-sm whitespace-nowrap">
+                  {saveStatus === 'saved' && (
+                    <span className="flex items-center gap-1 text-green-600">
+                      <CheckCircle className="w-4 h-4" />
+                      保存済み
                     </span>
-                    <span className="text-base text-indigo-900 font-medium">
-                      {customer}
+                  )}
+                  {saveStatus === 'saving' && (
+                    <span className="flex items-center gap-1 text-blue-600">
+                      <Clock className="w-4 h-4 animate-spin" />
+                      保存中...
                     </span>
-                  </div>
-                )}
+                  )}
+                  {saveStatus === 'unsaved' && (
+                    <span className="flex items-center gap-1 text-orange-600">
+                      <AlertCircle className="w-4 h-4" />
+                      未保存
+                    </span>
+                  )}
+                  <span className="text-gray-400 text-xs">
+                    {isMounted
+                      ? lastSaved.toLocaleTimeString('ja-JP')
+                      : '--:--:--'}
+                  </span>
+                </div>
               </div>
-              {/* 保存状態インジケーター */}
-              <div className="flex items-center gap-2 text-sm">
-                {saveStatus === 'saved' && (
-                  <span className="flex items-center gap-1 text-green-600">
-                    <CheckCircle className="w-4 h-4" />
-                    保存済み
+              {/* 顧客情報 */}
+              {customer && (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 border border-indigo-200 rounded-lg w-fit">
+                  <span className="text-sm text-indigo-600 font-semibold">
+                    顧客:
                   </span>
-                )}
-                {saveStatus === 'saving' && (
-                  <span className="flex items-center gap-1 text-blue-600">
-                    <Clock className="w-4 h-4 animate-spin" />
-                    保存中...
+                  <span className="text-base text-indigo-900 font-medium">
+                    {customer}
                   </span>
-                )}
-                {saveStatus === 'unsaved' && (
-                  <span className="flex items-center gap-1 text-orange-600">
-                    <AlertCircle className="w-4 h-4" />
-                    未保存
-                  </span>
-                )}
-                <span className="text-gray-400 text-xs">
-                  最終保存:{' '}
-                  {isMounted
-                    ? lastSaved.toLocaleTimeString('ja-JP')
-                    : '--:--:--'}
-                </span>
-              </div>
+                </div>
+              )}
             </div>
 
             {/* アクションボタン */}
             <div className="flex items-center gap-2">
+              {/* 見積一覧へ */}
+              <button
+                onClick={() => router.push('/estimates')}
+                className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all shadow-md hover:shadow-lg flex items-center gap-2 font-semibold"
+                title="見積一覧へ戻る"
+              >
+                <List className="w-4 h-4" />
+                見積一覧へ
+              </button>
+
               {/* 手動保存 */}
               <button
                 onClick={handleSave}
