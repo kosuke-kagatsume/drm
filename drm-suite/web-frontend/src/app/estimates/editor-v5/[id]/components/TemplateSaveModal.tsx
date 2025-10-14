@@ -1,7 +1,7 @@
 'use client';
 
 import React, { memo, useState } from 'react';
-import { X, Check, FileTemplate } from 'lucide-react';
+import { X, Check, FileText } from 'lucide-react';
 import { TEMPLATE_CATEGORIES, BRANCHES } from '../constants';
 
 // ==================== TemplateSaveModal コンポーネント ====================
@@ -63,7 +63,7 @@ const TemplateSaveModal = memo(function TemplateSaveModal({
         {/* ヘッダー */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold flex items-center gap-2">
-            <FileTemplate className="w-6 h-6 text-blue-600" />
+            <FileText className="w-6 h-6 text-blue-600" />
             テンプレートとして保存
           </h2>
           <button

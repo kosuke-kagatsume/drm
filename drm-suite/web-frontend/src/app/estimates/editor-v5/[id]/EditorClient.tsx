@@ -6,7 +6,7 @@ import {
   Download,
   Upload,
   Plus,
-  FileTemplate,
+  FileText,
   GitBranch,
   Printer,
   AlertCircle,
@@ -614,7 +614,7 @@ export default function EditorClient({
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
                 title="テンプレートから追加"
               >
-                <FileTemplate className="w-4 h-4" />
+                <FileText className="w-4 h-4" />
                 テンプレート
               </button>
 
@@ -624,7 +624,7 @@ export default function EditorClient({
                 className="px-4 py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition-colors flex items-center gap-2"
                 title="テンプレートとして保存"
               >
-                <FileTemplate className="w-4 h-4" />
+                <FileText className="w-4 h-4" />
                 保存
               </button>
 
@@ -677,19 +677,19 @@ export default function EditorClient({
             <div className="flex items-center gap-2">
               <span className="text-gray-600">合計原価:</span>
               <span className="font-semibold text-yellow-600">
-                {formatPrice(totals.totalCostAmount)}
+                {formatPrice(totals.totalCost)}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-gray-600">合計粗利:</span>
               <span className="font-semibold text-green-600">
-                {formatPrice(totals.totalGrossProfit)}
+                {formatPrice(totals.totalProfit)}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-gray-600">粗利率:</span>
               <span className="font-semibold text-green-600">
-                {totals.averageGrossProfitRate.toFixed(1)}%
+                {totals.totalProfitRate.toFixed(1)}%
               </span>
             </div>
             <div className="flex items-center gap-2 ml-auto">

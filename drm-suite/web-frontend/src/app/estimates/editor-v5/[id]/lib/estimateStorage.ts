@@ -212,3 +212,93 @@ export function downloadCSV(data: EstimateData): void {
   link.click();
   URL.revokeObjectURL(url);
 }
+
+/**
+ * CSVインポート
+ */
+export function parseCSV(csvText: string): EstimateData | null {
+  try {
+    const lines = csvText.split('\n').filter((line) => line.trim());
+    if (lines.length < 2) return null;
+
+    // ヘッダー行をスキップして、データ行を解析
+    const dataLines = lines.slice(1);
+
+    const items = dataLines.map((line, index) => {
+      // CSVパース（簡易版）
+      const values = line
+        .split(',')
+        .map((val) => val.replace(/^"|"$/g, '').trim());
+
+      return {
+        id: `item-${Date.now()}-${index}`,
+        no: parseInt(values[0] || '0', 10),
+        category: values[1] || '',
+        itemName: values[2] || '',
+        specification: values[3] || '',
+        quantity: parseFloat(values[4] || '0'),
+        unit: values[5] || '',
+        unitPrice: parseFloat(values[6] || '0'),
+        amount: parseFloat(values[7] || '0'),
+        costPrice: parseFloat(values[8] || '0'),
+        remarks: values[11] || '',
+      };
+    });
+
+    return {
+      id: `imported-${Date.now()}`,
+      title: 'インポートされた見積',
+      items,
+      totalAmount: items.reduce((sum, item) => sum + item.amount, 0),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      createdBy: 'user',
+      createdByName: 'ユーザー',
+    };
+  } catch (error) {
+    console.error('CSV parse error:', error);
+    return null;
+  }
+}
+
+/**
+ * 単一テンプレートの保存
+ */
+export function saveTemplate(template: EstimateTemplate): void {
+  const templates = loadTemplates();
+  const existingIndex = templates.findIndex((t) => t.id === template.id);
+
+  if (existingIndex >= 0) {
+    templates[existingIndex] = template;
+  } else {
+    templates.push(template);
+  }
+
+  saveTemplates(templates);
+}
+
+/**
+ * テンプレートの削除
+ */
+export function deleteTemplate(templateId: string): void {
+  const templates = loadTemplates();
+  const filtered = templates.filter((t) => t.id !== templateId);
+  saveTemplates(filtered);
+}
+
+// ==================== エイリアス（EditorClientとの互換性） ====================
+
+/**
+ * exportCSV: downloadCSVのエイリアス
+ */
+export const exportCSV = downloadCSV;
+
+/**
+ * importCSV: parseCSVのエイリアス
+ */
+export const importCSV = parseCSV;
+
+/**
+ * getAllTemplates: loadTemplatesのエイリアス
+ */
+export const getAllTemplates = loadTemplates;

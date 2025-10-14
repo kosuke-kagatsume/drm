@@ -102,3 +102,15 @@ export function generateVersionNumber(
 export function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
+
+// ==================== エイリアス（EditorClientとの互換性） ====================
+
+/**
+ * calculateItemAmount: calculateAmountのエイリアス
+ */
+export const calculateItemAmount = calculateAmount;
+
+/**
+ * recalculateItemNumbers: renumberItemsのエイリアス
+ */
+export const recalculateItemNumbers = renumberItems;
