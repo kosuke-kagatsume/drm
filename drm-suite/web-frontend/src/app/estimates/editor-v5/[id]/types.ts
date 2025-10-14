@@ -148,3 +148,14 @@ export interface VersionComparison {
   totalAmountDiff: number;
   totalAmountDiffRate: number;
 }
+
+// コメント機能（V5新機能）
+export interface Comment {
+  id: string;
+  itemId: string; // 見積項目のID
+  content: string; // コメント内容
+  createdBy: string; // 作成者ID
+  createdByName: string; // 作成者名
+  createdAt: string; // 作成日時
+  updatedAt?: string; // 更新日時
+}

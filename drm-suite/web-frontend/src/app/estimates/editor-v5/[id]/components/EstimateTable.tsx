@@ -8,6 +8,7 @@ import {
   ChevronDown,
   Search,
   Plus,
+  MessageSquare,
 } from 'lucide-react';
 import { EstimateItem, EditingCell } from '../types';
 import { CATEGORIES, UNITS, getMinorCategoriesByMajor } from '../constants';
@@ -83,6 +84,8 @@ interface EstimateTableProps {
   onMoveRowUp: (itemId: string) => void;
   onMoveRowDown: (itemId: string) => void;
   onOpenMasterSearch: (itemId: string) => void;
+  onOpenCommentPanel: (itemId: string) => void;
+  commentCounts: Map<string, number>;
 }
 
 const EstimateTable = memo(function EstimateTable({
@@ -96,6 +99,8 @@ const EstimateTable = memo(function EstimateTable({
   onMoveRowUp,
   onMoveRowDown,
   onOpenMasterSearch,
+  onOpenCommentPanel,
+  commentCounts,
 }: EstimateTableProps) {
   // アイテムを大項目でグループ化
   const groupedItems = useMemo(() => groupItemsByCategory(items), [items]);
@@ -648,6 +653,20 @@ const EstimateTableRow = memo(function EstimateTableRow({
             title="複製"
           >
             <Copy className="w-4 h-4" />
+          </button>
+
+          {/* コメント */}
+          <button
+            onClick={() => onOpenCommentPanel(item.id)}
+            className="p-1 text-gray-600 hover:text-indigo-600 hover:bg-indigo-100 rounded relative"
+            title="コメント"
+          >
+            <MessageSquare className="w-4 h-4" />
+            {commentCounts.get(item.id) ? (
+              <span className="absolute -top-1 -right-1 bg-indigo-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                {commentCounts.get(item.id)}
+              </span>
+            ) : null}
           </button>
 
           {/* 削除 */}

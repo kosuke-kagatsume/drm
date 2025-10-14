@@ -21,6 +21,7 @@ import {
   MasterItem,
   EstimateTemplate,
   TemplateSection,
+  Comment,
 } from './types';
 import { CATEGORIES, UNITS } from './constants';
 import {
@@ -41,6 +42,14 @@ import {
   getAllTemplates,
   saveTemplate,
 } from './lib/estimateStorage';
+import {
+  loadComments,
+  getItemComments,
+  addComment,
+  updateComment,
+  deleteComment,
+  getCommentCounts,
+} from './lib/commentStorage';
 import { initializeDemoTemplates } from './lib/demoTemplates';
 import { useCostCalculation } from './hooks/useCostCalculation';
 import { useVersionManagement } from './hooks/useVersionManagement';
@@ -51,6 +60,7 @@ import TemplateSelectModal from './components/TemplateSelectModal';
 import TemplateSaveModal from './components/TemplateSaveModal';
 import MasterSearchModal from './components/MasterSearchModal';
 import VersionComparisonModal from './components/VersionComparisonModal';
+import CommentPanel from './components/CommentPanel';
 
 // ==================== EditorClient メインコンポーネント ====================
 
@@ -105,6 +115,13 @@ export default function EditorClient({
     string | null
   >(null);
 
+  // コメントパネル
+  const [showCommentPanel, setShowCommentPanel] = useState(false);
+  const [commentTargetItemId, setCommentTargetItemId] = useState<string | null>(
+    null,
+  );
+  const [comments, setComments] = useState<Comment[]>([]);
+
   // 大項目追加用の選択状態
   const [selectedCategoryForAdd, setSelectedCategoryForAdd] = useState<string>(
     CATEGORIES[0],
@@ -140,6 +157,10 @@ export default function EditorClient({
       setItems(loadedData.items);
       setLastSaved(new Date(loadedData.updatedAt));
     }
+
+    // コメントを読み込み
+    const loadedComments = loadComments(estimateId);
+    setComments(loadedComments);
   }, [estimateId]);
 
   // ==================== デモテンプレート初期化 ====================
@@ -644,6 +665,66 @@ export default function EditorClient({
     [estimateId],
   );
 
+  // ==================== コメント管理 ====================
+
+  const handleOpenCommentPanel = useCallback((itemId: string) => {
+    setCommentTargetItemId(itemId);
+    setShowCommentPanel(true);
+  }, []);
+
+  const handleAddComment = useCallback(
+    (itemId: string, content: string) => {
+      const newComment = addComment(
+        estimateId,
+        itemId,
+        content,
+        currentUser.id,
+        currentUser.name,
+      );
+      setComments((prev) => [...prev, newComment]);
+    },
+    [estimateId, currentUser],
+  );
+
+  const handleUpdateComment = useCallback(
+    (commentId: string, content: string) => {
+      const success = updateComment(estimateId, commentId, content);
+      if (success) {
+        const updatedComments = loadComments(estimateId);
+        setComments(updatedComments);
+      }
+    },
+    [estimateId],
+  );
+
+  const handleDeleteComment = useCallback(
+    (commentId: string) => {
+      const success = deleteComment(estimateId, commentId);
+      if (success) {
+        setComments((prev) => prev.filter((c) => c.id !== commentId));
+      }
+    },
+    [estimateId],
+  );
+
+  // 項目ごとのコメント数を計算
+  const commentCounts = useMemo(() => {
+    return getCommentCounts(estimateId);
+  }, [estimateId, comments]);
+
+  // 選択中の項目のコメント一覧
+  const selectedItemComments = useMemo(() => {
+    if (!commentTargetItemId) return [];
+    return comments.filter((c) => c.itemId === commentTargetItemId);
+  }, [comments, commentTargetItemId]);
+
+  // 選択中の項目名
+  const selectedItemName = useMemo(() => {
+    if (!commentTargetItemId) return '';
+    const item = items.find((i) => i.id === commentTargetItemId);
+    return item ? `No.${item.no} ${item.itemName || '(項目名なし)'}` : '';
+  }, [commentTargetItemId, items]);
+
   // ==================== PDF出力 ====================
 
   const handlePrintPDF = useCallback(() => {
@@ -890,6 +971,8 @@ export default function EditorClient({
               onMoveRowUp={handleMoveRowUp}
               onMoveRowDown={handleMoveRowDown}
               onOpenMasterSearch={handleOpenMasterSearch}
+              onOpenCommentPanel={handleOpenCommentPanel}
+              commentCounts={commentCounts}
             />
           </div>
         </div>
@@ -969,6 +1052,19 @@ export default function EditorClient({
         onClose={() => setShowMasterSearchModal(false)}
         category={masterSearchCategory}
         onSelectItem={handleSelectMasterItem}
+      />
+
+      {/* コメントパネル */}
+      <CommentPanel
+        isOpen={showCommentPanel}
+        onClose={() => setShowCommentPanel(false)}
+        itemId={commentTargetItemId}
+        itemName={selectedItemName}
+        comments={selectedItemComments}
+        onAddComment={handleAddComment}
+        onUpdateComment={handleUpdateComment}
+        onDeleteComment={handleDeleteComment}
+        currentUserId={currentUser.id}
       />
     </div>
   );
