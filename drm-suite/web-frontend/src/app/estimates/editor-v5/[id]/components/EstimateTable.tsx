@@ -242,6 +242,14 @@ interface SubtotalRowProps {
 }
 
 const SubtotalRow = memo(function SubtotalRow({ group }: SubtotalRowProps) {
+  // 粗利率による色分け
+  const profitRateColor =
+    group.subtotalProfitRate < 0
+      ? 'text-red-700 bg-red-100'
+      : group.subtotalProfitRate < 15
+        ? 'text-orange-700 bg-orange-100'
+        : 'text-green-700 bg-green-100';
+
   return (
     <tr className="bg-blue-50 font-semibold">
       <td colSpan={7} className="px-4 py-2 border border-gray-300 text-right">
@@ -256,7 +264,9 @@ const SubtotalRow = memo(function SubtotalRow({ group }: SubtotalRowProps) {
       <td className="px-3 py-2 border border-gray-300 text-right text-green-600">
         {formatPrice(group.subtotalProfit)}
       </td>
-      <td className="px-3 py-2 border border-gray-300 text-right text-green-600">
+      <td
+        className={`px-3 py-2 border border-gray-300 text-right ${profitRateColor}`}
+      >
         {group.subtotalProfitRate.toFixed(1)}%
       </td>
       <td colSpan={2} className="px-3 py-2 border border-gray-300"></td>
@@ -438,7 +448,15 @@ const EstimateTableRow = memo(function EstimateTableRow({
       </td>
 
       {/* 粗利率 */}
-      <td className="px-3 py-2 border border-gray-300 text-right bg-green-50 font-semibold">
+      <td
+        className={`px-3 py-2 border border-gray-300 text-right font-semibold ${
+          (item.grossProfitRate || 0) < 0
+            ? 'bg-red-100 text-red-700'
+            : (item.grossProfitRate || 0) < 15
+              ? 'bg-orange-100 text-orange-700'
+              : 'bg-green-100 text-green-700'
+        }`}
+      >
         {(item.grossProfitRate || 0).toFixed(1)}%
       </td>
 

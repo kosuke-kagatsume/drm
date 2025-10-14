@@ -8,6 +8,7 @@ import {
   PRODUCT_TYPES,
   MAKERS,
   EQUIPMENT_CATEGORIES,
+  getMinorCategoriesByMajor,
 } from '../constants';
 import { formatPrice } from '../lib/estimateCalculations';
 
@@ -27,7 +28,10 @@ const MasterSearchModal = memo(function MasterSearchModal({
   onSelectItem,
 }: MasterSearchModalProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchStep, setSearchStep] = useState<SearchStep>('category');
+  const [searchStep, setSearchStep] = useState<SearchStep>('minorCategory');
+  const [selectedMinorCategory, setSelectedMinorCategory] = useState<
+    string | null
+  >(null);
   const [selectedProductType, setSelectedProductType] = useState<string | null>(
     null,
   );
@@ -35,6 +39,11 @@ const MasterSearchModal = memo(function MasterSearchModal({
 
   // 住設機器カテゴリかどうか判定（Hooksはearly returnの前に配置）
   const isEquipmentCategory = EQUIPMENT_CATEGORIES.includes(category as any);
+
+  // 小項目をフィルター
+  const minorCategories = useMemo(() => {
+    return getMinorCategoriesByMajor(category);
+  }, [category]);
 
   // 商品種別をフィルター
   const productTypes = useMemo(() => {
@@ -55,6 +64,13 @@ const MasterSearchModal = memo(function MasterSearchModal({
   // マスタアイテムをフィルター
   const filteredItems = useMemo(() => {
     let items = MASTER_ITEMS.filter((item) => item.category === category);
+
+    // 小項目でフィルター
+    if (selectedMinorCategory) {
+      items = items.filter(
+        (item) => item.minorCategory === selectedMinorCategory,
+      );
+    }
 
     // 住設機器カテゴリの場合
     if (isEquipmentCategory) {
@@ -83,11 +99,23 @@ const MasterSearchModal = memo(function MasterSearchModal({
     return items;
   }, [
     category,
+    selectedMinorCategory,
     isEquipmentCategory,
     selectedProductType,
     selectedMaker,
     searchTerm,
   ]);
+
+  // 小項目を選択
+  const handleSelectMinorCategory = (minorCategoryName: string) => {
+    setSelectedMinorCategory(minorCategoryName);
+    // 住設機器カテゴリの場合は商品種別選択へ、それ以外は製品一覧へ
+    if (isEquipmentCategory) {
+      setSearchStep('category');
+    } else {
+      setSearchStep('product');
+    }
+  };
 
   // 商品種別を選択
   const handleSelectProductType = (productTypeId: string) => {
@@ -110,7 +138,8 @@ const MasterSearchModal = memo(function MasterSearchModal({
   // モーダルを閉じる
   const handleClose = () => {
     setSearchTerm('');
-    setSearchStep('category');
+    setSearchStep('minorCategory');
+    setSelectedMinorCategory(null);
     setSelectedProductType(null);
     setSelectedMaker(null);
     onClose();
@@ -119,11 +148,19 @@ const MasterSearchModal = memo(function MasterSearchModal({
   // 戻るボタン
   const handleBack = () => {
     if (searchStep === 'product') {
-      setSearchStep('maker');
-      setSelectedMaker(null);
+      if (isEquipmentCategory) {
+        setSearchStep('maker');
+        setSelectedMaker(null);
+      } else {
+        setSearchStep('minorCategory');
+        setSelectedMinorCategory(null);
+      }
     } else if (searchStep === 'maker') {
       setSearchStep('category');
       setSelectedProductType(null);
+    } else if (searchStep === 'category') {
+      setSearchStep('minorCategory');
+      setSelectedMinorCategory(null);
     }
   };
 
@@ -137,7 +174,7 @@ const MasterSearchModal = memo(function MasterSearchModal({
         <div className="p-6 border-b">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              {isEquipmentCategory && searchStep !== 'category' && (
+              {searchStep !== 'minorCategory' && (
                 <button
                   onClick={handleBack}
                   className="p-1 hover:bg-gray-100 rounded transition-colors"
@@ -170,6 +207,24 @@ const MasterSearchModal = memo(function MasterSearchModal({
 
         {/* コンテンツ */}
         <div className="flex-1 overflow-y-auto p-6">
+          {/* Step 0: 小項目選択 */}
+          {searchStep === 'minorCategory' && (
+            <div>
+              <h3 className="font-semibold text-lg mb-3">小項目を選択</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {minorCategories.map((minorCat) => (
+                  <button
+                    key={minorCat.id}
+                    onClick={() => handleSelectMinorCategory(minorCat.name)}
+                    className="p-4 border border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-left"
+                  >
+                    <div className="font-semibold">{minorCat.name}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {isEquipmentCategory ? (
             /* 住設機器: 4段階検索 */
             <>

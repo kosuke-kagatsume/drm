@@ -113,7 +113,12 @@ export interface CostCalculation {
 export type SaveStatus = 'saved' | 'saving' | 'unsaved';
 
 // 検索ステップ（マスタ検索）
-export type SearchStep = 'category' | 'productType' | 'maker' | 'product';
+export type SearchStep =
+  | 'minorCategory'
+  | 'category'
+  | 'productType'
+  | 'maker'
+  | 'product';
 
 // 小項目定義
 export interface MinorCategory {
