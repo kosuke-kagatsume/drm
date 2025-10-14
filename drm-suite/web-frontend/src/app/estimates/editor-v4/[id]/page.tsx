@@ -14,6 +14,9 @@ import {
   Package,
   ChevronUp,
   ChevronDown,
+  Download,
+  Upload,
+  Printer,
 } from 'lucide-react';
 import { logger } from '@/lib/logger';
 
@@ -510,6 +513,13 @@ export default function EstimateEditorV4() {
     null,
   );
 
+  // CSVインポート用のref
+  const fileInputRef = useCallback((node: HTMLInputElement | null) => {
+    if (node) {
+      node.value = '';
+    }
+  }, []);
+
   // ==================== データ読み込み ====================
 
   useEffect(() => {
@@ -920,6 +930,7 @@ export default function EstimateEditorV4() {
         JSON.stringify(estimateData),
       );
 
+      setHasUnsavedChanges(false);
       setSaveMessage('✅ 保存しました');
       logger.estimate.info('V4: 保存完了', {
         id: estimateId,
@@ -935,6 +946,164 @@ export default function EstimateEditorV4() {
       setIsSaving(false);
     }
   };
+
+  // ==================== CSV エクスポート ====================
+
+  /**
+   * CSVエクスポート
+   */
+  const handleExportCSV = useCallback(() => {
+    try {
+      // CSVヘッダー
+      const headers = [
+        'No',
+        'カテゴリ',
+        '項目名',
+        '仕様',
+        '数量',
+        '単位',
+        '単価',
+        '金額',
+        '備考',
+      ];
+
+      // CSVデータ行
+      const rows = items.map((item) => [
+        item.no.toString(),
+        item.category,
+        item.itemName,
+        item.specification,
+        item.quantity.toString(),
+        item.unit,
+        item.unitPrice.toString(),
+        item.amount.toString(),
+        item.remarks,
+      ]);
+
+      // CSV文字列を作成
+      const csvContent = [
+        headers.join(','),
+        ...rows.map((row) =>
+          row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(','),
+        ),
+      ].join('\n');
+
+      // BOMを追加（Excel対応）
+      const bom = '\uFEFF';
+      const blob = new Blob([bom + csvContent], {
+        type: 'text/csv;charset=utf-8;',
+      });
+
+      // ダウンロード
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute(
+        'download',
+        `見積書_${title}_${new Date().toISOString().split('T')[0]}.csv`,
+      );
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setSaveMessage('✅ CSVをエクスポートしました');
+      setTimeout(() => setSaveMessage(''), 3000);
+
+      logger.estimate.info('V4: CSVエクスポート完了', {
+        id: estimateId,
+        itemCount: items.length,
+      });
+    } catch (error) {
+      logger.estimate.error('V4: CSVエクスポートエラー', error);
+      setSaveMessage('❌ CSVエクスポートに失敗しました');
+    }
+  }, [items, title, estimateId]);
+
+  // ==================== CSV インポート ====================
+
+  /**
+   * CSVインポート
+   */
+  const handleImportCSV = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const text = e.target?.result as string;
+          const lines = text.split('\n').filter((line) => line.trim() !== '');
+
+          // ヘッダー行をスキップ
+          const dataLines = lines.slice(1);
+
+          // CSVパース
+          const parsedItems: EstimateItem[] = dataLines.map((line, index) => {
+            // カンマで分割（ダブルクォートで囲まれた部分を考慮）
+            const regex = /("([^"]*)"|[^,]+)/g;
+            const matches = line.match(regex) || [];
+            const cells = matches.map((cell) =>
+              cell.replace(/^"|"$/g, '').replace(/""/g, '"'),
+            );
+
+            const [
+              no,
+              category,
+              itemName,
+              specification,
+              quantity,
+              unit,
+              unitPrice,
+              amount,
+              remarks,
+            ] = cells;
+
+            return {
+              id: generateId(),
+              no: parseInt(no) || index + 1,
+              category: category || CATEGORIES[0],
+              itemName: itemName || '',
+              specification: specification || '',
+              quantity: parseFloat(quantity) || 1,
+              unit: unit || UNITS[0],
+              unitPrice: parseFloat(unitPrice) || 0,
+              amount: parseFloat(amount) || 0,
+              remarks: remarks || '',
+            };
+          });
+
+          setItems(parsedItems);
+          setSaveMessage(
+            `✅ CSVから${parsedItems.length}件の項目をインポートしました`,
+          );
+          setTimeout(() => setSaveMessage(''), 3000);
+
+          logger.estimate.info('V4: CSVインポート完了', {
+            id: estimateId,
+            itemCount: parsedItems.length,
+          });
+        } catch (error) {
+          logger.estimate.error('V4: CSVインポートエラー', error);
+          setSaveMessage('❌ CSVインポートに失敗しました');
+        }
+      };
+
+      reader.readAsText(file, 'UTF-8');
+    },
+    [estimateId],
+  );
+
+  // ==================== PDF印刷 ====================
+
+  /**
+   * PDF印刷（ブラウザの印刷機能を使用）
+   */
+  const handlePrint = useCallback(() => {
+    logger.estimate.info('V4: PDF印刷を開始', { id: estimateId });
+    window.print();
+  }, [estimateId]);
 
   // ==================== 合計金額計算 ====================
 
@@ -1040,6 +1209,39 @@ export default function EstimateEditorV4() {
               >
                 <Plus className="w-4 h-4" />
                 <span>行を追加</span>
+              </button>
+
+              <div className="h-6 w-px bg-gray-300 mx-2"></div>
+
+              {/* CSV インポートボタン */}
+              <label className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium cursor-pointer">
+                <Upload className="w-4 h-4" />
+                <span>CSV取込</span>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv"
+                  onChange={handleImportCSV}
+                  className="hidden"
+                />
+              </label>
+
+              {/* CSV エクスポートボタン */}
+              <button
+                onClick={handleExportCSV}
+                className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+              >
+                <Download className="w-4 h-4" />
+                <span>CSV出力</span>
+              </button>
+
+              {/* PDF印刷ボタン */}
+              <button
+                onClick={handlePrint}
+                className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium print:hidden"
+              >
+                <Printer className="w-4 h-4" />
+                <span>PDF出力</span>
               </button>
 
               <div className="text-sm text-gray-600 ml-4">
@@ -1155,6 +1357,64 @@ export default function EstimateEditorV4() {
         onCategoryChange={setSelectedCategory}
         filteredMasters={filteredMasters}
       />
+
+      {/* 印刷用スタイル */}
+      <style jsx global>{`
+        @media print {
+          /* 印刷時はヘッダー・ツールバー・モーダルを非表示 */
+          header,
+          .print\\:hidden {
+            display: none !important;
+          }
+
+          /* 印刷時は背景色を白に */
+          body {
+            background: white !important;
+          }
+
+          /* 印刷時はページ余白を設定 */
+          @page {
+            margin: 15mm;
+            size: A4;
+          }
+
+          /* メインコンテンツの余白を調整 */
+          main {
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: 100% !important;
+          }
+
+          /* テーブルのスタイル調整 */
+          table {
+            page-break-inside: auto;
+          }
+
+          tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+          }
+
+          thead {
+            display: table-header-group;
+          }
+
+          tfoot {
+            display: table-footer-group;
+          }
+
+          /* 操作列を非表示 */
+          th:last-child,
+          td:last-child {
+            display: none !important;
+          }
+
+          /* 合計金額ボックスのスタイル調整 */
+          .print\\:border-black {
+            border-color: black !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
