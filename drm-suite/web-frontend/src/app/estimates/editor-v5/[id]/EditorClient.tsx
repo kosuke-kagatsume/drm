@@ -44,11 +44,9 @@ import {
 } from './lib/estimateStorage';
 import {
   loadComments,
-  getItemComments,
   addComment,
   updateComment,
   deleteComment,
-  getCommentCounts,
 } from './lib/commentStorage';
 import { initializeDemoTemplates } from './lib/demoTemplates';
 import { useCostCalculation } from './hooks/useCostCalculation';
@@ -709,8 +707,13 @@ export default function EditorClient({
 
   // 項目ごとのコメント数を計算
   const commentCounts = useMemo(() => {
-    return getCommentCounts(estimateId);
-  }, [estimateId, comments]);
+    const counts = new Map<string, number>();
+    comments.forEach((comment) => {
+      const current = counts.get(comment.itemId) || 0;
+      counts.set(comment.itemId, current + 1);
+    });
+    return counts;
+  }, [comments]);
 
   // 選択中の項目のコメント一覧
   const selectedItemComments = useMemo(() => {

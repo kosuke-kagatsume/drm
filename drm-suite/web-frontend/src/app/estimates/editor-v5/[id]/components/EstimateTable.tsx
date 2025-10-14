@@ -192,6 +192,8 @@ const EstimateTable = memo(function EstimateTable({
                     onMoveRowUp={onMoveRowUp}
                     onMoveRowDown={onMoveRowDown}
                     onOpenMasterSearch={onOpenMasterSearch}
+                    onOpenCommentPanel={onOpenCommentPanel}
+                    commentCounts={commentCounts}
                   />
                 ))}
 
@@ -300,6 +302,8 @@ interface EstimateTableRowProps {
   onMoveRowUp: (itemId: string) => void;
   onMoveRowDown: (itemId: string) => void;
   onOpenMasterSearch: (itemId: string) => void;
+  onOpenCommentPanel: (itemId: string) => void;
+  commentCounts: Map<string, number>;
 }
 
 const EstimateTableRow = memo(function EstimateTableRow({
@@ -316,6 +320,8 @@ const EstimateTableRow = memo(function EstimateTableRow({
   onMoveRowUp,
   onMoveRowDown,
   onOpenMasterSearch,
+  onOpenCommentPanel,
+  commentCounts,
 }: EstimateTableRowProps) {
   const isEditing = (field: string) =>
     editingCell?.row === item.id && editingCell?.col === field;
