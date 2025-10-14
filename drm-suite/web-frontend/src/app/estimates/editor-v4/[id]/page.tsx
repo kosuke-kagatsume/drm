@@ -12,6 +12,8 @@ import {
   Search,
   X,
   Package,
+  ChevronUp,
+  ChevronDown,
 } from 'lucide-react';
 import { logger } from '@/lib/logger';
 
@@ -502,6 +504,12 @@ export default function EstimateEditorV4() {
   const [masterSearchQuery, setMasterSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
+  // 自動保存関連
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [autoSaveTimer, setAutoSaveTimer] = useState<NodeJS.Timeout | null>(
+    null,
+  );
+
   // ==================== データ読み込み ====================
 
   useEffect(() => {
@@ -532,6 +540,93 @@ export default function EstimateEditorV4() {
       setIsLoading(false);
     }
   };
+
+  // ==================== 自動保存 ====================
+
+  /**
+   * データ変更時に未保存フラグを立てる
+   */
+  useEffect(() => {
+    if (isLoading) return; // 初回読み込み中は無視
+
+    setHasUnsavedChanges(true);
+
+    // 既存のタイマーをクリア
+    if (autoSaveTimer) {
+      clearTimeout(autoSaveTimer);
+    }
+
+    // 5秒後に自動保存
+    const timer = setTimeout(() => {
+      handleAutoSave();
+    }, 5000);
+
+    setAutoSaveTimer(timer);
+
+    // クリーンアップ
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [items, title, customer]);
+
+  /**
+   * 自動保存を実行
+   */
+  const handleAutoSave = async () => {
+    if (!hasUnsavedChanges) return;
+
+    try {
+      const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
+
+      const estimateData: EstimateData = {
+        id: estimateId,
+        title,
+        customer,
+        items,
+        totalAmount,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      // ローカルストレージに保存
+      localStorage.setItem(
+        `estimate-v4-${estimateId}`,
+        JSON.stringify(estimateData),
+      );
+
+      setHasUnsavedChanges(false);
+      setSaveMessage('✅ 自動保存しました');
+      logger.estimate.info('V4: 自動保存完了', {
+        id: estimateId,
+        itemCount: items.length,
+      });
+
+      // 3秒後にメッセージを消す
+      setTimeout(() => setSaveMessage(''), 3000);
+    } catch (error) {
+      logger.estimate.error('V4: 自動保存エラー', error);
+    }
+  };
+
+  /**
+   * ブラウザ離脱時の警告
+   */
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
 
   // ==================== アイテム操作 ====================
 
@@ -594,6 +689,58 @@ export default function EstimateEditorV4() {
 
       setItems([...items, newItem]);
       logger.estimate.debug('V4: 行複製', { id, newId: newItem.id });
+    },
+    [items],
+  );
+
+  /**
+   * 行を上に移動
+   */
+  const handleMoveUp = useCallback(
+    (id: string) => {
+      const index = items.findIndex((item) => item.id === id);
+      if (index <= 0) return; // 最初の行は上に移動できない
+
+      const newItems = [...items];
+      [newItems[index - 1], newItems[index]] = [
+        newItems[index],
+        newItems[index - 1],
+      ];
+
+      // No を振り直し
+      const reorderedItems = newItems.map((item, idx) => ({
+        ...item,
+        no: idx + 1,
+      }));
+
+      setItems(reorderedItems);
+      logger.estimate.debug('V4: 行を上に移動', { id, fromIndex: index });
+    },
+    [items],
+  );
+
+  /**
+   * 行を下に移動
+   */
+  const handleMoveDown = useCallback(
+    (id: string) => {
+      const index = items.findIndex((item) => item.id === id);
+      if (index < 0 || index >= items.length - 1) return; // 最後の行は下に移動できない
+
+      const newItems = [...items];
+      [newItems[index], newItems[index + 1]] = [
+        newItems[index + 1],
+        newItems[index],
+      ];
+
+      // No を振り直し
+      const reorderedItems = newItems.map((item, idx) => ({
+        ...item,
+        no: idx + 1,
+      }));
+
+      setItems(reorderedItems);
+      logger.estimate.debug('V4: 行を下に移動', { id, fromIndex: index });
     },
     [items],
   );
@@ -861,12 +1008,20 @@ export default function EstimateEditorV4() {
                   ${
                     isSaving
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                      : hasUnsavedChanges
+                        ? 'bg-orange-500 text-white hover:bg-orange-600'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
                   }
                 `}
               >
                 <Save className="w-4 h-4" />
-                <span>{isSaving ? '保存中...' : '保存'}</span>
+                <span>
+                  {isSaving
+                    ? '保存中...'
+                    : hasUnsavedChanges
+                      ? '保存 (未保存)'
+                      : '保存'}
+                </span>
               </button>
             </div>
           </div>
@@ -954,7 +1109,7 @@ export default function EstimateEditorV4() {
                     </td>
                   </tr>
                 ) : (
-                  items.map((item) => (
+                  items.map((item, index) => (
                     <EstimateRow
                       key={item.id}
                       item={item}
@@ -962,6 +1117,10 @@ export default function EstimateEditorV4() {
                       onDelete={handleDeleteRow}
                       onCopy={handleCopyRow}
                       onOpenMasterModal={handleOpenMasterModal}
+                      onMoveUp={handleMoveUp}
+                      onMoveDown={handleMoveDown}
+                      isFirst={index === 0}
+                      isLast={index === items.length - 1}
                     />
                   ))
                 )}
@@ -1008,6 +1167,10 @@ interface EstimateRowProps {
   onDelete: (id: string) => void;
   onCopy: (id: string) => void;
   onOpenMasterModal: (id: string) => void;
+  onMoveUp: (id: string) => void;
+  onMoveDown: (id: string) => void;
+  isFirst: boolean;
+  isLast: boolean;
 }
 
 function EstimateRow({
@@ -1016,6 +1179,10 @@ function EstimateRow({
   onDelete,
   onCopy,
   onOpenMasterModal,
+  onMoveUp,
+  onMoveDown,
+  isFirst,
+  isLast,
 }: EstimateRowProps) {
   return (
     <tr className="hover:bg-gray-50 transition-colors">
@@ -1134,6 +1301,30 @@ function EstimateRow({
       {/* 操作ボタン */}
       <td className="px-3 py-2">
         <div className="flex items-center justify-center space-x-1">
+          <button
+            onClick={() => onMoveUp(item.id)}
+            disabled={isFirst}
+            className={`p-1 rounded transition-colors ${
+              isFirst
+                ? 'text-gray-300 cursor-not-allowed'
+                : 'hover:bg-gray-100 text-gray-600'
+            }`}
+            title="上に移動"
+          >
+            <ChevronUp className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => onMoveDown(item.id)}
+            disabled={isLast}
+            className={`p-1 rounded transition-colors ${
+              isLast
+                ? 'text-gray-300 cursor-not-allowed'
+                : 'hover:bg-gray-100 text-gray-600'
+            }`}
+            title="下に移動"
+          >
+            <ChevronDown className="w-4 h-4" />
+          </button>
           <button
             onClick={() => onCopy(item.id)}
             className="p-1 hover:bg-blue-100 rounded transition-colors"
