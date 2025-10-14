@@ -42,6 +42,7 @@ import {
   getAllTemplates,
   saveTemplate,
 } from './lib/estimateStorage';
+import { generateEstimatePdf, canGeneratePdf } from './lib/pdfGenerator';
 import {
   loadComments,
   addComment,
@@ -85,6 +86,7 @@ export default function EditorClient({
 
   // 基本データ
   const [estimateTitle, setEstimateTitle] = useState(initialTitle);
+  const [customer, setCustomer] = useState('');
   const [items, setItems] = useState<EstimateItem[]>(initialItems);
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
 
@@ -152,6 +154,7 @@ export default function EditorClient({
     const loadedData = loadEstimate(estimateId);
     if (loadedData) {
       setEstimateTitle(loadedData.title);
+      setCustomer(loadedData.customer || '');
       setItems(loadedData.items);
       setLastSaved(new Date(loadedData.updatedAt));
     }
@@ -183,7 +186,7 @@ export default function EditorClient({
     }, 2000); // 2秒後に自動保存
 
     return () => clearTimeout(timer);
-  }, [items, estimateTitle]);
+  }, [items, estimateTitle, customer]);
 
   // ==================== 保存処理 ====================
 
@@ -193,6 +196,7 @@ export default function EditorClient({
     const estimateData = {
       id: estimateId,
       title: estimateTitle,
+      customer: customer,
       items: itemsWithCost,
       totalAmount: totals.totalAmount,
       createdAt: new Date().toISOString(),
@@ -207,6 +211,7 @@ export default function EditorClient({
   }, [
     estimateId,
     estimateTitle,
+    customer,
     itemsWithCost,
     totals.totalAmount,
     currentUser,
@@ -730,10 +735,41 @@ export default function EditorClient({
 
   // ==================== PDF出力 ====================
 
-  const handlePrintPDF = useCallback(() => {
-    // TODO: 実装 - 管理画面のPDFテンプレート選択と連携
-    alert('PDF出力機能は管理画面と連携して実装予定です');
-  }, []);
+  const handlePrintPDF = useCallback(async () => {
+    try {
+      // 見積データを作成
+      const estimateData = {
+        id: estimateId,
+        title: estimateTitle,
+        customer: customer,
+        items: items,
+        totalAmount: totals.totalAmount,
+        comment: '', // コメント欄は後で追加予定
+        createdAt: new Date().toISOString(),
+        updatedAt: lastSaved.toISOString(),
+      };
+
+      // PDF生成可能かチェック
+      const validation = canGeneratePdf(estimateData);
+      if (!validation.canGenerate) {
+        alert(validation.reason || 'PDF生成できません');
+        return;
+      }
+
+      // PDF生成
+      await generateEstimatePdf(estimateData);
+    } catch (error) {
+      console.error('PDF生成エラー:', error);
+      alert('PDF生成に失敗しました');
+    }
+  }, [
+    estimateId,
+    estimateTitle,
+    customer,
+    items,
+    totals.totalAmount,
+    lastSaved,
+  ]);
 
   // ==================== キーボードショートカット ====================
 
@@ -768,13 +804,22 @@ export default function EditorClient({
           {/* タイトル行 */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-4 flex-1">
-              <input
-                type="text"
-                value={estimateTitle}
-                onChange={(e) => setEstimateTitle(e.target.value)}
-                className="text-2xl font-bold border-none outline-none focus:outline-none bg-transparent hover:bg-gray-50 px-2 py-1 rounded transition-colors flex-1 max-w-md"
-                placeholder="見積タイトル"
-              />
+              <div className="flex flex-col gap-2 flex-1 max-w-2xl">
+                <input
+                  type="text"
+                  value={estimateTitle}
+                  onChange={(e) => setEstimateTitle(e.target.value)}
+                  className="text-2xl font-bold border-none outline-none focus:outline-none bg-transparent hover:bg-gray-50 px-2 py-1 rounded transition-colors"
+                  placeholder="見積タイトル"
+                />
+                <input
+                  type="text"
+                  value={customer}
+                  onChange={(e) => setCustomer(e.target.value)}
+                  className="text-base border border-gray-300 outline-none focus:outline-none focus:ring-2 focus:ring-indigo-500 px-3 py-1.5 rounded transition-colors"
+                  placeholder="顧客名を入力"
+                />
+              </div>
               {/* 保存状態インジケーター */}
               <div className="flex items-center gap-2 text-sm">
                 {saveStatus === 'saved' && (
