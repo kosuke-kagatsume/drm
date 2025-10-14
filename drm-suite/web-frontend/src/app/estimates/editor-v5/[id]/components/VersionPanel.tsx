@@ -17,6 +17,7 @@ interface VersionPanelProps {
     changeNote: string,
   ) => void;
   onSwitchVersion: (versionId: string) => void;
+  onOpenVersionComparison: () => void;
 }
 
 const VersionPanel = memo(function VersionPanel({
@@ -26,6 +27,7 @@ const VersionPanel = memo(function VersionPanel({
   currentVersionId,
   onCreateVersion,
   onSwitchVersion,
+  onOpenVersionComparison,
 }: VersionPanelProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [versionType, setVersionType] = useState<'major' | 'minor' | 'draft'>(
@@ -63,13 +65,21 @@ const VersionPanel = memo(function VersionPanel({
               <X className="w-5 h-5" />
             </button>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="w-full px-4 py-2 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors"
-          >
-            <GitBranch className="w-4 h-4 inline mr-2" />
-            新バージョン作成
-          </button>
+          <div className="space-y-2">
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="w-full px-4 py-2 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors"
+            >
+              <GitBranch className="w-4 h-4 inline mr-2" />
+              新バージョン作成
+            </button>
+            <button
+              onClick={onOpenVersionComparison}
+              className="w-full px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-400 transition-colors"
+            >
+              バージョン比較
+            </button>
+          </div>
         </div>
 
         {/* バージョンリスト */}

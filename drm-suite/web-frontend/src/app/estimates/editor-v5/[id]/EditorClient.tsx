@@ -48,6 +48,7 @@ import VersionPanel from './components/VersionPanel';
 import TemplateSelectModal from './components/TemplateSelectModal';
 import TemplateSaveModal from './components/TemplateSaveModal';
 import MasterSearchModal from './components/MasterSearchModal';
+import VersionComparisonModal from './components/VersionComparisonModal';
 
 // ==================== EditorClient メインコンポーネント ====================
 
@@ -83,6 +84,7 @@ export default function EditorClient({
 
   // モーダル表示フラグ
   const [showVersionPanel, setShowVersionPanel] = useState(false);
+  const [showVersionComparison, setShowVersionComparison] = useState(false);
   const [showTemplateSelectModal, setShowTemplateSelectModal] = useState(false);
   const [showTemplateSaveModal, setShowTemplateSaveModal] = useState(false);
   const [showMasterSearchModal, setShowMasterSearchModal] = useState(false);
@@ -572,6 +574,14 @@ export default function EditorClient({
     [switchVersion],
   );
 
+  const getVersionItems = useCallback(
+    (versionId: string): EstimateItem[] => {
+      const versionData = loadVersionData(estimateId, versionId);
+      return versionData ? versionData.items : [];
+    },
+    [estimateId],
+  );
+
   // ==================== PDF出力 ====================
 
   const handlePrintPDF = useCallback(() => {
@@ -854,6 +864,15 @@ export default function EditorClient({
         currentVersionId={currentVersionId}
         onCreateVersion={handleCreateVersion}
         onSwitchVersion={handleSwitchVersion}
+        onOpenVersionComparison={() => setShowVersionComparison(true)}
+      />
+
+      {/* バージョン比較モーダル */}
+      <VersionComparisonModal
+        isOpen={showVersionComparison}
+        onClose={() => setShowVersionComparison(false)}
+        versions={versions}
+        getVersionItems={getVersionItems}
       />
 
       {/* テンプレート選択モーダル */}

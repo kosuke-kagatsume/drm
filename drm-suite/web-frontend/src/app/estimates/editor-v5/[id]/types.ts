@@ -126,3 +126,25 @@ export interface MinorCategory {
   name: string;
   majorCategory: string; // 所属する大項目
 }
+
+// バージョン比較（V5新機能）
+export type DiffType = 'added' | 'removed' | 'modified' | 'unchanged';
+
+export interface ItemDiff {
+  type: DiffType;
+  oldItem?: EstimateItem;
+  newItem?: EstimateItem;
+  changes?: {
+    field: keyof EstimateItem;
+    oldValue: any;
+    newValue: any;
+  }[];
+}
+
+export interface VersionComparison {
+  oldVersion: EstimateVersion;
+  newVersion: EstimateVersion;
+  itemDiffs: ItemDiff[];
+  totalAmountDiff: number;
+  totalAmountDiffRate: number;
+}
