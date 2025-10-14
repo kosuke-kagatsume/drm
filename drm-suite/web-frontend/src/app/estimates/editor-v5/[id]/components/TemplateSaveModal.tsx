@@ -33,8 +33,6 @@ const TemplateSaveModal = memo(function TemplateSaveModal({
   >('personal');
   const [templateBranch, setTemplateBranch] = useState(BRANCHES[0]);
 
-  if (!isOpen) return null;
-
   const handleSave = () => {
     if (!templateName.trim()) {
       alert('テンプレート名を入力してください');
@@ -56,6 +54,9 @@ const TemplateSaveModal = memo(function TemplateSaveModal({
     setTemplateScope('personal');
     setTemplateBranch(BRANCHES[0]);
   };
+
+  // モーダルが閉じている場合は何も表示しない
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">

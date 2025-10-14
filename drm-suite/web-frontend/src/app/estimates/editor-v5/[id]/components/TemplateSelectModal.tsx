@@ -34,9 +34,7 @@ const TemplateSelectModal = memo(function TemplateSelectModal({
   );
   const [selectAllSections, setSelectAllSections] = useState(false);
 
-  if (!isOpen) return null;
-
-  // フィルタリング
+  // フィルタリング（Hooksはearly returnの前に配置）
   const filteredTemplates = useMemo(() => {
     return templates.filter((template) => {
       // 検索語でフィルター
@@ -103,7 +101,7 @@ const TemplateSelectModal = memo(function TemplateSelectModal({
   // テンプレート適用
   const handleApply = () => {
     if (!selectedTemplate || selectedSections.size === 0) {
-      alert('セクションを選択してください');
+      alert('大項目を選択してください');
       return;
     }
 
@@ -121,6 +119,9 @@ const TemplateSelectModal = memo(function TemplateSelectModal({
     setCategoryFilter('all');
     onClose();
   };
+
+  // モーダルが閉じている場合は何も表示しない
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -231,7 +232,7 @@ const TemplateSelectModal = memo(function TemplateSelectModal({
                           </span>
                         )}
                         <span className="px-2 py-0.5 bg-purple-200 text-purple-700 text-xs rounded">
-                          {template.sections.length}セクション
+                          {template.sections.length}大項目
                         </span>
                       </div>
                     </div>
@@ -284,11 +285,11 @@ const TemplateSelectModal = memo(function TemplateSelectModal({
                     htmlFor="select-all"
                     className="font-semibold cursor-pointer"
                   >
-                    全てのセクションを選択
+                    全ての大項目を選択
                   </label>
                 </div>
 
-                {/* セクションリスト */}
+                {/* 大項目リスト */}
                 <div className="space-y-3">
                   {selectedTemplate.sections.map((section) => (
                     <SectionCard
@@ -321,7 +322,7 @@ const TemplateSelectModal = memo(function TemplateSelectModal({
             className="flex-1 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
             <Check className="w-5 h-5" />
-            選択したセクションを適用（{selectedSections.size}個）
+            選択した大項目を適用（{selectedSections.size}個）
           </button>
           <button
             onClick={handleClose}

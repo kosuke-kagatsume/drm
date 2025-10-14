@@ -1,10 +1,70 @@
 'use client';
 
-import React, { memo } from 'react';
-import { Trash2, Copy, ChevronUp, ChevronDown, Search } from 'lucide-react';
+import React, { memo, useMemo } from 'react';
+import {
+  Trash2,
+  Copy,
+  ChevronUp,
+  ChevronDown,
+  Search,
+  Plus,
+} from 'lucide-react';
 import { EstimateItem, EditingCell } from '../types';
-import { CATEGORIES, UNITS } from '../constants';
+import { CATEGORIES, UNITS, getMinorCategoriesByMajor } from '../constants';
 import { formatPrice } from '../lib/estimateCalculations';
+
+// ==================== 型定義 ====================
+
+interface ItemGroup {
+  category: string;
+  items: EstimateItem[];
+  subtotal: number;
+  subtotalCost: number;
+  subtotalProfit: number;
+  subtotalProfitRate: number;
+}
+
+// ==================== ヘルパー関数 ====================
+
+/**
+ * アイテムを大項目でグループ化
+ */
+function groupItemsByCategory(items: EstimateItem[]): ItemGroup[] {
+  const groups: Map<string, EstimateItem[]> = new Map();
+
+  // 大項目ごとにアイテムを分類
+  items.forEach((item) => {
+    const category = item.category;
+    if (!groups.has(category)) {
+      groups.set(category, []);
+    }
+    groups.get(category)!.push(item);
+  });
+
+  // グループごとに小計を計算
+  const result: ItemGroup[] = [];
+  groups.forEach((groupItems, category) => {
+    const subtotal = groupItems.reduce((sum, item) => sum + item.amount, 0);
+    const subtotalCost = groupItems.reduce(
+      (sum, item) => sum + (item.costAmount || 0),
+      0,
+    );
+    const subtotalProfit = subtotal - subtotalCost;
+    const subtotalProfitRate =
+      subtotal > 0 ? (subtotalProfit / subtotal) * 100 : 0;
+
+    result.push({
+      category,
+      items: groupItems,
+      subtotal,
+      subtotalCost,
+      subtotalProfit,
+      subtotalProfitRate,
+    });
+  });
+
+  return result;
+}
 
 // ==================== EstimateTable コンポーネント ====================
 
@@ -17,7 +77,7 @@ interface EstimateTableProps {
     field: keyof EstimateItem,
     value: string,
   ) => void;
-  onAddRow: () => void;
+  onAddRow: (category?: string) => void;
   onDeleteRow: (itemId: string) => void;
   onDuplicateRow: (itemId: string) => void;
   onMoveRowUp: (itemId: string) => void;
@@ -37,6 +97,9 @@ const EstimateTable = memo(function EstimateTable({
   onMoveRowDown,
   onOpenMasterSearch,
 }: EstimateTableProps) {
+  // アイテムを大項目でグループ化
+  const groupedItems = useMemo(() => groupItemsByCategory(items), [items]);
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse">
@@ -46,7 +109,7 @@ const EstimateTable = memo(function EstimateTable({
               No
             </th>
             <th className="px-3 py-3 text-left text-sm font-semibold border border-blue-500 w-32">
-              カテゴリ
+              小項目
             </th>
             <th className="px-3 py-3 text-left text-sm font-semibold border border-blue-500 min-w-[200px]">
               項目名
@@ -90,30 +153,45 @@ const EstimateTable = memo(function EstimateTable({
                 <div className="flex flex-col items-center gap-2">
                   <p className="text-lg">項目がありません</p>
                   <button
-                    onClick={onAddRow}
+                    onClick={() => onAddRow()}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                   >
-                    最初の行を追加
+                    最初の大項目を追加
                   </button>
                 </div>
               </td>
             </tr>
           ) : (
-            items.map((item, index) => (
-              <EstimateTableRow
-                key={item.id}
-                item={item}
-                index={index}
-                totalItems={items.length}
-                editingCell={editingCell}
-                onCellEdit={onCellEdit}
-                onCellChange={onCellChange}
-                onDeleteRow={onDeleteRow}
-                onDuplicateRow={onDuplicateRow}
-                onMoveRowUp={onMoveRowUp}
-                onMoveRowDown={onMoveRowDown}
-                onOpenMasterSearch={onOpenMasterSearch}
-              />
+            groupedItems.map((group) => (
+              <React.Fragment key={group.category}>
+                {/* 大項目ヘッダー行 */}
+                <CategoryHeaderRow
+                  category={group.category}
+                  onAddItem={onAddRow}
+                />
+
+                {/* 明細行 */}
+                {group.items.map((item, index) => (
+                  <EstimateTableRow
+                    key={item.id}
+                    item={item}
+                    index={index}
+                    groupItems={group.items}
+                    totalItems={items.length}
+                    editingCell={editingCell}
+                    onCellEdit={onCellEdit}
+                    onCellChange={onCellChange}
+                    onDeleteRow={onDeleteRow}
+                    onDuplicateRow={onDuplicateRow}
+                    onMoveRowUp={onMoveRowUp}
+                    onMoveRowDown={onMoveRowDown}
+                    onOpenMasterSearch={onOpenMasterSearch}
+                  />
+                ))}
+
+                {/* 小計行 */}
+                <SubtotalRow group={group} />
+              </React.Fragment>
             ))
           )}
         </tbody>
@@ -122,11 +200,76 @@ const EstimateTable = memo(function EstimateTable({
   );
 });
 
+// ==================== CategoryHeaderRow コンポーネント ====================
+
+interface CategoryHeaderRowProps {
+  category: string;
+  onAddItem: (category: string) => void;
+}
+
+const CategoryHeaderRow = memo(function CategoryHeaderRow({
+  category,
+  onAddItem,
+}: CategoryHeaderRowProps) {
+  return (
+    <tr className="bg-gradient-to-r from-blue-500 to-blue-600">
+      <td
+        colSpan={13}
+        className="px-4 py-3 border border-blue-400 text-white font-bold text-lg"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">●</span>
+            <span>{category}</span>
+          </div>
+          <button
+            onClick={() => onAddItem(category)}
+            className="px-3 py-1 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors text-sm flex items-center gap-1"
+          >
+            <Plus className="w-4 h-4" />
+            項目を追加
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+});
+
+// ==================== SubtotalRow コンポーネント ====================
+
+interface SubtotalRowProps {
+  group: ItemGroup;
+}
+
+const SubtotalRow = memo(function SubtotalRow({ group }: SubtotalRowProps) {
+  return (
+    <tr className="bg-blue-50 font-semibold">
+      <td colSpan={7} className="px-4 py-2 border border-gray-300 text-right">
+        {group.category} 小計
+      </td>
+      <td className="px-3 py-2 border border-gray-300 text-right text-blue-600">
+        {formatPrice(group.subtotal)}
+      </td>
+      <td className="px-3 py-2 border border-gray-300 text-right text-yellow-600">
+        {formatPrice(group.subtotalCost)}
+      </td>
+      <td className="px-3 py-2 border border-gray-300 text-right text-green-600">
+        {formatPrice(group.subtotalProfit)}
+      </td>
+      <td className="px-3 py-2 border border-gray-300 text-right text-green-600">
+        {group.subtotalProfitRate.toFixed(1)}%
+      </td>
+      <td colSpan={2} className="px-3 py-2 border border-gray-300"></td>
+    </tr>
+  );
+});
+
 // ==================== EstimateTableRow コンポーネント ====================
 
 interface EstimateTableRowProps {
   item: EstimateItem;
   index: number;
+  groupItems: EstimateItem[]; // 同じグループ内のアイテム一覧
   totalItems: number;
   editingCell: EditingCell | null;
   onCellEdit: (cell: EditingCell | null) => void;
@@ -145,6 +288,7 @@ interface EstimateTableRowProps {
 const EstimateTableRow = memo(function EstimateTableRow({
   item,
   index,
+  groupItems,
   totalItems,
   editingCell,
   onCellEdit,
@@ -157,6 +301,12 @@ const EstimateTableRow = memo(function EstimateTableRow({
 }: EstimateTableRowProps) {
   const isEditing = (field: string) =>
     editingCell?.row === item.id && editingCell?.col === field;
+
+  // 選択された大項目に応じて小項目の選択肢を取得
+  const minorCategoryOptions = useMemo(() => {
+    const minorCats = getMinorCategoriesByMajor(item.category);
+    return ['', ...minorCats.map((mc) => mc.name)]; // 空文字列を先頭に追加（未選択）
+  }, [item.category]);
 
   const renderCell = (
     field: keyof EstimateItem,
@@ -234,9 +384,9 @@ const EstimateTableRow = memo(function EstimateTableRow({
         {item.no}
       </td>
 
-      {/* カテゴリ */}
-      <td className="px-3 py-2 border border-gray-300">
-        {renderCell('category', 'select', CATEGORIES)}
+      {/* 小項目 */}
+      <td className="px-3 py-2 border border-gray-300 bg-blue-50">
+        {renderCell('minorCategory', 'select', minorCategoryOptions)}
       </td>
 
       {/* 項目名 */}
@@ -300,22 +450,22 @@ const EstimateTableRow = memo(function EstimateTableRow({
       {/* 操作 */}
       <td className="px-3 py-2 border border-gray-300">
         <div className="flex items-center justify-center gap-1">
-          {/* 上に移動 */}
+          {/* 上に移動（グループ内のみ） */}
           <button
             onClick={() => onMoveRowUp(item.id)}
             disabled={index === 0}
             className="p-1 text-gray-600 hover:text-blue-600 hover:bg-blue-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
-            title="上に移動"
+            title="上に移動（同じ大項目内のみ）"
           >
             <ChevronUp className="w-4 h-4" />
           </button>
 
-          {/* 下に移動 */}
+          {/* 下に移動（グループ内のみ） */}
           <button
             onClick={() => onMoveRowDown(item.id)}
-            disabled={index === totalItems - 1}
+            disabled={index === groupItems.length - 1}
             className="p-1 text-gray-600 hover:text-blue-600 hover:bg-blue-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
-            title="下に移動"
+            title="下に移動（同じ大項目内のみ）"
           >
             <ChevronDown className="w-4 h-4" />
           </button>

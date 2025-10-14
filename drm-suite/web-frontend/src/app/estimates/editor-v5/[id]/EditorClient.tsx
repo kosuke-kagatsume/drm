@@ -18,8 +18,9 @@ import {
   EditingCell,
   MasterItem,
   EstimateTemplate,
+  TemplateSection,
 } from './types';
-import { CATEGORIES, UNITS, SAMPLE_TEMPLATES } from './constants';
+import { CATEGORIES, UNITS } from './constants';
 import {
   calculateItemAmount,
   calculateItemCost,
@@ -38,6 +39,7 @@ import {
   getAllTemplates,
   saveTemplate,
 } from './lib/estimateStorage';
+import { initializeDemoTemplates } from './lib/demoTemplates';
 import { useCostCalculation } from './hooks/useCostCalculation';
 import { useVersionManagement } from './hooks/useVersionManagement';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
@@ -89,6 +91,11 @@ export default function EditorClient({
     string | null
   >(null);
 
+  // 大項目追加用の選択状態
+  const [selectedCategoryForAdd, setSelectedCategoryForAdd] = useState<string>(
+    CATEGORIES[0],
+  );
+
   // ==================== Custom Hooks ====================
 
   // 原価計算
@@ -119,6 +126,13 @@ export default function EditorClient({
       setLastSaved(new Date(loadedData.updatedAt));
     }
   }, [estimateId]);
+
+  // ==================== デモテンプレート初期化 ====================
+
+  useEffect(() => {
+    // 初回マウント時のみデモテンプレートを初期化
+    initializeDemoTemplates();
+  }, []);
 
   // ==================== 自動保存 ====================
 
@@ -206,27 +220,35 @@ export default function EditorClient({
 
   // ==================== 行操作 ====================
 
-  const handleAddRow = useCallback(() => {
-    const newNo =
-      items.length > 0 ? Math.max(...items.map((item) => item.no)) + 1 : 1;
-    const newItem: EstimateItem = {
-      id: `item-${Date.now()}-${Math.random().toString(36).substring(7)}`,
-      no: newNo,
-      category: CATEGORIES[0],
-      itemName: '',
-      specification: '',
-      quantity: 1,
-      unit: UNITS[0],
-      unitPrice: 0,
-      amount: 0,
-      remarks: '',
-      costPrice: 0,
-      costAmount: 0,
-      grossProfit: 0,
-      grossProfitRate: 0,
-    };
-    setItems((prev) => [...prev, newItem]);
-  }, [items]);
+  const handleAddRow = useCallback(
+    (category?: string) => {
+      const newNo =
+        items.length > 0 ? Math.max(...items.map((item) => item.no)) + 1 : 1;
+
+      // categoryはドロップダウンまたはヘッダーボタンから常に指定される
+      const selectedCategory = category || CATEGORIES[0];
+
+      const newItem: EstimateItem = {
+        id: `item-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        no: newNo,
+        category: selectedCategory,
+        minorCategory: undefined, // 小項目は未選択
+        itemName: '',
+        specification: '',
+        quantity: 1,
+        unit: UNITS[0],
+        unitPrice: 0,
+        amount: 0,
+        remarks: '',
+        costPrice: 0,
+        costAmount: 0,
+        grossProfit: 0,
+        grossProfitRate: 0,
+      };
+      setItems((prev) => [...prev, newItem]);
+    },
+    [items],
+  );
 
   const handleDeleteRow = useCallback((itemId: string) => {
     setItems((prev) => {
@@ -262,6 +284,14 @@ export default function EditorClient({
       const targetIndex = prev.findIndex((item) => item.id === itemId);
       if (targetIndex <= 0) return prev;
 
+      // 大項目境界チェック: 上の行と同じ大項目かどうか
+      const currentItem = prev[targetIndex];
+      const aboveItem = prev[targetIndex - 1];
+      if (currentItem.category !== aboveItem.category) {
+        // 大項目が異なる場合は移動不可
+        return prev;
+      }
+
       const newItems = [...prev];
       [newItems[targetIndex - 1], newItems[targetIndex]] = [
         newItems[targetIndex],
@@ -276,6 +306,14 @@ export default function EditorClient({
     setItems((prev) => {
       const targetIndex = prev.findIndex((item) => item.id === itemId);
       if (targetIndex === -1 || targetIndex >= prev.length - 1) return prev;
+
+      // 大項目境界チェック: 下の行と同じ大項目かどうか
+      const currentItem = prev[targetIndex];
+      const belowItem = prev[targetIndex + 1];
+      if (currentItem.category !== belowItem.category) {
+        // 大項目が異なる場合は移動不可
+        return prev;
+      }
 
       const newItems = [...prev];
       [newItems[targetIndex], newItems[targetIndex + 1]] = [
@@ -311,6 +349,8 @@ export default function EditorClient({
 
           const updatedItem: EstimateItem = {
             ...item,
+            category: masterItem.category,
+            minorCategory: masterItem.minorCategory, // 小項目も設定
             itemName: masterItem.itemName,
             specification: masterItem.specification,
             unit: masterItem.unit,
@@ -398,6 +438,7 @@ export default function EditorClient({
             id: `item-${Date.now()}-${Math.random().toString(36).substring(7)}-${currentNo}`,
             no: currentNo++,
             category: templateItem.category,
+            minorCategory: templateItem.minorCategory, // 小項目も含める
             itemName: templateItem.itemName,
             specification: templateItem.specification,
             quantity: templateItem.quantity,
@@ -433,6 +474,40 @@ export default function EditorClient({
       scope: 'personal' | 'branch' | 'company';
       branch?: string;
     }) => {
+      // 大項目ごとにグループ化
+      const categoryGroups: Map<string, EstimateItem[]> = new Map();
+      items.forEach((item) => {
+        const category = item.category;
+        if (!categoryGroups.has(category)) {
+          categoryGroups.set(category, []);
+        }
+        categoryGroups.get(category)!.push(item);
+      });
+
+      // 各大項目をセクションに変換
+      const sections: TemplateSection[] = [];
+      let sectionIndex = 0;
+      categoryGroups.forEach((categoryItems, majorCategory) => {
+        sections.push({
+          id: `section-${Date.now()}-${sectionIndex++}`,
+          name: majorCategory, // セクション名を大項目名にする
+          majorCategory: majorCategory,
+          minorCategory: undefined,
+          items: categoryItems.map((item) => ({
+            category: item.category,
+            minorCategory: item.minorCategory,
+            itemName: item.itemName,
+            specification: item.specification,
+            quantity: item.quantity,
+            unit: item.unit,
+            unitPrice: item.unitPrice,
+            amount: item.amount,
+            costPrice: item.costPrice,
+            remarks: item.remarks,
+          })),
+        });
+      });
+
       const template: EstimateTemplate = {
         id: `template-${Date.now()}`,
         name: data.name,
@@ -440,23 +515,7 @@ export default function EditorClient({
         category: data.category,
         scope: data.scope,
         branch: data.branch as any,
-        sections: [
-          {
-            id: `section-${Date.now()}`,
-            name: '全項目',
-            items: items.map((item) => ({
-              category: item.category,
-              itemName: item.itemName,
-              specification: item.specification,
-              quantity: item.quantity,
-              unit: item.unit,
-              unitPrice: item.unitPrice,
-              amount: item.amount,
-              costPrice: item.costPrice,
-              remarks: item.remarks,
-            })),
-          },
-        ],
+        sections: sections,
         createdBy: currentUser.id,
         createdByName: currentUser.name,
         createdAt: new Date().toISOString(),
@@ -580,7 +639,10 @@ export default function EditorClient({
                     未保存
                   </span>
                 )}
-                <span className="text-gray-400 text-xs">
+                <span
+                  className="text-gray-400 text-xs"
+                  suppressHydrationWarning
+                >
                   最終保存: {lastSaved.toLocaleTimeString('ja-JP')}
                 </span>
               </div>
@@ -709,14 +771,27 @@ export default function EditorClient({
           <div className="p-4 border-b bg-gray-50">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-gray-700">見積明細</h2>
-              <button
-                onClick={handleAddRow}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                title="行を追加 (Ctrl+N)"
-              >
-                <Plus className="w-4 h-4" />
-                行を追加
-              </button>
+              <div className="flex items-center gap-2">
+                <select
+                  value={selectedCategoryForAdd}
+                  onChange={(e) => setSelectedCategoryForAdd(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => handleAddRow(selectedCategoryForAdd)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  title="大項目を追加 (Ctrl+N)"
+                >
+                  <Plus className="w-4 h-4" />
+                  大項目を追加
+                </button>
+              </div>
             </div>
           </div>
 

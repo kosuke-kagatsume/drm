@@ -33,9 +33,7 @@ const MasterSearchModal = memo(function MasterSearchModal({
   );
   const [selectedMaker, setSelectedMaker] = useState<string | null>(null);
 
-  if (!isOpen) return null;
-
-  // 住設機器カテゴリかどうか判定
+  // 住設機器カテゴリかどうか判定（Hooksはearly returnの前に配置）
   const isEquipmentCategory = EQUIPMENT_CATEGORIES.includes(category as any);
 
   // 商品種別をフィルター
@@ -128,6 +126,9 @@ const MasterSearchModal = memo(function MasterSearchModal({
       setSelectedProductType(null);
     }
   };
+
+  // モーダルが閉じている場合は何も表示しない
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">

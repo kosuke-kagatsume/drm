@@ -4,7 +4,8 @@
 export interface EstimateItem {
   id: string;
   no: number;
-  category: string;
+  category: string; // 大項目
+  minorCategory?: string; // 小項目（V5で追加）
   itemName: string;
   specification: string;
   quantity: number;
@@ -36,7 +37,8 @@ export interface EstimateData {
 // マスタアイテム
 export interface MasterItem {
   id: string;
-  category: string;
+  category: string; // 大項目
+  minorCategory?: string; // 小項目
   productType?: string;
   itemName: string;
   specification: string;
@@ -79,7 +81,9 @@ export interface EstimateTemplate {
 // テンプレートセクション
 export interface TemplateSection {
   id: string;
-  name: string; // '仮設工事', '基礎工事', '木工事'
+  name: string; // セクション名（例：「木工事 - 構造材」）
+  majorCategory: string; // 大項目
+  minorCategory?: string; // 小項目
   items: EstimateItem[];
 }
 
@@ -110,3 +114,10 @@ export type SaveStatus = 'saved' | 'saving' | 'unsaved';
 
 // 検索ステップ（マスタ検索）
 export type SearchStep = 'category' | 'productType' | 'maker' | 'product';
+
+// 小項目定義
+export interface MinorCategory {
+  id: string;
+  name: string;
+  majorCategory: string; // 所属する大項目
+}
