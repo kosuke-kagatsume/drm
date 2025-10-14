@@ -17,6 +17,7 @@ import {
   Download,
   Upload,
   Printer,
+  MessageSquare,
 } from 'lucide-react';
 import { logger } from '@/lib/logger';
 
@@ -59,6 +60,7 @@ interface EstimateData {
   customer: string;
   items: EstimateItem[];
   totalAmount: number;
+  comment?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -513,6 +515,10 @@ export default function EstimateEditorV4() {
     null,
   );
 
+  // コメント機能
+  const [comment, setComment] = useState('');
+  const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+
   // CSVインポート用のref
   const fileInputRef = useCallback((node: HTMLInputElement | null) => {
     if (node) {
@@ -538,6 +544,7 @@ export default function EstimateEditorV4() {
         setTitle(data.title);
         setCustomer(data.customer);
         setItems(data.items);
+        setComment(data.comment || '');
         logger.estimate.info('V4: 見積データ読み込み完了', { id: estimateId });
       } else {
         // 新規作成の場合、サンプル行を追加
@@ -579,7 +586,7 @@ export default function EstimateEditorV4() {
         clearTimeout(timer);
       }
     };
-  }, [items, title, customer]);
+  }, [items, title, customer, comment]);
 
   /**
    * 自動保存を実行
@@ -596,6 +603,7 @@ export default function EstimateEditorV4() {
         customer,
         items,
         totalAmount,
+        comment,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -920,6 +928,7 @@ export default function EstimateEditorV4() {
         customer,
         items,
         totalAmount,
+        comment,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -1170,6 +1179,20 @@ export default function EstimateEditorV4() {
               )}
 
               <button
+                onClick={() => setIsCommentModalOpen(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                title="コメントを追加"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span>コメント</span>
+                {comment && (
+                  <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+                    ●
+                  </span>
+                )}
+              </button>
+
+              <button
                 onClick={handleSave}
                 disabled={isSaving}
                 className={`
@@ -1356,6 +1379,14 @@ export default function EstimateEditorV4() {
         selectedCategory={selectedCategory}
         onCategoryChange={setSelectedCategory}
         filteredMasters={filteredMasters}
+      />
+
+      {/* コメントモーダル */}
+      <CommentModal
+        isOpen={isCommentModalOpen}
+        onClose={() => setIsCommentModalOpen(false)}
+        comment={comment}
+        onCommentChange={setComment}
       />
 
       {/* 印刷用スタイル */}
@@ -1783,6 +1814,84 @@ function MasterSearchModal({
               キャンセル
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==================== コメントモーダルコンポーネント ====================
+
+interface CommentModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  comment: string;
+  onCommentChange: (comment: string) => void;
+}
+
+function CommentModal({
+  isOpen,
+  onClose,
+  comment,
+  onCommentChange,
+}: CommentModalProps) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+        {/* ヘッダー */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <MessageSquare className="w-6 h-6 text-blue-600" />
+            <h2 className="text-2xl font-bold text-gray-900">見積コメント</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <X className="w-5 h-5 text-gray-600" />
+          </button>
+        </div>
+
+        {/* コンテンツ */}
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                全体コメント
+              </label>
+              <textarea
+                value={comment}
+                onChange={(e) => onCommentChange(e.target.value)}
+                rows={10}
+                placeholder="見積全体に関するコメントを入力してください..."
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
+              />
+            </div>
+            <p className="text-xs text-gray-500">
+              ※ コメントは見積データと共に保存されます
+            </p>
+          </div>
+        </div>
+
+        {/* フッター */}
+        <div className="p-6 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
+          <div className="text-sm text-gray-600">
+            {comment.length > 0 ? (
+              <span className="text-green-600 font-medium">
+                ✓ コメント入力済み ({comment.length}文字)
+              </span>
+            ) : (
+              <span className="text-gray-400">コメントなし</span>
+            )}
+          </div>
+          <button
+            onClick={onClose}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          >
+            閉じる
+          </button>
         </div>
       </div>
     </div>
