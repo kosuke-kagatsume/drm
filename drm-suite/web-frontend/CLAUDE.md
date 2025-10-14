@@ -5,9 +5,9 @@
 ### 最重要情報
 
 **開発サーバー**: http://localhost:3005 (ポート3005で動作中)
-**本番URL**: https://web-frontend-l7vxyuc3f-kosukes-projects-c6ad92ba.vercel.app
+**本番URL**: https://web-frontend-9iexw0bub-kosukes-projects-c6ad92ba.vercel.app
 
-⚠️ **2025年10月13日の重要修正** - 資金計画書の保存をlocalStorageベースに変更してVercelサーバーレス環境完全対応！顧客管理からのアクセスも追加！
+⚠️ **2025年10月14日の重要更新** - V3エディタを完全削除し、V5に統一！重複保存バグも修正完了！
 
 ### プロジェクト概要
 
@@ -17,7 +17,60 @@
 
 ---
 
-## 🆕 最新の実装内容（2025/10/13）
+## 🆕 最新の実装内容（2025/10/14）
+
+### ✨ V3エディタ完全削除とV5への統一移行（重複保存バグ修正）
+
+**コミット**: `d832ca3` - 2025/10/14
+**ブランチ**: recover/design-ic
+**GitHubプッシュ**: ✅ 完了
+**デプロイURL**: https://web-frontend-9iexw0bub-kosukes-projects-c6ad92ba.vercel.app
+
+#### 主要変更
+
+**1. V3エディタの完全削除**
+
+- ❌ `/estimates/editor-v3/[id]/page.tsx` (4,391行)
+- ❌ `/estimates/editor-v3/new/page.tsx` (25行)
+- ❌ GlobalMasterAddModal.tsx (98行)
+- ❌ SavedEstimatesModal.tsx (527行)
+- ❌ estimateData.ts (162行)
+- **合計削除: 5,203行**
+
+**2. V5エディタの改善**
+
+- ✅ 重複保存バグ修正（一回の保存で2個見積が作られる問題を解決）
+- ✅ useRefでID永続化（actualEstimateIdRef）
+- ✅ 保存中フラグで二重保存防止（isSavingRef）
+- `/estimates/editor-v5/[id]/EditorClient.tsx` (+245行)
+
+**3. 全リンクをV3→V5に更新（10ファイル）**
+
+- ✅ AuthContext.tsx - 認証ホワイトリスト
+- ✅ dashboard/sales.tsx - ダッシュボード（4箇所）
+- ✅ dark/dashboard/sales.tsx - ダークモード版
+- ✅ customers/[id]/page.tsx - 顧客詳細
+- ✅ estimates/[id]/page.tsx - 見積詳細
+- ✅ estimates/create-v2/page.tsx - 作成フロー
+- ✅ estimates/templates/page.tsx - テンプレート（3箇所）
+- ✅ 4つのリダイレクトファイル（editor/editor-v2/create/new）
+
+#### 統計
+
+- 18ファイル変更
+- +230行、-5,272行
+- **正味: -5,042行（コード削減率96%）**
+
+#### 結果
+
+✅ 全ての見積機能がeditor-v5に統一
+✅ コンパイルエラーなし
+✅ 全ルートが正常動作
+✅ V3への参照が完全に除去
+
+---
+
+## 📜 過去の実装内容（2025/10/13）
 
 ### 🔧 資金計画書のlocalStorage対応 + 顧客管理連携（Vercel保存問題の完全解決）
 
