@@ -64,7 +64,7 @@ const TemplateSaveModal = memo(function TemplateSaveModal({
         {/* ヘッダー */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold flex items-center gap-2">
-            <FileText className="w-6 h-6 text-blue-600" />
+            <FileText className="w-6 h-6 text-purple-600" />
             テンプレートとして保存
           </h2>
           <button
@@ -87,7 +87,7 @@ const TemplateSaveModal = memo(function TemplateSaveModal({
               value={templateName}
               onChange={(e) => setTemplateName(e.target.value)}
               placeholder="例: 標準的な新築見積"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
 
@@ -101,7 +101,7 @@ const TemplateSaveModal = memo(function TemplateSaveModal({
               onChange={(e) => setTemplateDescription(e.target.value)}
               placeholder="このテンプレートの用途や特徴を記入..."
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
 
@@ -111,7 +111,7 @@ const TemplateSaveModal = memo(function TemplateSaveModal({
             <select
               value={templateCategory}
               onChange={(e) => setTemplateCategory(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
               {TEMPLATE_CATEGORIES.map((cat) => (
                 <option key={cat} value={cat}>
@@ -131,7 +131,7 @@ const TemplateSaveModal = memo(function TemplateSaveModal({
                   e.target.value as 'personal' | 'branch' | 'company',
                 )
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
               <option value="personal">個人用（自分だけ）</option>
               <option value="branch">支店用（支店メンバー共有）</option>
@@ -146,7 +146,7 @@ const TemplateSaveModal = memo(function TemplateSaveModal({
               <select
                 value={templateBranch}
                 onChange={(e) => setTemplateBranch(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
                 {BRANCHES.map((branch) => (
                   <option key={branch} value={branch}>
@@ -163,7 +163,7 @@ const TemplateSaveModal = memo(function TemplateSaveModal({
           <button
             onClick={handleSave}
             disabled={!templateName.trim()}
-            className="flex-1 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-fuchsia-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
           >
             <Check className="w-5 h-5" />
             テンプレートを保存

@@ -91,7 +91,7 @@ export default function EditorClient({
   // 基本データ
   const [estimateTitle, setEstimateTitle] = useState(initialTitle);
   const [customer, setCustomer] = useState(initialCustomer);
-  const [customerId] = useState(initialCustomerId);
+  // const [customerId] = useState(initialCustomerId); // 将来の機能拡張用に予約
   const [items, setItems] = useState<EstimateItem[]>(initialItems);
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
 
@@ -191,6 +191,7 @@ export default function EditorClient({
     }, 2000); // 2秒後に自動保存
 
     return () => clearTimeout(timer);
+    // handleSaveは依存配列に含めない（循環依存を避けるため）
   }, [items, estimateTitle]);
 
   // ==================== 保存処理 ====================
@@ -802,9 +803,9 @@ export default function EditorClient({
   // ==================== レンダリング ====================
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-sky-300 via-cyan-400 to-sky-500">
       {/* ヘッダー */}
-      <header className="bg-white border-b shadow-sm sticky top-0 z-30">
+      <header className="bg-white/95 backdrop-blur-lg border-b border-blue-200 shadow-xl sticky top-0 z-30">
         <div className="max-w-[1800px] mx-auto px-6 py-4">
           {/* タイトル行 */}
           <div className="flex items-center justify-between mb-3">
@@ -862,7 +863,7 @@ export default function EditorClient({
               {/* 手動保存 */}
               <button
                 onClick={handleSave}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 font-semibold"
+                className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 font-semibold"
                 title="保存 (Ctrl+S)"
               >
                 <Save className="w-4 h-4" />
@@ -872,7 +873,7 @@ export default function EditorClient({
               {/* バージョン管理 */}
               <button
                 onClick={() => setShowVersionPanel(true)}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 font-semibold"
+                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 font-semibold"
                 title="バージョン履歴"
               >
                 <GitBranch className="w-4 h-4" />
@@ -882,7 +883,7 @@ export default function EditorClient({
               {/* テンプレート選択 */}
               <button
                 onClick={handleOpenTemplateSelect}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all shadow-md hover:shadow-lg flex items-center gap-2 font-semibold"
                 title="テンプレートから追加"
               >
                 <FileText className="w-4 h-4" />
@@ -892,7 +893,7 @@ export default function EditorClient({
               {/* テンプレート保存 */}
               <button
                 onClick={handleOpenTemplateSave}
-                className="px-4 py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white rounded-lg hover:from-purple-700 hover:to-fuchsia-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 font-semibold"
                 title="テンプレートとして保存"
               >
                 <FileText className="w-4 h-4" />
@@ -902,7 +903,7 @@ export default function EditorClient({
               {/* CSV出力 */}
               <button
                 onClick={handleExportCSV}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-2"
+                className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all flex items-center gap-2"
                 title="CSV出力"
               >
                 <Download className="w-4 h-4" />
@@ -910,7 +911,7 @@ export default function EditorClient({
               </button>
 
               {/* CSV入力 */}
-              <label className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-2 cursor-pointer">
+              <label className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all flex items-center gap-2 cursor-pointer">
                 <Upload className="w-4 h-4" />
                 CSV
                 <input
@@ -924,7 +925,7 @@ export default function EditorClient({
               {/* PDF出力 */}
               <button
                 onClick={handlePrintPDF}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
                 title="PDF出力"
               >
                 <Printer className="w-4 h-4" />
@@ -934,7 +935,7 @@ export default function EditorClient({
               {/* 見積削除 */}
               <button
                 onClick={handleDeleteEstimate}
-                className="px-4 py-2 border border-red-600 text-red-600 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-2"
+                className="px-4 py-2 border-2 border-red-500 text-red-600 rounded-lg hover:bg-red-50 hover:border-red-600 transition-all flex items-center gap-2"
                 title="見積書を削除"
               >
                 <Trash2 className="w-4 h-4" />
@@ -985,16 +986,16 @@ export default function EditorClient({
 
       {/* メインコンテンツ */}
       <main className="max-w-[1800px] mx-auto px-6 py-6">
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-blue-100">
           {/* テーブルコントロール */}
-          <div className="p-4 border-b bg-gray-50">
+          <div className="p-4 border-b bg-gradient-to-r from-blue-50 to-cyan-50">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-gray-700">見積明細</h2>
+              <h2 className="text-lg font-bold text-blue-900">見積明細</h2>
               <div className="flex items-center gap-2">
                 <select
                   value={selectedCategoryForAdd}
                   onChange={(e) => setSelectedCategoryForAdd(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-2 border-2 border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 bg-white"
                 >
                   {CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>
@@ -1004,7 +1005,7 @@ export default function EditorClient({
                 </select>
                 <button
                   onClick={() => handleAddRow(selectedCategoryForAdd)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 font-semibold"
                   title="大項目を追加 (Ctrl+N)"
                 >
                   <Plus className="w-4 h-4" />
@@ -1034,31 +1035,31 @@ export default function EditorClient({
         </div>
 
         {/* ショートカットヘルプ */}
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-          <h3 className="text-sm font-semibold text-blue-900 mb-2">
-            キーボードショートカット
+        <div className="mt-6 p-4 bg-gradient-to-r from-blue-100 to-cyan-100 rounded-xl shadow-md border border-blue-200">
+          <h3 className="text-sm font-semibold text-blue-900 mb-3">
+            ⌨️ キーボードショートカット
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs text-blue-700">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs text-blue-800">
             <div>
-              <kbd className="px-2 py-1 bg-white rounded border border-blue-200">
+              <kbd className="px-2 py-1 bg-white rounded border-2 border-blue-300 font-semibold">
                 Ctrl+S
               </kbd>{' '}
               保存
             </div>
             <div>
-              <kbd className="px-2 py-1 bg-white rounded border border-blue-200">
+              <kbd className="px-2 py-1 bg-white rounded border-2 border-blue-300 font-semibold">
                 Ctrl+N
               </kbd>{' '}
               新規行
             </div>
             <div>
-              <kbd className="px-2 py-1 bg-white rounded border border-blue-200">
+              <kbd className="px-2 py-1 bg-white rounded border-2 border-blue-300 font-semibold">
                 Delete
               </kbd>{' '}
               行削除
             </div>
             <div>
-              <kbd className="px-2 py-1 bg-white rounded border border-blue-200">
+              <kbd className="px-2 py-1 bg-white rounded border-2 border-blue-300 font-semibold">
                 Ctrl+D
               </kbd>{' '}
               行複製

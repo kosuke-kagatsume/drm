@@ -109,44 +109,44 @@ const EstimateTable = memo(function EstimateTable({
     <div className="overflow-x-auto">
       <table className="w-full border-collapse">
         <thead>
-          <tr className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-            <th className="px-3 py-3 text-left text-sm font-semibold border border-blue-500 w-16">
+          <tr className="bg-gradient-to-r from-cyan-500 via-blue-500 to-blue-600 text-white shadow-md">
+            <th className="px-3 py-3 text-left text-sm font-semibold border border-cyan-400 w-16">
               No
             </th>
-            <th className="px-3 py-3 text-left text-sm font-semibold border border-blue-500 w-32">
+            <th className="px-3 py-3 text-left text-sm font-semibold border border-cyan-400 w-32">
               小項目
             </th>
-            <th className="px-3 py-3 text-left text-sm font-semibold border border-blue-500 min-w-[200px]">
+            <th className="px-3 py-3 text-left text-sm font-semibold border border-cyan-400 min-w-[200px]">
               項目名
             </th>
-            <th className="px-3 py-3 text-left text-sm font-semibold border border-blue-500 min-w-[200px]">
+            <th className="px-3 py-3 text-left text-sm font-semibold border border-cyan-400 min-w-[200px]">
               仕様
             </th>
-            <th className="px-3 py-3 text-left text-sm font-semibold border border-blue-500 w-24">
+            <th className="px-3 py-3 text-left text-sm font-semibold border border-cyan-400 w-24">
               数量
             </th>
-            <th className="px-3 py-3 text-left text-sm font-semibold border border-blue-500 w-20">
+            <th className="px-3 py-3 text-left text-sm font-semibold border border-cyan-400 w-20">
               単位
             </th>
-            <th className="px-3 py-3 text-left text-sm font-semibold border border-blue-500 w-32">
+            <th className="px-3 py-3 text-left text-sm font-semibold border border-cyan-400 w-32">
               単価
             </th>
-            <th className="px-3 py-3 text-left text-sm font-semibold border border-blue-500 w-32">
+            <th className="px-3 py-3 text-left text-sm font-semibold border border-cyan-400 w-32">
               金額
             </th>
-            <th className="px-3 py-3 text-left text-sm font-semibold border border-yellow-500 bg-yellow-600 w-32">
+            <th className="px-3 py-3 text-left text-sm font-semibold border border-orange-400 bg-gradient-to-r from-orange-500 to-orange-600 w-32">
               原価
             </th>
-            <th className="px-3 py-3 text-left text-sm font-semibold border border-green-500 bg-green-600 w-32">
+            <th className="px-3 py-3 text-left text-sm font-semibold border border-emerald-400 bg-gradient-to-r from-emerald-500 to-green-600 w-32">
               粗利
             </th>
-            <th className="px-3 py-3 text-left text-sm font-semibold border border-green-500 bg-green-600 w-24">
+            <th className="px-3 py-3 text-left text-sm font-semibold border border-emerald-400 bg-gradient-to-r from-emerald-500 to-green-600 w-24">
               粗利率
             </th>
-            <th className="px-3 py-3 text-left text-sm font-semibold border border-blue-500 min-w-[150px]">
+            <th className="px-3 py-3 text-left text-sm font-semibold border border-cyan-400 min-w-[150px]">
               備考
             </th>
-            <th className="px-3 py-3 text-center text-sm font-semibold border border-blue-500 w-40">
+            <th className="px-3 py-3 text-center text-sm font-semibold border border-cyan-400 w-40">
               操作
             </th>
           </tr>
@@ -220,19 +220,19 @@ const CategoryHeaderRow = memo(function CategoryHeaderRow({
   onAddItem,
 }: CategoryHeaderRowProps) {
   return (
-    <tr className="bg-gradient-to-r from-blue-500 to-blue-600">
+    <tr className="bg-gradient-to-r from-cyan-600 to-blue-600 shadow-sm">
       <td
         colSpan={13}
-        className="px-4 py-3 border border-blue-400 text-white font-bold text-lg"
+        className="px-4 py-3 border border-cyan-400 text-white font-bold text-lg"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-xl">●</span>
+            <span className="text-xs">●</span>
             <span>{category}</span>
           </div>
           <button
             onClick={() => onAddItem(category)}
-            className="px-3 py-1 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors text-sm flex items-center gap-1"
+            className="px-3 py-1 bg-white text-cyan-600 font-semibold rounded-lg hover:bg-cyan-50 hover:shadow-md transition-all text-sm flex items-center gap-1"
           >
             <Plus className="w-4 h-4" />
             項目を追加

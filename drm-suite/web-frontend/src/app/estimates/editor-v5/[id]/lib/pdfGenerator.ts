@@ -110,8 +110,6 @@ export async function generateEstimatePdf(
 
     // PDF生成（ブラウザの印刷ダイアログを表示）
     await engine.generatePdf();
-
-    console.log('PDF生成を開始しました');
   } catch (error) {
     console.error('PDF生成エラー:', error);
     throw new Error('PDF生成に失敗しました');

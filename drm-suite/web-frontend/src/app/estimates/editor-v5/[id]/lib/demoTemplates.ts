@@ -995,9 +995,6 @@ export function initializeDemoTemplates(): void {
       if (!hasDemo) {
         const merged = [...existingTemplates, ...DEMO_TEMPLATES];
         localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
-        console.log('✅ デモテンプレート10個を追加しました');
-      } else {
-        console.log('ℹ️ デモテンプレートは既に存在します');
       }
     } catch (error) {
       console.error('既存テンプレートの読み込みに失敗:', error);
@@ -1006,6 +1003,5 @@ export function initializeDemoTemplates(): void {
   } else {
     // 新規の場合はデモテンプレートをそのまま保存
     localStorage.setItem(STORAGE_KEY, JSON.stringify(DEMO_TEMPLATES));
-    console.log('✅ デモテンプレート10個を作成しました');
   }
 }
