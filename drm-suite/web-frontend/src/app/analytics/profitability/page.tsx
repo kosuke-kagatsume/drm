@@ -2,7 +2,23 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import ProjectProfitability from '@/components/analytics/ProjectProfitability';
+import dynamic from 'next/dynamic';
+
+// 動的インポート（rechartsを含むため）
+const ProjectProfitability = dynamic(
+  () => import('@/components/analytics/ProjectProfitability'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+        <div className="animate-pulse">
+          <div className="text-4xl mb-4">📊</div>
+          <div className="text-gray-400">分析データを読み込み中...</div>
+        </div>
+      </div>
+    ),
+  },
+);
 
 /**
  * 工事収益分析ページ

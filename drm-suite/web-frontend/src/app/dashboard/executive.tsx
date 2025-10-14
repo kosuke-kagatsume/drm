@@ -2,18 +2,38 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
+import dynamic from 'next/dynamic';
+
+// 動的インポート（SSRを無効化してクライアントのみで読み込み）
+const RevenueTrendChart = dynamic(
+  () => import('@/components/charts/RevenueTrendChart'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-[300px] bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">
+        <div className="text-center text-gray-400">
+          <div className="text-lg mb-2">📊</div>
+          <div className="text-sm">チャートを読み込み中...</div>
+        </div>
+      </div>
+    ),
+  },
+);
+
+const DepartmentRevenueChart = dynamic(
+  () => import('@/components/charts/DepartmentRevenueChart'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-[300px] bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">
+        <div className="text-center text-gray-400">
+          <div className="text-lg mb-2">📊</div>
+          <div className="text-sm">チャートを読み込み中...</div>
+        </div>
+      </div>
+    ),
+  },
+);
 
 interface ExecutiveDashboardProps {
   userEmail: string;
@@ -246,40 +266,7 @@ export default function ExecutiveDashboard({
               </h2>
             </div>
             <div className="p-6">
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={revenueTrend}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="month" stroke="#6b7280" />
-                  <YAxis yAxisId="left" stroke="#6b7280" />
-                  <YAxis yAxisId="right" orientation="right" stroke="#6b7280" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'white',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                    }}
-                  />
-                  <Legend />
-                  <Line
-                    yAxisId="left"
-                    type="monotone"
-                    dataKey="売上"
-                    stroke="#3b82f6"
-                    strokeWidth={3}
-                    dot={{ fill: '#3b82f6', r: 5 }}
-                    name="売上 (M)"
-                  />
-                  <Line
-                    yAxisId="right"
-                    type="monotone"
-                    dataKey="粗利"
-                    stroke="#10b981"
-                    strokeWidth={3}
-                    dot={{ fill: '#10b981', r: 5 }}
-                    name="粗利率 (%)"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              <RevenueTrendChart data={revenueTrend} />
             </div>
           </div>
 
@@ -289,36 +276,7 @@ export default function ExecutiveDashboard({
               <h2 className="text-lg font-semibold">📊 部門別売上・粗利率</h2>
             </div>
             <div className="p-6">
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={departmentRevenueData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="name" stroke="#6b7280" />
-                  <YAxis yAxisId="left" stroke="#6b7280" />
-                  <YAxis yAxisId="right" orientation="right" stroke="#6b7280" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'white',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                    }}
-                  />
-                  <Legend />
-                  <Bar
-                    yAxisId="left"
-                    dataKey="売上"
-                    fill="#3b82f6"
-                    name="売上 (M)"
-                    radius={[8, 8, 0, 0]}
-                  />
-                  <Bar
-                    yAxisId="right"
-                    dataKey="粗利率"
-                    fill="#10b981"
-                    name="粗利率 (%)"
-                    radius={[8, 8, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+              <DepartmentRevenueChart data={departmentRevenueData} />
             </div>
           </div>
 

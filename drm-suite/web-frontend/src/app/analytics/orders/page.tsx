@@ -2,7 +2,23 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import OrderAnalytics from '@/components/analytics/OrderAnalytics';
+import dynamic from 'next/dynamic';
+
+// 動的インポート（rechartsを含むため）
+const OrderAnalytics = dynamic(
+  () => import('@/components/analytics/OrderAnalytics'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+        <div className="animate-pulse">
+          <div className="text-4xl mb-4">📊</div>
+          <div className="text-gray-400">分析データを読み込み中...</div>
+        </div>
+      </div>
+    ),
+  },
+);
 
 /**
  * 受注率分析ページ
