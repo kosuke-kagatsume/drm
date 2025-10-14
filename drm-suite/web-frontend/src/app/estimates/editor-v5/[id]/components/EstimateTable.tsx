@@ -177,6 +177,7 @@ const EstimateTable = memo(function EstimateTable({
                     item={item}
                     index={index}
                     groupItems={group.items}
+                    allItems={items}
                     totalItems={items.length}
                     editingCell={editingCell}
                     onCellEdit={onCellEdit}
@@ -280,6 +281,7 @@ interface EstimateTableRowProps {
   item: EstimateItem;
   index: number;
   groupItems: EstimateItem[]; // 同じグループ内のアイテム一覧
+  allItems: EstimateItem[]; // 全アイテム（キーボードナビゲーション用）
   totalItems: number;
   editingCell: EditingCell | null;
   onCellEdit: (cell: EditingCell | null) => void;
@@ -299,6 +301,7 @@ const EstimateTableRow = memo(function EstimateTableRow({
   item,
   index,
   groupItems,
+  allItems,
   totalItems,
   editingCell,
   onCellEdit,
@@ -318,6 +321,157 @@ const EstimateTableRow = memo(function EstimateTableRow({
     return ['', ...minorCats.map((mc) => mc.name)]; // 空文字列を先頭に追加（未選択）
   }, [item.category]);
 
+  // ==================== キーボードナビゲーション ====================
+
+  // 編集可能なカラムの順序定義
+  const EDITABLE_COLUMNS = [
+    'minorCategory',
+    'itemName',
+    'specification',
+    'quantity',
+    'unit',
+    'unitPrice',
+    'costPrice',
+    'remarks',
+  ];
+
+  // 次の行のセルを見つける（Enter: 下に移動）
+  const findNextRowCell = (currentItemId: string, currentCol: string) => {
+    const currentIndex = allItems.findIndex(
+      (item) => item.id === currentItemId,
+    );
+    if (currentIndex === -1 || currentIndex >= allItems.length - 1) return null;
+
+    const nextItem = allItems[currentIndex + 1];
+    return { row: nextItem.id, col: currentCol };
+  };
+
+  // 前の行のセルを見つける（↑: 上に移動）
+  const findPrevRowCell = (currentItemId: string, currentCol: string) => {
+    const currentIndex = allItems.findIndex(
+      (item) => item.id === currentItemId,
+    );
+    if (currentIndex <= 0) return null;
+
+    const prevItem = allItems[currentIndex - 1];
+    return { row: prevItem.id, col: currentCol };
+  };
+
+  // 次のカラムを見つける（Tab: 右に移動）
+  const findNextColumnCell = (currentItemId: string, currentCol: string) => {
+    const currentColIndex = EDITABLE_COLUMNS.indexOf(currentCol);
+    if (currentColIndex === -1) return null;
+
+    if (currentColIndex >= EDITABLE_COLUMNS.length - 1) {
+      // 最後のカラムの場合、次の行の最初のカラムへ
+      return findNextRowCell(currentItemId, EDITABLE_COLUMNS[0]);
+    } else {
+      // 次のカラムへ
+      return { row: currentItemId, col: EDITABLE_COLUMNS[currentColIndex + 1] };
+    }
+  };
+
+  // 前のカラムを見つける（Shift+Tab: 左に移動）
+  const findPrevColumnCell = (currentItemId: string, currentCol: string) => {
+    const currentColIndex = EDITABLE_COLUMNS.indexOf(currentCol);
+    if (currentColIndex === -1) return null;
+
+    if (currentColIndex <= 0) {
+      // 最初のカラムの場合、前の行の最後のカラムへ
+      return findPrevRowCell(
+        currentItemId,
+        EDITABLE_COLUMNS[EDITABLE_COLUMNS.length - 1],
+      );
+    } else {
+      // 前のカラムへ
+      return { row: currentItemId, col: EDITABLE_COLUMNS[currentColIndex - 1] };
+    }
+  };
+
+  // キーボードイベントハンドラー（編集モード用）
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+    itemId: string,
+    field: string,
+  ) => {
+    // Enter: 下のセルに移動（同じ列）
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const nextCell = findNextRowCell(itemId, field);
+      if (nextCell) {
+        onCellEdit(nextCell);
+      } else {
+        onCellEdit(null); // 最後の行の場合は編集終了
+      }
+    }
+    // Tab: 右のセルに移動
+    else if (e.key === 'Tab' && !e.shiftKey) {
+      e.preventDefault();
+      const nextCell = findNextColumnCell(itemId, field);
+      if (nextCell) {
+        onCellEdit(nextCell);
+      }
+    }
+    // Shift+Tab: 左のセルに移動
+    else if (e.key === 'Tab' && e.shiftKey) {
+      e.preventDefault();
+      const prevCell = findPrevColumnCell(itemId, field);
+      if (prevCell) {
+        onCellEdit(prevCell);
+      }
+    }
+    // Esc: 編集をキャンセル
+    else if (e.key === 'Escape') {
+      e.preventDefault();
+      onCellEdit(null);
+    }
+  };
+
+  // キーボードイベントハンドラー（非編集モード用）
+  const handleCellKeyDown = (
+    e: React.KeyboardEvent<HTMLDivElement>,
+    itemId: string,
+    field: string,
+  ) => {
+    // Enter: 編集モードに入る
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      onCellEdit({ row: itemId, col: field });
+    }
+    // ↓: 下のセルに移動
+    else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const nextCell = findNextRowCell(itemId, field);
+      if (nextCell) {
+        onCellEdit(nextCell);
+      }
+    }
+    // ↑: 上のセルに移動
+    else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const prevCell = findPrevRowCell(itemId, field);
+      if (prevCell) {
+        onCellEdit(prevCell);
+      }
+    }
+    // →: 右のセルに移動
+    else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      const nextCell = findNextColumnCell(itemId, field);
+      if (nextCell) {
+        onCellEdit(nextCell);
+      }
+    }
+    // ←: 左のセルに移動
+    else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const prevCell = findPrevColumnCell(itemId, field);
+      if (prevCell) {
+        onCellEdit(prevCell);
+      }
+    }
+  };
+
   const renderCell = (
     field: keyof EstimateItem,
     type: 'text' | 'number' | 'select' = 'text',
@@ -333,6 +487,7 @@ const EstimateTableRow = memo(function EstimateTableRow({
             value={String(value)}
             onChange={(e) => onCellChange(item.id, field, e.target.value)}
             onBlur={() => onCellEdit(null)}
+            onKeyDown={(e) => handleKeyDown(e, item.id, field as string)}
             autoFocus
             className="w-full px-2 py-1 border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
@@ -351,11 +506,7 @@ const EstimateTableRow = memo(function EstimateTableRow({
           value={String(value)}
           onChange={(e) => onCellChange(item.id, field, e.target.value)}
           onBlur={() => onCellEdit(null)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === 'Escape') {
-              onCellEdit(null);
-            }
-          }}
+          onKeyDown={(e) => handleKeyDown(e, item.id, field as string)}
           autoFocus
           step={
             type === 'number'
@@ -372,7 +523,9 @@ const EstimateTableRow = memo(function EstimateTableRow({
     return (
       <div
         onClick={() => onCellEdit({ row: item.id, col: field as string })}
-        className="min-h-[32px] px-2 py-1 rounded hover:bg-blue-50 cursor-text"
+        onKeyDown={(e) => handleCellKeyDown(e, item.id, field as string)}
+        tabIndex={0}
+        className="min-h-[32px] px-2 py-1 rounded hover:bg-blue-50 cursor-text focus:outline-none focus:ring-2 focus:ring-blue-300"
       >
         {type === 'number' && typeof value === 'number'
           ? field === 'unitPrice' || field === 'amount' || field === 'costPrice'
