@@ -7,10 +7,20 @@ interface PageProps {
   params: {
     id: string;
   };
+  searchParams?: {
+    customerId?: string;
+    customerName?: string;
+    quick?: string;
+  };
 }
 
-export default async function EstimateEditorV5Page({ params }: PageProps) {
+export default async function EstimateEditorV5Page({
+  params,
+  searchParams,
+}: PageProps) {
   const { id } = params;
+  const customerName = searchParams?.customerName || '';
+  const customerId = searchParams?.customerId || '';
 
   // TODO: 将来的にはサーバー側でデータを取得
   // 現在はlocalStorageベースなのでクライアント側で取得
@@ -27,6 +37,8 @@ export default async function EstimateEditorV5Page({ params }: PageProps) {
       <EditorClient
         estimateId={id}
         initialTitle="新規見積"
+        initialCustomer={customerName}
+        initialCustomerId={customerId}
         initialItems={[]}
         currentUser={currentUser}
       />

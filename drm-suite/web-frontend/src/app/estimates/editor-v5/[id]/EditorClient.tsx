@@ -66,6 +66,8 @@ import CommentPanel from './components/CommentPanel';
 interface EditorClientProps {
   estimateId: string;
   initialTitle?: string;
+  initialCustomer?: string;
+  initialCustomerId?: string;
   initialItems?: EstimateItem[];
   currentUser: {
     id: string;
@@ -77,6 +79,8 @@ interface EditorClientProps {
 export default function EditorClient({
   estimateId,
   initialTitle = '新規見積',
+  initialCustomer = '',
+  initialCustomerId = '',
   initialItems = [],
   currentUser,
 }: EditorClientProps) {
@@ -86,7 +90,8 @@ export default function EditorClient({
 
   // 基本データ
   const [estimateTitle, setEstimateTitle] = useState(initialTitle);
-  const [customer, setCustomer] = useState('');
+  const [customer, setCustomer] = useState(initialCustomer);
+  const [customerId] = useState(initialCustomerId);
   const [items, setItems] = useState<EstimateItem[]>(initialItems);
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
 
@@ -186,7 +191,7 @@ export default function EditorClient({
     }, 2000); // 2秒後に自動保存
 
     return () => clearTimeout(timer);
-  }, [items, estimateTitle, customer]);
+  }, [items, estimateTitle]);
 
   // ==================== 保存処理 ====================
 
@@ -812,13 +817,16 @@ export default function EditorClient({
                   className="text-2xl font-bold border-none outline-none focus:outline-none bg-transparent hover:bg-gray-50 px-2 py-1 rounded transition-colors"
                   placeholder="見積タイトル"
                 />
-                <input
-                  type="text"
-                  value={customer}
-                  onChange={(e) => setCustomer(e.target.value)}
-                  className="text-base border border-gray-300 outline-none focus:outline-none focus:ring-2 focus:ring-indigo-500 px-3 py-1.5 rounded transition-colors"
-                  placeholder="顧客名を入力"
-                />
+                {customer && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 border border-indigo-200 rounded-lg">
+                    <span className="text-sm text-indigo-600 font-semibold">
+                      顧客:
+                    </span>
+                    <span className="text-base text-indigo-900 font-medium">
+                      {customer}
+                    </span>
+                  </div>
+                )}
               </div>
               {/* 保存状態インジケーター */}
               <div className="flex items-center gap-2 text-sm">

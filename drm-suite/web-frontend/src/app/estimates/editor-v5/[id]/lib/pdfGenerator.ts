@@ -50,20 +50,12 @@ export function convertEstimateToPdfData(
 
   // 現在の日付を取得
   const now = new Date();
-  const createdDate = now.toLocaleDateString('ja-JP', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  const createdDate = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`;
 
   // 有効期限（30日後）
   const validUntilDate = new Date(now);
   validUntilDate.setDate(validUntilDate.getDate() + 30);
-  const validUntil = validUntilDate.toLocaleDateString('ja-JP', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  const validUntil = `${validUntilDate.getFullYear()}年${validUntilDate.getMonth() + 1}月${validUntilDate.getDate()}日`;
 
   return {
     // 基本情報
