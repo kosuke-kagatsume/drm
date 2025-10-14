@@ -117,11 +117,45 @@ export function useVersionManagement({
     return versions.find((v) => v.id === currentVersionId) || null;
   }, [versions, currentVersionId]);
 
+  /**
+   * バージョンを削除
+   */
+  const deleteVersion = useCallback(
+    (versionId: string): boolean => {
+      // 最低1バージョンは必要
+      if (versions.length <= 1) {
+        return false;
+      }
+
+      // 削除するバージョンを除外
+      const updatedVersions = versions.filter((v) => v.id !== versionId);
+
+      // 削除されたバージョンが現在のバージョンだった場合、最新のアクティブバージョンに切り替え
+      if (versionId === currentVersionId) {
+        const newActiveVersion =
+          updatedVersions.find((v) => v.status === 'active') ||
+          updatedVersions[updatedVersions.length - 1];
+        setCurrentVersionId(newActiveVersion.id);
+      }
+
+      // バージョンリストを更新して保存
+      setVersions(updatedVersions);
+      saveVersions(estimateId, updatedVersions);
+
+      // バージョンデータをlocalStorageから削除
+      localStorage.removeItem(`estimate-v5-version-${estimateId}-${versionId}`);
+
+      return true;
+    },
+    [versions, currentVersionId, estimateId],
+  );
+
   return {
     versions,
     currentVersionId,
     createVersion,
     switchVersion,
     getCurrentVersion,
+    deleteVersion,
   };
 }

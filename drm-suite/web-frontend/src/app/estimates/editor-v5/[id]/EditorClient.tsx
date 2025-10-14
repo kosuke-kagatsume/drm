@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Save,
   Download,
@@ -12,6 +13,7 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
+  Trash2,
 } from 'lucide-react';
 import {
   EstimateItem,
@@ -69,6 +71,8 @@ export default function EditorClient({
   initialItems = [],
   currentUser,
 }: EditorClientProps) {
+  const router = useRouter();
+
   // ==================== State管理 ====================
 
   // 基本データ
@@ -76,11 +80,19 @@ export default function EditorClient({
   const [items, setItems] = useState<EstimateItem[]>(initialItems);
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
 
+  // クライアント側のみでマウント状態を管理
+  const [isMounted, setIsMounted] = useState(false);
+
   // 保存状態
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>(
     'saved',
   );
   const [lastSaved, setLastSaved] = useState<Date>(new Date());
+
+  // クライアント側マウント検出
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // モーダル表示フラグ
   const [showVersionPanel, setShowVersionPanel] = useState(false);
@@ -110,6 +122,7 @@ export default function EditorClient({
     createVersion,
     switchVersion,
     getCurrentVersion,
+    deleteVersion,
   } = useVersionManagement({
     estimateId,
     estimateTitle,
@@ -574,6 +587,55 @@ export default function EditorClient({
     [switchVersion],
   );
 
+  const handleDeleteVersion = useCallback(
+    (versionId: string) => {
+      const success = deleteVersion(versionId);
+      if (success) {
+        // 削除が成功した場合、現在のバージョンのデータを再読み込み
+        const currentVersion = getCurrentVersion();
+        if (currentVersion) {
+          const versionData = loadVersionData(estimateId, currentVersion.id);
+          if (versionData) {
+            setEstimateTitle(versionData.title);
+            setItems(versionData.items);
+          }
+        }
+        alert('バージョンを削除しました');
+      } else {
+        alert('バージョンの削除に失敗しました');
+      }
+    },
+    [deleteVersion, getCurrentVersion, estimateId],
+  );
+
+  const handleDeleteEstimate = useCallback(() => {
+    if (
+      !confirm(
+        `見積書「${estimateTitle}」を完全に削除しますか？\n\nこの操作は取り消せません。\n全てのバージョンとデータが削除されます。`,
+      )
+    ) {
+      return;
+    }
+
+    // 全バージョンのデータを削除
+    versions.forEach((version) => {
+      localStorage.removeItem(
+        `estimate-v5-version-${estimateId}-${version.id}`,
+      );
+    });
+
+    // バージョンリストを削除
+    localStorage.removeItem(`estimate-v5-versions-${estimateId}`);
+
+    // 見積データを削除
+    localStorage.removeItem(`estimate-v5-${estimateId}`);
+
+    alert('見積書を削除しました');
+
+    // 見積一覧画面に遷移
+    router.push('/estimates');
+  }, [estimateId, estimateTitle, versions, router]);
+
   const getVersionItems = useCallback(
     (versionId: string): EstimateItem[] => {
       const versionData = loadVersionData(estimateId, versionId);
@@ -649,11 +711,11 @@ export default function EditorClient({
                     未保存
                   </span>
                 )}
-                <span
-                  className="text-gray-400 text-xs"
-                  suppressHydrationWarning
-                >
-                  最終保存: {lastSaved.toLocaleTimeString('ja-JP')}
+                <span className="text-gray-400 text-xs">
+                  最終保存:{' '}
+                  {isMounted
+                    ? lastSaved.toLocaleTimeString('ja-JP')
+                    : '--:--:--'}
                 </span>
               </div>
             </div>
@@ -730,6 +792,16 @@ export default function EditorClient({
               >
                 <Printer className="w-4 h-4" />
                 PDF
+              </button>
+
+              {/* 見積削除 */}
+              <button
+                onClick={handleDeleteEstimate}
+                className="px-4 py-2 border border-red-600 text-red-600 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-2"
+                title="見積書を削除"
+              >
+                <Trash2 className="w-4 h-4" />
+                削除
               </button>
             </div>
           </div>
@@ -865,6 +937,7 @@ export default function EditorClient({
         onCreateVersion={handleCreateVersion}
         onSwitchVersion={handleSwitchVersion}
         onOpenVersionComparison={() => setShowVersionComparison(true)}
+        onDeleteVersion={handleDeleteVersion}
       />
 
       {/* バージョン比較モーダル */}

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { memo, useState } from 'react';
-import { X, GitBranch, Check } from 'lucide-react';
+import { X, GitBranch, Check, Trash2 } from 'lucide-react';
 import { EstimateVersion } from '../types';
 import { formatPrice } from '../lib/estimateCalculations';
 
@@ -18,6 +18,7 @@ interface VersionPanelProps {
   ) => void;
   onSwitchVersion: (versionId: string) => void;
   onOpenVersionComparison: () => void;
+  onDeleteVersion: (versionId: string) => void;
 }
 
 const VersionPanel = memo(function VersionPanel({
@@ -28,6 +29,7 @@ const VersionPanel = memo(function VersionPanel({
   onCreateVersion,
   onSwitchVersion,
   onOpenVersionComparison,
+  onDeleteVersion,
 }: VersionPanelProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [versionType, setVersionType] = useState<'major' | 'minor' | 'draft'>(
@@ -45,6 +47,21 @@ const VersionPanel = memo(function VersionPanel({
     onCreateVersion(versionType, changeNote);
     setShowCreateModal(false);
     setChangeNote('');
+  };
+
+  const handleDeleteVersion = (
+    versionId: string,
+    versionNumber: string,
+    e: React.MouseEvent,
+  ) => {
+    e.stopPropagation(); // 親要素のクリックイベントを防ぐ
+    if (
+      confirm(
+        `バージョン ${versionNumber} を削除しますか？\nこの操作は取り消せません。`,
+      )
+    ) {
+      onDeleteVersion(versionId);
+    }
   };
 
   return (
@@ -97,7 +114,7 @@ const VersionPanel = memo(function VersionPanel({
                   <div
                     key={version.id}
                     onClick={() => onSwitchVersion(version.id)}
-                    className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                    className={`p-3 border rounded-lg cursor-pointer transition-all relative group ${
                       version.id === currentVersionId
                         ? 'border-blue-500 bg-blue-50 shadow-md'
                         : 'border-gray-300 hover:border-blue-300 hover:bg-gray-50'
@@ -107,7 +124,7 @@ const VersionPanel = memo(function VersionPanel({
                       <span className="font-semibold text-lg text-blue-600">
                         v{version.versionNumber}
                       </span>
-                      <div className="flex gap-1">
+                      <div className="flex gap-1 items-center">
                         {version.status === 'active' && (
                           <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">
                             ✓ 最新
@@ -122,6 +139,22 @@ const VersionPanel = memo(function VersionPanel({
                           <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
                             表示中
                           </span>
+                        )}
+                        {/* 削除ボタン（最低1バージョンは残す） */}
+                        {versions.length > 1 && (
+                          <button
+                            onClick={(e) =>
+                              handleDeleteVersion(
+                                version.id,
+                                version.versionNumber,
+                                e,
+                              )
+                            }
+                            className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors opacity-0 group-hover:opacity-100"
+                            title="バージョンを削除"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         )}
                       </div>
                     </div>
