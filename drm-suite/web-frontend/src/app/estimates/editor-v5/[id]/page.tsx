@@ -22,8 +22,34 @@ const EditorClient = dynamic(() => import('./EditorClient'), {
 
 interface PageProps {
   params: { id: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
 }
 
-export default function EstimateEditorV5Page({ params }: PageProps) {
-  return <EditorClient estimateId={params.id} />;
+export default function EstimateEditorV5Page({
+  params,
+  searchParams,
+}: PageProps) {
+  const customerName =
+    typeof searchParams?.customerName === 'string'
+      ? searchParams.customerName
+      : '';
+  const customerId =
+    typeof searchParams?.customerId === 'string' ? searchParams.customerId : '';
+
+  const currentUser = {
+    id: 'user-001',
+    name: '山田太郎',
+    branch: '東京支店',
+  };
+
+  return (
+    <EditorClient
+      estimateId={params.id}
+      initialTitle="新規見積"
+      initialCustomer={customerName}
+      initialCustomerId={customerId}
+      initialItems={[]}
+      currentUser={currentUser}
+    />
+  );
 }
