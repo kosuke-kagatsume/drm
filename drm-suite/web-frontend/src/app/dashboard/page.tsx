@@ -2,12 +2,84 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import SalesDashboard from './sales';
-import ManagerDashboard from './manager';
-import ExecutiveDashboard from './executive';
-import MarketingDashboard from './marketing';
-import AccountingDashboard from './accounting';
+import { useEffect } from 'react';
+import dynamic from 'next/dynamic';
+
+// 動的インポートで各ダッシュボードを遅延ロード
+const SalesDashboard = dynamic(() => import('./sales'), {
+  ssr: false,
+  loading: () => (
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-yellow-50 to-amber-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-orange-600 mx-auto mb-4"></div>
+        <p className="text-gray-600 font-medium text-lg">
+          営業ダッシュボードを読み込み中...
+        </p>
+        <p className="text-gray-400 text-sm mt-2">データを準備しています</p>
+      </div>
+    </div>
+  ),
+});
+
+const ManagerDashboard = dynamic(() => import('./manager'), {
+  ssr: false,
+  loading: () => (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-cyan-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600 font-medium text-lg">
+          支店長ダッシュボードを読み込み中...
+        </p>
+        <p className="text-gray-400 text-sm mt-2">データを準備しています</p>
+      </div>
+    </div>
+  ),
+});
+
+const ExecutiveDashboard = dynamic(() => import('./executive'), {
+  ssr: false,
+  loading: () => (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-sky-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-indigo-600 mx-auto mb-4"></div>
+        <p className="text-gray-600 font-medium text-lg">
+          経営ダッシュボードを読み込み中...
+        </p>
+        <p className="text-gray-400 text-sm mt-2">データを準備しています</p>
+      </div>
+    </div>
+  ),
+});
+
+const MarketingDashboard = dynamic(() => import('./marketing'), {
+  ssr: false,
+  loading: () => (
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600 mx-auto mb-4"></div>
+        <p className="text-gray-600 font-medium text-lg">
+          マーケティングダッシュボードを読み込み中...
+        </p>
+        <p className="text-gray-400 text-sm mt-2">データを準備しています</p>
+      </div>
+    </div>
+  ),
+});
+
+const AccountingDashboard = dynamic(() => import('./accounting'), {
+  ssr: false,
+  loading: () => (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto mb-4"></div>
+        <p className="text-gray-600 font-medium text-lg">
+          経理ダッシュボードを読み込み中...
+        </p>
+        <p className="text-gray-400 text-sm mt-2">データを準備しています</p>
+      </div>
+    </div>
+  ),
+});
 
 export default function DashboardPage() {
   const { user, isLoading, logout, isSuperAdmin } = useAuth();
