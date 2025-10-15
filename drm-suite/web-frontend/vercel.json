@@ -1,5 +1,4 @@
 {
-  "name": "drm-suite-v2",
   "functions": {
     "src/app/api/pdf/simple/[id]/route.ts": {
       "maxDuration": 30
