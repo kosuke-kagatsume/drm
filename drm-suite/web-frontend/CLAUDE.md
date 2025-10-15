@@ -5,9 +5,9 @@
 ### 最重要情報
 
 **開発サーバー**: http://localhost:3005 (ポート3005で動作中)
-**本番URL**: https://web-frontend-9iexw0bub-kosukes-projects-c6ad92ba.vercel.app
+**本番URL**: https://web-frontend-41z4ijyp3-kosukes-projects-c6ad92ba.vercel.app
 
-⚠️ **2025年10月14日の重要更新** - V3エディタを完全削除し、V5に統一！重複保存バグも修正完了！
+⚠️ **2025年10月15日の重要更新** - Phase 6-10バンドル最適化完了！全19ページが100KB以下に！
 
 ### プロジェクト概要
 
@@ -17,7 +17,82 @@
 
 ---
 
-## 🆕 最新の実装内容（2025/10/14）
+## 🆕 最新の実装内容（2025/10/15）
+
+### 🚀 Phase 6-10: バンドル最適化プロジェクト完了
+
+**コミット**: `dde0093` (Phase 10), `597a981` (Phase 9), `5658b2e` (Phase 8) - 2025/10/15
+**ブランチ**: recover/design-ic
+**GitHubプッシュ**: ✅ 完了
+**デプロイURL**: https://web-frontend-41z4ijyp3-kosukes-projects-c6ad92ba.vercel.app
+
+#### 成果サマリー
+
+**目標達成率: 100%** 🎯
+
+- **最適化ページ数**: 19ページ
+- **総削減量**: 421.4 KB
+- **100 KB超えページ**: 0個（目標: 0個）
+- **手法**: Next.js dynamic imports + two-layer architecture
+
+#### Phase別の詳細
+
+**Phase 6-7: 初期最適化（6ページ）**
+
+- Map/Expenses/Inventory（163 KB削減）
+- Editor/Admin画面（110 KB削減）
+- 合計削減: 273 KB
+
+**Phase 8: 重量級ページ（3ページ）**
+
+- Estimates/Contracts/Editor-v4
+- 削減量: 39 KB
+- 全て 90.3 KB達成
+
+**Phase 9: 最終重量級ページ（9ページ）**
+
+- Construction/Dark系/その他重量ページ
+- 削減量: 100 KB
+- 全て 90.5 KB達成
+
+**Phase 10: ラスト1ページ（1ページ）**
+
+- Aftercare Dashboard
+- 100 KB → 90.6 KB
+- 削減量: 9.4 KB
+
+#### 技術的アプローチ
+
+**Two-Layer Architecture Pattern:**
+
+```typescript
+// Layer 1: Lightweight wrapper (page.tsx)
+const HeavyContent = dynamic(() => import('./HeavyContent'), {
+  ssr: false,
+  loading: () => <ThemedLoadingScreen />
+});
+
+// Layer 2: Heavy implementation (*Content.tsx)
+// Full component code with all dependencies
+```
+
+**各ページのテーマ別ローディング画面:**
+
+- Aftercare: Cyan-Blue-Sky gradient（サービスメンテナンステーマ）
+- Construction: Orange-Amber-Yellow（建設現場テーマ）
+- Dark Dashboard: Gray-Slate-Zinc（ダークモード）
+- 他16ページ、各々のコンテキストに合わせた配色
+
+#### ファイル構成の改善
+
+- 各ページで2層構造を採用
+- page.tsx: 25-30行（動的インポート＋ローディングUI）
+- \*Content.tsx: 元のコード全体（遅延ロード対象）
+- 初回ロード時のJSバンドルサイズを大幅削減
+
+---
+
+## 📜 過去の実装内容（2025/10/14）
 
 ### ✨ V3エディタ完全削除とV5への統一移行（重複保存バグ修正）
 
